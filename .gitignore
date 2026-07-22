@@ -1,0 +1,32 @@
+# Secrets — never commit these
+.env
+*.key
+
+# Real portfolio data — synthetic samples in data/ are fine, real client data is not
+data/real/
+data/private/
+*_real.csv
+*_client.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Cached price data — regenerated on demand, no reason to version it
+.cache/
+
+# Generated reports — one committed sample lives in docs/, the rest are local
+reports/*.html
+reports/*.pdf
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
