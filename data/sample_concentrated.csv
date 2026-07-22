@@ -1,0 +1,18 @@
+# client_name: Jordan Reyes
+# client_age: 41
+# time_horizon_years: 22
+# notes: Senior software engineer. Employer stock accumulated through RSU vests since 2019. Wants to diversify but is anxious about the tax bill.
+# scenario: Concentrated employer stock with a large embedded long-term gain.
+# SYNTHETIC DATA - not a real client.
+ticker,shares,cost_basis_per_share,acquisition_date,account_type,is_employer_stock
+NVDA,1800,14.85,2019-04-15,taxable,true
+NVDA,900,32.40,2021-06-11,taxable,true
+NVDA,450,48.20,2023-02-17,taxable,true
+VOO,410,352.00,2021-09-08,taxable,false
+VOO,120,398.50,2023-05-22,traditional,false
+VTI,300,205.10,2020-11-03,traditional,false
+QQQ,140,332.75,2022-08-19,roth,false
+BND,850,85.20,2021-03-12,traditional,false
+AGG,300,96.50,2022-10-07,traditional,false
+VEA,600,45.30,2022-01-14,taxable,false
+CASH,28000,1.00,2024-01-02,taxable,false

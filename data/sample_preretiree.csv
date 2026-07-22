@@ -1,0 +1,17 @@
+# client_name: Margaret Chen
+# client_age: 62
+# time_horizon_years: 3
+# notes: Plans to retire at 65 and begin drawing income. Portfolio still allocated as it was in her forties. Has not rebalanced since 2019.
+# scenario: Pre-retiree carrying accumulation-phase equity risk into a short horizon.
+# SYNTHETIC DATA - not a real client.
+ticker,shares,cost_basis_per_share,acquisition_date,account_type,is_employer_stock
+VOO,1150,268.40,2019-07-22,traditional,false
+VOO,240,401.15,2023-03-06,taxable,false
+QQQ,420,268.90,2019-11-18,traditional,false
+VUG,380,45.12,2020-09-14,traditional,false
+AAPL,700,74.20,2019-05-06,taxable,false
+MSFT,340,138.75,2019-08-12,taxable,false
+VTV,260,118.40,2021-02-08,roth,false
+VNQ,180,88.30,2021-05-17,traditional,false
+BND,420,84.10,2019-06-03,traditional,false
+CASH,31000,1.00,2024-06-14,taxable,false
