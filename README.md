@@ -6,7 +6,7 @@ volatility, maximum drawdown, Sharpe ratio, beta, and a **tax-aware** rebalancin
 plan that accounts for lot-level holding periods and account registration.
 
 ```bash
-python -m pra.cli --portfolio data/sample_concentrated.csv --model balanced_growth --open
+pra --portfolio data/sample_concentrated.csv --model balanced_growth --open
 ```
 
 Output is a single self-contained HTML file, print-styled so `Ctrl+P → Save as PDF`
@@ -77,10 +77,14 @@ cd portfolio-risk-agent
 
 python -m venv .venv
 .venv\Scripts\Activate.ps1          # Windows;  source .venv/bin/activate on macOS/Linux
-pip install -r requirements.txt
+pip install -e .
 
-python -m pra.cli --portfolio data/sample_concentrated.csv --model balanced_growth --open
+pra --portfolio data/sample_concentrated.csv --model balanced_growth --open
 ```
+
+`pip install -e .` installs the project in editable mode and creates the `pra`
+command. If you'd rather not install anything, `PYTHONPATH=src python -m pra.cli ...`
+does the same thing.
 
 **No API key required.** Without one the report renders with rule-based
 commentary and every number is identical — the key only changes who writes the
