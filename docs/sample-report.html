@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio Risk Review — Jordan Reyes</title>
+<style>
+  /* Restrained, print-first styling. A client document, not a dashboard. */
+  :root {
+    --ink:      #1a1d23;
+    --muted:    #5c6370;
+    --line:     #d8dce3;
+    --bg-soft:  #f6f7f9;
+    --accent:   #1f4e79;
+    --high:     #a4262c;
+    --moderate: #9a6700;
+    --low:      #4a5568;
+    --pos:      #1a7f4b;
+    --neg:      #a4262c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 28px 48px;
+    font: 14px/1.5 "Segoe UI", -apple-system, Helvetica, Arial, sans-serif;
+    color: var(--ink); background: #fff;
+    max-width: 1000px; margin-inline: auto;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  h1 { font-size: 21px; margin: 0 0 2px; letter-spacing: -.2px; }
+  h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--muted); margin: 28px 0 10px;
+    border-bottom: 1px solid var(--line); padding-bottom: 5px;
+  }
+  .sub { color: var(--muted); font-size: 13px; }
+  header { border-bottom: 2px solid var(--accent); padding-bottom: 14px; }
+  .hdr-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+  .hdr-meta { text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+  /* Summary tiles */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 18px; }
+  .tile { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 5px; padding: 11px 13px; }
+  .tile .label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .tile .value { font-size: 19px; font-weight: 600; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .tile .note  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Wide tables scroll inside their own container so the page body never
+     scrolls sideways on a narrow screen or a phone. */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-scroll table { min-width: 640px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); font-weight: 600; padding: 5px 8px; border-bottom: 1px solid var(--line);
+  }
+  td { padding: 6px 8px; border-bottom: 1px solid #eef0f3; font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: none; }
+  .num { text-align: right; }
+  .pos { color: var(--pos); }
+  .neg { color: var(--neg); }
+  .dim { color: var(--muted); }
+  tfoot td { font-weight: 600; border-top: 1.5px solid var(--line); border-bottom: none; padding-top: 8px; }
+
+  /* Allocation bars */
+  .bar-wrap { position: relative; height: 15px; background: #eef0f3; border-radius: 2px; min-width: 130px; }
+  .bar { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 2px; opacity: .85; }
+  .target-tick { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+
+  /* Flags */
+  .flag { border-left: 3px solid var(--low); background: var(--bg-soft); padding: 9px 13px; margin-bottom: 7px; border-radius: 0 4px 4px 0; }
+  .flag.high     { border-left-color: var(--high); }
+  .flag.moderate { border-left-color: var(--moderate); }
+  .flag-head { display: flex; gap: 9px; align-items: baseline; margin-bottom: 2px; }
+  .sev {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; font-weight: 700;
+    padding: 1px 6px; border-radius: 3px; background: #e7e9ed; color: var(--low);
+  }
+  .sev.high     { background: #f7e4e5; color: var(--high); }
+  .sev.moderate { background: #f9efd8; color: var(--moderate); }
+  .flag-subject { font-weight: 600; }
+  .flag-msg { font-size: 12.5px; color: #333941; }
+
+  .commentary { background: #fbfcfd; border: 1px solid var(--line); border-radius: 5px; padding: 15px 18px; }
+  .commentary p { margin: 0 0 10px; }
+  .commentary p:last-child { margin-bottom: 0; }
+  .commentary h3 { font-size: 13px; margin: 14px 0 5px; }
+  .commentary h3:first-child { margin-top: 0; }
+
+  .badge {
+    display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: .07em;
+    padding: 2px 7px; border-radius: 3px; background: #e7e9ed; color: var(--muted); font-weight: 600;
+  }
+  .badge.ai { background: #e3edf7; color: var(--accent); }
+  .badge.flagged { background: #f9efd8; color: var(--moderate); }
+
+  .notice { border: 1px solid var(--moderate); background: #fdf8ec; border-radius: 4px; padding: 10px 13px; font-size: 12.5px; margin-bottom: 12px; }
+  .warnings { font-size: 12px; color: var(--muted); }
+  .warnings li { margin-bottom: 3px; }
+
+  footer { margin-top: 34px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 10.5px; line-height: 1.55; color: var(--muted); }
+  footer p { margin: 0 0 7px; }
+
+  /* Print: US Letter, avoid splitting a section across a page break. */
+  @page { size: letter; margin: 0.55in; }
+  @media print {
+    body { padding: 0; max-width: none; font-size: 11.5px; }
+    h2 { margin-top: 16px; }
+    .tiles { gap: 7px; }
+    .tile .value { font-size: 16px; }
+    section, .flag, table { break-inside: avoid; }
+    .table-scroll { overflow-x: visible; }
+    .table-scroll table { min-width: 0; }
+    .no-print { display: none; }
+  }
+  @media (max-width: 720px) {
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .hdr-row { flex-direction: column; }
+    .hdr-meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-row">
+    <div>
+      <h1>Portfolio Risk Review</h1>
+      <div class="sub">
+        Jordan Reyes &middot; Age 41 &middot; 22-year horizon      </div>
+    </div>
+    <div class="hdr-meta">
+      Prepared July 21, 2026<br>
+      Target: <strong>Balanced Growth</strong><br>
+      Benchmark: S&amp;P 500
+    </div>
+  </div>
+</header>
+
+<div class="tiles">
+  <div class="tile">
+    <div class="label">Portfolio Value</div>
+    <div class="value">$1,388,867</div>
+    <div class="note">8 positions</div>
+  </div>
+  <div class="tile">
+    <div class="label">Unrealized Gain</div>
+    <div class="value pos">
+      $854,482
+    </div>
+    <div class="note">159.9% on cost</div>
+  </div>
+  <div class="tile">
+    <div class="label">Volatility (ann.)</div>
+    <div class="value">27.3%</div>
+    <div class="note">S&amp;P 500: 15.0%</div>
+  </div>
+  <div class="tile">
+    <div class="label">Max Drawdown</div>
+    <div class="value neg">-24.3%</div>
+    <div class="note">S&amp;P 500: -18.9%</div>
+  </div>
+</div>
+
+<div class="notice" style="margin-top:16px">Senior software engineer. Employer stock accumulated through RSU vests since 2019. Wants to diversify but is anxious about the tax bill.</div>
+
+<!-- ALLOCATION -->
+<section>
+  <h2>Allocation vs. Target</h2>
+  <div class="table-scroll">
+<table>
+    <thead>
+      <tr>
+        <th>Asset Class</th>
+        <th class="num">Current</th>
+        <th class="num">Target</th>
+        <th class="num">Drift</th>
+        <th style="width:170px">Current vs. target</th>
+        <th class="num">Dollar Gap</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Equity</strong></td>
+        <td class="num">91.4%</td>
+        <td class="num dim">60.0%</td>
+        <td class="num neg">
+          +31.4%
+        </td>
+        <td>
+          <div class="bar-wrap">
+            <div class="bar" style="width: 91.4%"></div>
+            <div class="target-tick" style="left: 60.0%"></div>
+          </div>
+        </td>
+        <td class="num">+$436,587</td>
+      </tr>
+      <tr>
+        <td><strong>Fixed Income</strong></td>
+        <td class="num">6.5%</td>
+        <td class="num dim">35.0%</td>
+        <td class="num neg">
+          -28.5%
+        </td>
+        <td>
+          <div class="bar-wrap">
+            <div class="bar" style="width: 6.5%"></div>
+            <div class="target-tick" style="left: 35.0%"></div>
+          </div>
+        </td>
+        <td class="num">-$395,144</td>
+      </tr>
+      <tr>
+        <td><strong>Cash</strong></td>
+        <td class="num">2.0%</td>
+        <td class="num dim">5.0%</td>
+        <td class="num dim">
+          -3.0%
+        </td>
+        <td>
+          <div class="bar-wrap">
+            <div class="bar" style="width: 2.0%"></div>
+            <div class="target-tick" style="left: 5.0%"></div>
+          </div>
+        </td>
+        <td class="num">-$41,443</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+  <p class="sub" style="font-size:11.5px;margin-top:7px">
+    Bar shows current weight; the vertical marker is the Balanced Growth target.
+    Positive drift is overweight. Drift under 3 percentage points is treated as within tolerance.
+  </p>
+</section>
+
+<!-- CONCENTRATION -->
+<section>
+  <h2>Concentration</h2>
+    <div class="flag high">
+      <div class="flag-head">
+        <span class="sev high">high</span>
+        <span class="flag-subject">Technology</span>
+        <span class="dim" style="font-size:12px">64.9% of portfolio</span>
+      </div>
+      <div class="flag-msg">64.9% of the portfolio sits in Technology, above the 25% guideline. Sector-wide declines would affect a large share of the portfolio at once.</div>
+    </div>
+    <div class="flag high">
+      <div class="flag-head">
+        <span class="sev high">high</span>
+        <span class="flag-subject">NVDA</span>
+        <span class="dim" style="font-size:12px">47.0% of portfolio</span>
+      </div>
+      <div class="flag-msg">NVDA represents 47.0% of the portfolio and is employer stock. Salary, benefits, and this position all depend on the same company, so a downturn there affects income and net worth at the same time.</div>
+    </div>
+    <div class="flag high">
+      <div class="flag-head">
+        <span class="sev high">high</span>
+        <span class="flag-subject">VOO</span>
+        <span class="dim" style="font-size:12px">26.2% of portfolio</span>
+      </div>
+      <div class="flag-msg">VOO represents 26.2% of the portfolio, above the 10% single-position guideline.</div>
+    </div>
+    <div class="flag moderate">
+      <div class="flag-head">
+        <span class="sev moderate">moderate</span>
+        <span class="flag-subject">Top 5 holdings</span>
+        <span class="dim" style="font-size:12px">92.8% of portfolio</span>
+      </div>
+      <div class="flag-msg">The five largest holdings account for 92.8% of the portfolio. Diversification across the remaining positions has limited effect on overall risk at this level.</div>
+    </div>
+    <div class="flag moderate">
+      <div class="flag-head">
+        <span class="sev moderate">moderate</span>
+        <span class="flag-subject">NVDA</span>
+        <span class="dim" style="font-size:12px">50.0% of portfolio</span>
+      </div>
+      <div class="flag-msg">True exposure to NVDA is approximately 50.0% once fund holdings are counted: 47.0% held directly plus about 3.0% held indirectly through QQQ, VOO, VTI. The position line alone understates it.</div>
+    </div>
+  <p class="sub" style="font-size:11.5px;margin-top:9px">
+    Top five holdings: 92.8% of the portfolio.
+    Effective number of holdings: 3.3
+    (across 8 positions) &mdash; a diversification measure that
+    weights by position size, so a portfolio dominated by one holding scores low regardless of how
+    many line items it contains.
+  </p>
+</section>
+
+<!-- RISK -->
+<section>
+  <h2>Risk &amp; Return &mdash; 3.0 Years</h2>
+  <div class="table-scroll">
+<table>
+    <thead>
+      <tr><th>Measure</th><th class="num">Portfolio</th><th class="num">S&amp;P 500</th><th>What it means</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Annualized volatility</td>
+        <td class="num">27.3%</td>
+        <td class="num dim">15.0%</td>
+        <td class="dim">Typical size of annual swings, up or down.</td>
+      </tr>
+      <tr>
+        <td>Maximum drawdown</td>
+        <td class="num neg">-24.3%</td>
+        <td class="num dim">-18.9%</td>
+        <td class="dim">
+          Worst peak-to-trough decline in the period,
+          Jan 2025 to Apr 2025.
+        </td>
+      </tr>
+      <tr>
+        <td>Annualized return</td>
+        <td class="num pos">41.7%</td>
+        <td class="num dim">18.3%</td>
+        <td class="dim">Compound annual growth of the current allocation.</td>
+      </tr>
+      <tr>
+        <td>Sharpe ratio</td>
+        <td class="num">1.28</td>
+        <td class="num dim">&mdash;</td>
+        <td class="dim">Return earned per unit of volatility, above the 3.73% risk-free rate.</td>
+      </tr>
+      <tr>
+        <td>Beta vs. S&amp;P 500</td>
+        <td class="num">1.45</td>
+        <td class="num dim">1.00</td>
+        <td class="dim">Moves about 1.45% for each 1% move in the index.</td>
+      </tr>
+      <tr>
+        <td>Correlation</td>
+        <td class="num">0.80</td>
+        <td class="num dim">1.00</td>
+        <td class="dim">How closely the portfolio tracks the index, ignoring magnitude.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</section>
+
+<!-- POSITIONS -->
+<section>
+  <h2>Holdings</h2>
+  <div class="table-scroll">
+<table>
+    <thead>
+      <tr>
+        <th>Ticker</th><th>Name</th><th>Class</th>
+        <th class="num">Value</th><th class="num">Weight</th>
+        <th class="num">Cost Basis</th><th class="num">Unrealized</th><th class="num">Return</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>NVDA</strong> <span class="badge">employer</span></td>
+        <td class="dim" style="max-width:200px">NVIDIA Corporation</td>
+        <td class="dim">Equity</td>
+        <td class="num">$652,963</td>
+        <td class="num">47.0%</td>
+        <td class="num dim">$77,580</td>
+        <td class="num pos">+$575,383</td>
+        <td class="num pos">+741.7%</td>
+      </tr>
+      <tr>
+        <td><strong>VOO</strong></td>
+        <td class="dim" style="max-width:200px">Vanguard S&amp;P 500 ETF</td>
+        <td class="dim">Equity</td>
+        <td class="num">$364,571</td>
+        <td class="num">26.2%</td>
+        <td class="num dim">$192,140</td>
+        <td class="num pos">+$172,431</td>
+        <td class="num pos">+89.7%</td>
+      </tr>
+      <tr>
+        <td><strong>VTI</strong></td>
+        <td class="dim" style="max-width:200px">Vanguard Total Stock Market ETF</td>
+        <td class="dim">Equity</td>
+        <td class="num">$110,835</td>
+        <td class="num">8.0%</td>
+        <td class="num dim">$61,530</td>
+        <td class="num pos">+$49,305</td>
+        <td class="num pos">+80.1%</td>
+      </tr>
+      <tr>
+        <td><strong>QQQ</strong></td>
+        <td class="dim" style="max-width:200px">Invesco QQQ Trust</td>
+        <td class="dim">Equity</td>
+        <td class="num">$99,256</td>
+        <td class="num">7.1%</td>
+        <td class="num dim">$46,585</td>
+        <td class="num pos">+$52,671</td>
+        <td class="num pos">+113.1%</td>
+      </tr>
+      <tr>
+        <td><strong>BND</strong></td>
+        <td class="dim" style="max-width:200px">Vanguard Total Bond Market ETF</td>
+        <td class="dim">Fixed Income</td>
+        <td class="num">$61,638</td>
+        <td class="num">4.4%</td>
+        <td class="num dim">$72,420</td>
+        <td class="num neg">-$10,782</td>
+        <td class="num neg">-14.9%</td>
+      </tr>
+      <tr>
+        <td><strong>VEA</strong></td>
+        <td class="dim" style="max-width:200px">Vanguard FTSE Developed Markets...</td>
+        <td class="dim">Equity</td>
+        <td class="num">$42,282</td>
+        <td class="num">3.0%</td>
+        <td class="num dim">$27,180</td>
+        <td class="num pos">+$15,102</td>
+        <td class="num pos">+55.6%</td>
+      </tr>
+      <tr>
+        <td><strong>AGG</strong></td>
+        <td class="dim" style="max-width:200px">iShares Core U.S. Aggregate Bon</td>
+        <td class="dim">Fixed Income</td>
+        <td class="num">$29,322</td>
+        <td class="num">2.1%</td>
+        <td class="num dim">$28,950</td>
+        <td class="num pos">+$372</td>
+        <td class="num pos">+1.3%</td>
+      </tr>
+      <tr>
+        <td><strong>CASH</strong></td>
+        <td class="dim" style="max-width:200px">Cash</td>
+        <td class="dim">Cash</td>
+        <td class="num">$28,000</td>
+        <td class="num">2.0%</td>
+        <td class="num dim">$28,000</td>
+        <td class="num pos">+$0</td>
+        <td class="num pos">+0.0%</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3">Total</td>
+        <td class="num">$1,388,867</td>
+        <td class="num">100.0%</td>
+        <td class="num">$534,385</td>
+        <td class="num pos">+$854,482</td>
+        <td class="num">+159.9%</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+  <p class="sub" style="font-size:11.5px;margin-top:7px">
+    Weighted average expense ratio across funds with published data:
+    <strong>0.051%</strong>
+    ($709 per year at current value).
+  </p>
+</section>
+
+<!-- REBALANCING -->
+<section>
+  <h2>Rebalancing &mdash; Drift and Tax Impact</h2>
+    <div class="table-scroll">
+<table>
+      <thead>
+        <tr>
+          <th>Reduce</th><th>Account</th>
+          <th class="num">Amount</th><th class="num">Shares</th>
+          <th class="num">Gain Realized</th><th>Term</th><th class="num">Est. Tax</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>NVDA</strong></td>
+          <td class="dim">
+            Taxable
+          </td>
+          <td class="num">$93,280</td>
+          <td class="num dim">450.0</td>
+          <td class="num pos">+$71,590</td>
+          <td class="dim">Long-term</td>
+          <td class="num">$10,739</td>
+        </tr>
+        <tr>
+          <td><strong>NVDA</strong></td>
+          <td class="dim">
+            Taxable
+          </td>
+          <td class="num">$186,561</td>
+          <td class="num dim">900.0</td>
+          <td class="num pos">+$157,401</td>
+          <td class="dim">Long-term</td>
+          <td class="num">$23,610</td>
+        </tr>
+        <tr>
+          <td><strong>NVDA</strong></td>
+          <td class="dim">
+            Taxable
+          </td>
+          <td class="num">$156,746</td>
+          <td class="num dim">756.2</td>
+          <td class="num pos">+$145,517</td>
+          <td class="dim">Long-term</td>
+          <td class="num">$21,827</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2">Total</td>
+          <td class="num">$436,587</td>
+          <td></td>
+          <td class="num">+$374,508</td>
+          <td></td>
+          <td class="num">$56,176</td>
+        </tr>
+      </tfoot>
+    </table>
+</div>
+
+    <div class="tiles" style="margin-top:13px; grid-template-columns: repeat(3, 1fr);">
+      <div class="tile">
+        <div class="label">Sourced Tax-Free</div>
+        <div class="value">$0</div>
+        <div class="note">from sheltered accounts</div>
+      </div>
+      <div class="tile">
+        <div class="label">Estimated Tax Cost</div>
+        <div class="value">$56,176</div>
+        <div class="note">12.87% of turnover</div>
+      </div>
+      <div class="tile">
+        <div class="label">Gain Left Deferred</div>
+        <div class="value">$479,974</div>
+        <div class="note">unrealized after this plan</div>
+      </div>
+    </div>
+
+    <p class="sub" style="margin-top:11px">
+      Proceeds would be directed to:
+<strong>Fixed Income</strong> $395,144.
+    </p>
+
+</section>
+
+<!-- COMMENTARY -->
+<section>
+  <h2>
+    Commentary
+      <span class="badge">rule-based</span>
+  </h2>
+
+
+  <div class="commentary"><p>This review covers a $1,388,867 portfolio held across 8 positions, measured against a Balanced Growth target allocation. The stated time horizon is 22 years.</p>
+<h3>Primary observation</h3>
+<p>NVDA represents 47.0% of the portfolio and is employer stock. Salary, benefits, and this position all depend on the same company, so a downturn there affects income and net worth at the same time.</p>
+<p>For context, the five largest holdings account for 92.8% of the portfolio, and the effective number of holdings is 3.3 — meaning the portfolio carries the diversification of roughly that many equally sized positions, despite containing 8.</p>
+<h3>Risk profile</h3>
+<p>The portfolio has been materially more volatile than the broad market — 27.3% annualized against 15.0% for the S&amp;P 500. Its beta of 1.45 indicates it has historically moved about 1.45% for each 1% move in the index, with a correlation of 0.80. The Sharpe ratio over the period was 1.28, measuring return earned per unit of volatility above the 3.73% risk-free rate.</p>
+<p>Fixed income represents 6.5% of the portfolio against a 35.0% target. Fixed income is the component of the Balanced Growth allocation intended to cushion equity declines; at the current weight that cushion is largely absent.</p>
+<h3>Closing the gap</h3>
+<p>Moving to the Balanced Growth target would involve reducing positions by approximately $436,587. All of it would come from taxable accounts, with an estimated tax cost of $56,176, or roughly 12.9% of the amount moved.</p>
+<p>That tax cost is real and worth weighing deliberately. It is also the price of reducing an exposure that currently drives most of the portfolio&#x27;s risk. Approaches that spread the change over multiple tax years, direct new contributions toward the underweight asset classes, or pair sales with realized losses elsewhere can reduce the cost of getting to the same destination.</p>
+<p>This plan would leave $479,974 of unrealized gain untouched, deferring tax on that portion.</p></div>
+</section>
+
+
+<footer>
+  <p><strong>Methodology.</strong> Risk statistics are computed from 750 daily observations (3.0 years) by applying the portfolio&#39;s current weights across the full period, rebalanced daily. This describes how the current allocation would have behaved; it is not the account&#39;s realized performance, which would require transaction history.</p>
+  <p><strong>Tax assumptions.</strong> Tax estimates assume a 15% long-term and 32% short-term federal rate. No state tax, net investment income tax, or bracket detail is modeled.</p>
+  <p><strong>Data.</strong> Prices and security data from Yahoo Finance via yfinance,
+     retrieved July 21, 2026. Price history covers Jul 2023 to Jul 2026.
+     Risk-free rate: 3.73% (13-week Treasury bill).</p>
+  <p><strong>Disclaimer.</strong> This report is the output of a personal educational software project. It is not investment advice, not a recommendation to buy or sell any security, and not a solicitation. It was not prepared by a registered investment adviser or broker-dealer acting in that capacity. Figures are derived from third-party market data believed to be reliable but not guaranteed, and are illustrative only. Past performance does not indicate future results. Tax figures are rough estimates using assumed federal rates; they exclude state taxes, the net investment income tax, and individual bracket detail. Consult a qualified adviser and tax professional before acting on any information here.</p>
+  <p style="margin-top:9px">
+    Generated by portfolio-risk-agent v0.1.0 &middot;
+    All figures computed programmatically; narrative text is constrained to those figures.
+  </p>
+</footer>
+
+</body>
+</html>
