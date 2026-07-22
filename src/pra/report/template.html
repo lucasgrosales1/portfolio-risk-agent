@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio Risk Review — {{ client_name }}</title>
+<style>
+  /* Restrained, print-first styling. A client document, not a dashboard. */
+  :root {
+    --ink:      #1a1d23;
+    --muted:    #5c6370;
+    --line:     #d8dce3;
+    --bg-soft:  #f6f7f9;
+    --accent:   #1f4e79;
+    --high:     #a4262c;
+    --moderate: #9a6700;
+    --low:      #4a5568;
+    --pos:      #1a7f4b;
+    --neg:      #a4262c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 28px 48px;
+    font: 14px/1.5 "Segoe UI", -apple-system, Helvetica, Arial, sans-serif;
+    color: var(--ink); background: #fff;
+    max-width: 1000px; margin-inline: auto;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  h1 { font-size: 21px; margin: 0 0 2px; letter-spacing: -.2px; }
+  h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--muted); margin: 28px 0 10px;
+    border-bottom: 1px solid var(--line); padding-bottom: 5px;
+  }
+  .sub { color: var(--muted); font-size: 13px; }
+  header { border-bottom: 2px solid var(--accent); padding-bottom: 14px; }
+  .hdr-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+  .hdr-meta { text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+  /* Summary tiles */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 18px; }
+  .tile { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 5px; padding: 11px 13px; }
+  .tile .label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .tile .value { font-size: 19px; font-weight: 600; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .tile .note  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Wide tables scroll inside their own container so the page body never
+     scrolls sideways on a narrow screen or a phone. */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-scroll table { min-width: 640px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); font-weight: 600; padding: 5px 8px; border-bottom: 1px solid var(--line);
+  }
+  td { padding: 6px 8px; border-bottom: 1px solid #eef0f3; font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: none; }
+  .num { text-align: right; }
+  .pos { color: var(--pos); }
+  .neg { color: var(--neg); }
+  .dim { color: var(--muted); }
+  tfoot td { font-weight: 600; border-top: 1.5px solid var(--line); border-bottom: none; padding-top: 8px; }
+
+  /* Allocation bars */
+  .bar-wrap { position: relative; height: 15px; background: #eef0f3; border-radius: 2px; min-width: 130px; }
+  .bar { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 2px; opacity: .85; }
+  .target-tick { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+
+  /* Flags */
+  .flag { border-left: 3px solid var(--low); background: var(--bg-soft); padding: 9px 13px; margin-bottom: 7px; border-radius: 0 4px 4px 0; }
+  .flag.high     { border-left-color: var(--high); }
+  .flag.moderate { border-left-color: var(--moderate); }
+  .flag-head { display: flex; gap: 9px; align-items: baseline; margin-bottom: 2px; }
+  .sev {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; font-weight: 700;
+    padding: 1px 6px; border-radius: 3px; background: #e7e9ed; color: var(--low);
+  }
+  .sev.high     { background: #f7e4e5; color: var(--high); }
+  .sev.moderate { background: #f9efd8; color: var(--moderate); }
+  .flag-subject { font-weight: 600; }
+  .flag-msg { font-size: 12.5px; color: #333941; }
+
+  .commentary { background: #fbfcfd; border: 1px solid var(--line); border-radius: 5px; padding: 15px 18px; }
+  .commentary p { margin: 0 0 10px; }
+  .commentary p:last-child { margin-bottom: 0; }
+  .commentary h3 { font-size: 13px; margin: 14px 0 5px; }
+  .commentary h3:first-child { margin-top: 0; }
+
+  .badge {
+    display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: .07em;
+    padding: 2px 7px; border-radius: 3px; background: #e7e9ed; color: var(--muted); font-weight: 600;
+  }
+  .badge.ai { background: #e3edf7; color: var(--accent); }
+  .badge.flagged { background: #f9efd8; color: var(--moderate); }
+
+  .notice { border: 1px solid var(--moderate); background: #fdf8ec; border-radius: 4px; padding: 10px 13px; font-size: 12.5px; margin-bottom: 12px; }
+  .warnings { font-size: 12px; color: var(--muted); }
+  .warnings li { margin-bottom: 3px; }
+
+  footer { margin-top: 34px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 10.5px; line-height: 1.55; color: var(--muted); }
+  footer p { margin: 0 0 7px; }
+
+  /* Print: US Letter, avoid splitting a section across a page break. */
+  @page { size: letter; margin: 0.55in; }
+  @media print {
+    body { padding: 0; max-width: none; font-size: 11.5px; }
+    h2 { margin-top: 16px; }
+    .tiles { gap: 7px; }
+    .tile .value { font-size: 16px; }
+    section, .flag, table { break-inside: avoid; }
+    .table-scroll { overflow-x: visible; }
+    .table-scroll table { min-width: 0; }
+    .no-print { display: none; }
+  }
+  @media (max-width: 720px) {
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .hdr-row { flex-direction: column; }
+    .hdr-meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-row">
+    <div>
+      <h1>Portfolio Risk Review</h1>
+      <div class="sub">
+        {{ client_name }}{% if client_age %} &middot; Age {{ client_age }}{% endif %}
+        {%- if time_horizon %} &middot; {{ time_horizon }}-year horizon{% endif %}
+      </div>
+    </div>
+    <div class="hdr-meta">
+      Prepared {{ report_date }}<br>
+      Target: <strong>{{ model.name }}</strong><br>
+      Benchmark: {{ benchmark_name }}
+    </div>
+  </div>
+</header>
+
+<div class="tiles">
+  <div class="tile">
+    <div class="label">Portfolio Value</div>
+    <div class="value">{{ alloc.total_value | usd }}</div>
+    <div class="note">{{ alloc.positions | length }} positions</div>
+  </div>
+  <div class="tile">
+    <div class="label">Unrealized Gain</div>
+    <div class="value {{ 'pos' if alloc.total_unrealized_gain >= 0 else 'neg' }}">
+      {{ alloc.total_unrealized_gain | usd }}
+    </div>
+    <div class="note">{{ (alloc.total_unrealized_gain / alloc.total_cost_basis) | pct(1) }} on cost</div>
+  </div>
+  <div class="tile">
+    <div class="label">Volatility (ann.)</div>
+    <div class="value">{{ risk.annualized_volatility | pct(1) }}</div>
+    <div class="note">{{ benchmark_name }}: {{ risk.benchmark_volatility | pct(1) }}</div>
+  </div>
+  <div class="tile">
+    <div class="label">Max Drawdown</div>
+    <div class="value neg">{{ risk.max_drawdown | pct(1) }}</div>
+    <div class="note">{{ benchmark_name }}: {{ risk.benchmark_max_drawdown | pct(1) }}</div>
+  </div>
+</div>
+
+{% if notes %}
+<div class="notice" style="margin-top:16px">{{ notes }}</div>
+{% endif %}
+
+<!-- ALLOCATION -->
+<section>
+  <h2>Allocation vs. Target</h2>
+  <div class="table-scroll">
+<table>
+    <thead>
+      <tr>
+        <th>Asset Class</th>
+        <th class="num">Current</th>
+        <th class="num">Target</th>
+        <th class="num">Drift</th>
+        <th style="width:170px">Current vs. target</th>
+        <th class="num">Dollar Gap</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for d in plan.drifts %}
+      <tr>
+        <td><strong>{{ d.asset_class }}</strong></td>
+        <td class="num">{{ d.current_weight | pct(1) }}</td>
+        <td class="num dim">{{ d.target_weight | pct(1) }}</td>
+        <td class="num {{ 'neg' if d.drift|abs >= 0.03 else 'dim' }}">
+          {{ d.drift | signed_pct(1) }}
+        </td>
+        <td>
+          <div class="bar-wrap">
+            <div class="bar" style="width: {{ (d.current_weight * 100) | round(1) }}%"></div>
+            <div class="target-tick" style="left: {{ (d.target_weight * 100) | round(1) }}%"></div>
+          </div>
+        </td>
+        <td class="num">{{ d.dollar_gap | usd_signed }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+  <p class="sub" style="font-size:11.5px;margin-top:7px">
+    Bar shows current weight; the vertical marker is the {{ model.name }} target.
+    Positive drift is overweight. Drift under 3 percentage points is treated as within tolerance.
+  </p>
+</section>
+
+<!-- CONCENTRATION -->
+<section>
+  <h2>Concentration</h2>
+  {% if concentration.flags %}
+    {% for f in concentration.flags %}
+    <div class="flag {{ f.severity }}">
+      <div class="flag-head">
+        <span class="sev {{ f.severity }}">{{ f.severity }}</span>
+        <span class="flag-subject">{{ f.subject }}</span>
+        <span class="dim" style="font-size:12px">{{ f.weight | pct(1) }} of portfolio</span>
+      </div>
+      <div class="flag-msg">{{ f.message }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="sub">No positions, sectors, or look-through exposures exceed the concentration guidelines.</p>
+  {% endif %}
+  <p class="sub" style="font-size:11.5px;margin-top:9px">
+    Top five holdings: {{ concentration.top_five_weight | pct(1) }} of the portfolio.
+    Effective number of holdings: {{ concentration.effective_holdings | fixed(1) }}
+    (across {{ concentration.position_count }} positions) &mdash; a diversification measure that
+    weights by position size, so a portfolio dominated by one holding scores low regardless of how
+    many line items it contains.
+  </p>
+</section>
+
+<!-- RISK -->
+<section>
+  <h2>Risk &amp; Return &mdash; {{ risk.lookback_years | fixed(1) }} Years</h2>
+  <div class="table-scroll">
+<table>
+    <thead>
+      <tr><th>Measure</th><th class="num">Portfolio</th><th class="num">{{ benchmark_name }}</th><th>What it means</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Annualized volatility</td>
+        <td class="num">{{ risk.annualized_volatility | pct(1) }}</td>
+        <td class="num dim">{{ risk.benchmark_volatility | pct(1) }}</td>
+        <td class="dim">Typical size of annual swings, up or down.</td>
+      </tr>
+      <tr>
+        <td>Maximum drawdown</td>
+        <td class="num neg">{{ risk.max_drawdown | pct(1) }}</td>
+        <td class="num dim">{{ risk.benchmark_max_drawdown | pct(1) }}</td>
+        <td class="dim">
+          Worst peak-to-trough decline in the period{% if risk.max_drawdown_trough %},
+          {{ risk.max_drawdown_start.strftime('%b %Y') }} to {{ risk.max_drawdown_trough.strftime('%b %Y') }}{% endif %}.
+        </td>
+      </tr>
+      <tr>
+        <td>Annualized return</td>
+        <td class="num {{ 'pos' if risk.annualized_return >= 0 else 'neg' }}">{{ risk.annualized_return | pct(1) }}</td>
+        <td class="num dim">{{ risk.benchmark_annualized_return | pct(1) }}</td>
+        <td class="dim">Compound annual growth of the current allocation.</td>
+      </tr>
+      <tr>
+        <td>Sharpe ratio</td>
+        <td class="num">{{ risk.sharpe_ratio | fixed(2) }}</td>
+        <td class="num dim">&mdash;</td>
+        <td class="dim">Return earned per unit of volatility, above the {{ risk.risk_free_rate | pct(2) }} risk-free rate.</td>
+      </tr>
+      <tr>
+        <td>Beta vs. {{ benchmark_name }}</td>
+        <td class="num">{{ risk.beta | fixed(2) }}</td>
+        <td class="num dim">1.00</td>
+        <td class="dim">Moves about {{ risk.beta | fixed(2) }}% for each 1% move in the index.</td>
+      </tr>
+      <tr>
+        <td>Correlation</td>
+        <td class="num">{{ risk.correlation | fixed(2) }}</td>
+        <td class="num dim">1.00</td>
+        <td class="dim">How closely the portfolio tracks the index, ignoring magnitude.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</section>
+
+<!-- POSITIONS -->
+<section>
+  <h2>Holdings</h2>
+  <div class="table-scroll">
+<table>
+    <thead>
+      <tr>
+        <th>Ticker</th><th>Name</th><th>Class</th>
+        <th class="num">Value</th><th class="num">Weight</th>
+        <th class="num">Cost Basis</th><th class="num">Unrealized</th><th class="num">Return</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for p in alloc.positions %}
+      <tr>
+        <td><strong>{{ p.ticker }}</strong>{% if p.is_employer_stock %} <span class="badge">employer</span>{% endif %}</td>
+        <td class="dim" style="max-width:200px">{{ p.name | truncate(38) }}</td>
+        <td class="dim">{{ p.asset_class }}</td>
+        <td class="num">{{ p.market_value | usd }}</td>
+        <td class="num">{{ (p.market_value / alloc.total_value) | pct(1) }}</td>
+        <td class="num dim">{{ p.cost_basis | usd }}</td>
+        <td class="num {{ 'pos' if p.unrealized_gain >= 0 else 'neg' }}">{{ p.unrealized_gain | usd_signed }}</td>
+        <td class="num {{ 'pos' if p.gain_pct >= 0 else 'neg' }}">{{ p.gain_pct | signed_pct(1) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3">Total</td>
+        <td class="num">{{ alloc.total_value | usd }}</td>
+        <td class="num">100.0%</td>
+        <td class="num">{{ alloc.total_cost_basis | usd }}</td>
+        <td class="num {{ 'pos' if alloc.total_unrealized_gain >= 0 else 'neg' }}">{{ alloc.total_unrealized_gain | usd_signed }}</td>
+        <td class="num">{{ (alloc.total_unrealized_gain / alloc.total_cost_basis) | signed_pct(1) }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+  {% if alloc.weighted_expense_ratio is not none %}
+  <p class="sub" style="font-size:11.5px;margin-top:7px">
+    Weighted average expense ratio across funds with published data:
+    <strong>{{ alloc.weighted_expense_ratio | pct(3) }}</strong>
+    ({{ (alloc.weighted_expense_ratio * alloc.total_value) | usd }} per year at current value).
+  </p>
+  {% endif %}
+</section>
+
+<!-- REBALANCING -->
+<section>
+  <h2>Rebalancing &mdash; Drift and Tax Impact</h2>
+  {% if not plan.needs_rebalancing %}
+    <p class="sub">Every asset class is within 3 percentage points of the {{ model.name }} target. No trades indicated.</p>
+  {% else %}
+    <div class="table-scroll">
+<table>
+      <thead>
+        <tr>
+          <th>Reduce</th><th>Account</th>
+          <th class="num">Amount</th><th class="num">Shares</th>
+          <th class="num">Gain Realized</th><th>Term</th><th class="num">Est. Tax</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for leg in plan.sells %}
+        <tr>
+          <td><strong>{{ leg.ticker }}</strong></td>
+          <td class="dim">
+            {{ leg.account_type | title }}
+            {% if leg.is_sheltered %}<span class="badge">tax-sheltered</span>{% endif %}
+          </td>
+          <td class="num">{{ leg.dollars | usd }}</td>
+          <td class="num dim">{{ leg.shares | fixed(1) }}</td>
+          <td class="num {{ 'pos' if leg.realized_gain >= 0 else 'neg' }}">{{ leg.realized_gain | usd_signed }}</td>
+          <td class="dim">{{ 'Long-term' if leg.is_long_term else 'Short-term' }}</td>
+          <td class="num">{{ leg.estimated_tax | usd }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2">Total</td>
+          <td class="num">{{ plan.total_turnover | usd }}</td>
+          <td></td>
+          <td class="num">{{ plan.sells | sum(attribute='realized_gain') | usd_signed }}</td>
+          <td></td>
+          <td class="num">{{ plan.total_tax_cost | usd }}</td>
+        </tr>
+      </tfoot>
+    </table>
+</div>
+
+    <div class="tiles" style="margin-top:13px; grid-template-columns: repeat(3, 1fr);">
+      <div class="tile">
+        <div class="label">Sourced Tax-Free</div>
+        <div class="value">{{ plan.tax_free_proceeds | usd }}</div>
+        <div class="note">from sheltered accounts</div>
+      </div>
+      <div class="tile">
+        <div class="label">Estimated Tax Cost</div>
+        <div class="value">{{ plan.total_tax_cost | usd }}</div>
+        <div class="note">{{ plan.tax_cost_pct_of_turnover | pct(2) }} of turnover</div>
+      </div>
+      <div class="tile">
+        <div class="label">Gain Left Deferred</div>
+        <div class="value">{{ plan.unrealized_gain_deferred | usd }}</div>
+        <div class="note">unrealized after this plan</div>
+      </div>
+    </div>
+
+    {% if plan.buys %}
+    <p class="sub" style="margin-top:11px">
+      Proceeds would be directed to:
+      {% for cls, amt in plan.buys.items() %}<strong>{{ cls }}</strong> {{ amt | usd }}{% if not loop.last %}, {% endif %}{% endfor %}.
+    </p>
+    {% endif %}
+
+    {% if plan.notes %}
+    <ul class="sub" style="font-size:12px;margin-top:9px;padding-left:18px">
+      {% for n in plan.notes %}<li>{{ n }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+  {% endif %}
+</section>
+
+<!-- COMMENTARY -->
+<section>
+  <h2>
+    Commentary
+    {% if narrative.source == 'ai' %}
+      <span class="badge ai">AI-generated &middot; compliance reviewed</span>
+    {% else %}
+      <span class="badge">rule-based</span>
+    {% endif %}
+    {% if narrative.compliance_flags %}<span class="badge flagged">flagged</span>{% endif %}
+  </h2>
+
+  {% if narrative.compliance_flags %}
+  <div class="notice">
+    <strong>Compliance review flagged this commentary.</strong> It is shown unedited so the
+    issue is visible rather than silently suppressed.
+    <ul style="margin:6px 0 0;padding-left:18px">
+      {% for f in narrative.compliance_flags %}<li>{{ f }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="commentary">{{ narrative.html | safe }}</div>
+</section>
+
+{% if warnings %}
+<section>
+  <h2>Data Notes</h2>
+  <ul class="warnings" style="padding-left:18px">
+    {% for w in warnings %}<li>{{ w }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<footer>
+  <p><strong>Methodology.</strong> {{ methodology_note }}</p>
+  <p><strong>Tax assumptions.</strong> {{ tax_note }}</p>
+  <p><strong>Data.</strong> Prices and security data from Yahoo Finance via yfinance,
+     retrieved {{ report_date }}. Price history covers {{ data_start }} to {{ data_end }}.
+     Risk-free rate: {{ risk.risk_free_rate | pct(2) }}{% if not risk_free_is_live %} (assumed &mdash; live rate unavailable){% else %} (13-week Treasury bill){% endif %}.</p>
+  <p><strong>Disclaimer.</strong> {{ disclaimer }}</p>
+  <p style="margin-top:9px">
+    Generated by portfolio-risk-agent v{{ version }} &middot;
+    All figures computed programmatically; narrative text is constrained to those figures.
+  </p>
+</footer>
+
+</body>
+</html>

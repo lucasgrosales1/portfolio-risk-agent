@@ -25,6 +25,20 @@ TOP_FIVE_THRESHOLD = 0.50             # top five holdings above half the portfol
 
 SEVERITY_ORDER = {"high": 0, "moderate": 1, "low": 2}
 
+# Which kind of concentration leads the client conversation, when several are
+# flagged at the same severity. Employer stock outranks a large sector weight
+# even when the sector number is bigger, because the sector concentration is
+# usually a *consequence* of the single position — and because employer stock
+# correlates the client's portfolio with their paycheck, which no amount of
+# sector diversification fixes.
+CATEGORY_PRIORITY = {
+    "employer_stock": 0,
+    "overlap": 1,
+    "position": 2,
+    "sector": 3,
+    "top_holdings": 4,
+}
+
 
 @dataclass(frozen=True)
 class ConcentrationFlag:
@@ -50,12 +64,21 @@ class ConcentrationResult:
 
     @property
     def headline(self) -> ConcentrationFlag | None:
-        """The single flag most worth leading a client conversation with."""
+        """The single flag most worth leading a client conversation with.
+
+        Severity first, then category priority, then size — so a high-severity
+        employer-stock flag leads over a high-severity sector flag even when the
+        sector's percentage is larger.
+        """
         if not self.flags:
             return None
         return sorted(
             self.flags,
-            key=lambda f: (SEVERITY_ORDER.get(f.severity, 9), -f.weight),
+            key=lambda f: (
+                SEVERITY_ORDER.get(f.severity, 9),
+                CATEGORY_PRIORITY.get(f.category, 9),
+                -f.weight,
+            ),
         )[0]
 
 
