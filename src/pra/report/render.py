@@ -81,7 +81,7 @@ def build_environment() -> Environment:
     return env
 
 
-def render_report(
+def render_html(
     portfolio: Portfolio,
     allocation: AllocationResult,
     risk: RiskMetrics,
@@ -90,9 +90,11 @@ def render_report(
     model: ModelPortfolio,
     narrative: Narrative,
     market: MarketData,
-    output_path: str | Path,
-) -> Path:
-    """Render the report and write it to `output_path`."""
+) -> str:
+    """Render the report to an HTML string (no file written).
+
+    The Streamlit app embeds this directly; the CLI writes it to disk.
+    """
     env = build_environment()
     template = env.get_template("template.html")
 
@@ -124,7 +126,24 @@ def render_report(
         ),
         version=__version__,
     )
+    return html
 
+
+def render_report(
+    portfolio: Portfolio,
+    allocation: AllocationResult,
+    risk: RiskMetrics,
+    concentration: ConcentrationResult,
+    plan: RebalanceResult,
+    model: ModelPortfolio,
+    narrative: Narrative,
+    market: MarketData,
+    output_path: str | Path,
+) -> Path:
+    """Render the report and write it to `output_path`."""
+    html = render_html(
+        portfolio, allocation, risk, concentration, plan, model, narrative, market
+    )
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(html, encoding="utf-8")

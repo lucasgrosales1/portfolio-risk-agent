@@ -155,11 +155,22 @@ def load_portfolio(path: str | Path) -> Portfolio:
     path = Path(path)
     if not path.exists():
         raise PortfolioError(f"Portfolio file not found: {path}")
+    return parse_portfolio(
+        path.read_text(encoding="utf-8"),
+        default_name=path.stem.replace("_", " ").title(),
+    )
 
+
+def parse_portfolio(text: str, default_name: str = "Portfolio") -> Portfolio:
+    """Parse portfolio CSV text. Used by load_portfolio and by uploaded files.
+
+    Same format as load_portfolio; `default_name` is the client name used when
+    the text has no `# client_name:` metadata line.
+    """
     meta: dict[str, str] = {}
     data_lines: list[str] = []
 
-    for raw in path.read_text(encoding="utf-8").splitlines():
+    for raw in text.splitlines():
         stripped = raw.strip()
         if stripped.startswith("#"):
             # Metadata comment; ignore anything that isn't `key: value`.
@@ -172,17 +183,17 @@ def load_portfolio(path: str | Path) -> Portfolio:
             data_lines.append(raw)
 
     if not data_lines:
-        raise PortfolioError(f"{path} contains no data rows.")
+        raise PortfolioError("Portfolio contains no data rows.")
 
     reader = csv.DictReader(data_lines)
     if reader.fieldnames is None:
-        raise PortfolioError(f"{path} has no header row.")
+        raise PortfolioError("Portfolio has no header row.")
 
     columns = {name.strip().lower() for name in reader.fieldnames}
     missing = REQUIRED_COLUMNS - columns
     if missing:
         raise PortfolioError(
-            f"{path} is missing required column(s): {', '.join(sorted(missing))}. "
+            f"Missing required column(s): {', '.join(sorted(missing))}. "
             f"Found: {', '.join(sorted(columns))}"
         )
 
@@ -215,7 +226,7 @@ def load_portfolio(path: str | Path) -> Portfolio:
         )
 
     if not holdings:
-        raise PortfolioError(f"{path} produced no holdings.")
+        raise PortfolioError("Portfolio produced no holdings.")
 
     def _int_meta(key: str) -> int | None:
         value = meta.get(key)
@@ -228,7 +239,7 @@ def load_portfolio(path: str | Path) -> Portfolio:
 
     return Portfolio(
         holdings=holdings,
-        client_name=meta.get("client_name", path.stem.replace("_", " ").title()),
+        client_name=meta.get("client_name", default_name),
         client_age=_int_meta("client_age"),
         time_horizon_years=_int_meta("time_horizon_years"),
         notes=meta.get("notes", ""),
