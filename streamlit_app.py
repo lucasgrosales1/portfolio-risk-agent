@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 
 from pra import __version__
@@ -48,12 +49,51 @@ st.set_page_config(
 
 
 # --------------------------------------------------------------------------
-# Header + mode selector (the "option at the top of the page")
+# Styling — a modest, robust CSS pass. Targets Streamlit's stable test-ids
+# plus our own classes, so it survives version bumps.
 # --------------------------------------------------------------------------
-st.title("Advisor Workbench")
-st.caption(
-    "Portfolio risk analysis and suitability-driven planning. "
-    "Educational project — not investment advice. All sample data is synthetic."
+st.markdown(
+    """
+    <style>
+      .block-container { padding-top: 2.2rem; padding-bottom: 3rem; max-width: 1120px; }
+      h1, h2, h3 { letter-spacing: -0.01em; }
+
+      /* Header banner */
+      .aw-header {
+        background: linear-gradient(135deg, #1f4e79 0%, #2d6da3 100%);
+        color: #fff; border-radius: 12px; padding: 22px 26px; margin-bottom: 8px;
+      }
+      .aw-header h1 { margin: 0; font-size: 26px; font-weight: 700; color: #fff; }
+      .aw-header p  { margin: 6px 0 0; font-size: 14px; opacity: .92; }
+
+      /* Metric cards */
+      [data-testid="stMetric"] {
+        background: #f6f7f9; border: 1px solid #e3e6eb;
+        border-radius: 10px; padding: 12px 16px;
+      }
+      [data-testid="stMetricValue"] { font-size: 22px; }
+
+      /* Bordered containers as cards */
+      [data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 12px;
+      }
+
+      /* Section rules a touch lighter */
+      hr { margin: 1.4rem 0; opacity: .5; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <div class="aw-header">
+      <h1>📊 Advisor Workbench</h1>
+      <p>Portfolio risk analysis and suitability-driven planning &middot;
+         Educational project — not investment advice &middot; All data synthetic</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 mode = st.radio(
@@ -389,6 +429,38 @@ def render_plan_mode() -> None:
                 f"{c.raw:.0f}/100 × weight {c.weight:.0%} = "
                 f"{c.contribution:.1f} pts"
             )
+
+    # --- Sequence-of-returns stress test -----------------------------------
+    stress = rec.stress
+    if stress.applicable:
+        st.divider()
+        st.markdown("### Sequence-of-returns stress test")
+        st.caption(
+            f"The recommended {stress.equity_fraction:.0%}-equity allocation funding a "
+            f"${stress.base_withdrawal:,.0f}/yr withdrawal (growing with inflation) over "
+            f"{stress.horizon_years} years."
+        )
+
+        chart_df = pd.DataFrame(
+            {sc.name: sc.values for sc in stress.scenarios},
+            index=range(1, stress.horizon_years + 1),
+        )
+        chart_df.index.name = "Year"
+        st.line_chart(chart_df, height=320)
+
+        cols = st.columns(len(stress.scenarios))
+        for col, sc in zip(cols, stress.scenarios):
+            status = "Survived" if sc.survived else f"Depleted yr {sc.depletion_year}"
+            col.metric(sc.name, f"${sc.terminal_value:,.0f}", status, delta_color="off")
+
+        for f in stress.findings:
+            st.info(f, icon="📉")
+        st.caption(
+            "Early bear and Late bear use the **identical annual returns in reverse "
+            "order** — any gap between them is pure sequence-of-returns risk, the danger "
+            "of a poor first decade while withdrawing. Assumes ~8% equity / 3.5% bond "
+            "nominal returns and 2.5% inflation; illustrative, not a forecast."
+        )
 
     # --- Derived structured-product signals (used by the next stage) -------
     with st.expander("Suitability signals for structured products"):

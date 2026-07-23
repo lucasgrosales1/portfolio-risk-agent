@@ -15,6 +15,7 @@ from .capacity import CapacityCeiling, Constraint, equity_ceiling
 from .recommend import Recommendation, build_recommendation
 from .retirement import RetirementReadiness, assess_retirement_readiness
 from .scoring import RiskAssessment, ScoreComponent, score_profile
+from .stress import Scenario, StressTest, run_stress_test
 
 __all__ = [
     "ClientProfile",
@@ -32,4 +33,7 @@ __all__ = [
     "equity_ceiling",
     "Recommendation",
     "build_recommendation",
+    "Scenario",
+    "StressTest",
+    "run_stress_test",
 ]

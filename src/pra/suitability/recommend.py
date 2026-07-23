@@ -22,6 +22,7 @@ from .capacity import CapacityCeiling, equity_ceiling
 from .profile import ClientProfile
 from .retirement import RetirementReadiness, assess_retirement_readiness
 from .scoring import RiskAssessment, score_profile
+from .stress import StressTest, run_stress_test
 
 # Models ordered least to most equity, with their equity fraction.
 _MODELS_BY_EQUITY = sorted(
@@ -47,6 +48,7 @@ class Recommendation:
     assessment: RiskAssessment
     readiness: RetirementReadiness
     capacity: CapacityCeiling
+    stress: StressTest
 
     desired_model: str          # what the risk score alone supports
     recommended_model: str      # after capacity reconciliation
@@ -83,6 +85,14 @@ def build_recommendation(profile: ClientProfile) -> Recommendation:
 
     branch = "decumulation" if readiness.applicable else "accumulation"
 
+    # Stress-test the recommended allocation against return-sequence risk.
+    stress = run_stress_test(
+        age=profile.age,
+        equity_fraction=_model_equity(recommended),
+        starting_value=profile.investable_assets,
+        base_withdrawal=profile.net_withdrawal_need,
+    )
+
     rationale: list[str] = list(assessment.rationale)
     if capped:
         rationale.append(
@@ -104,6 +114,7 @@ def build_recommendation(profile: ClientProfile) -> Recommendation:
         assessment=assessment,
         readiness=readiness,
         capacity=capacity,
+        stress=stress,
         desired_model=desired,
         recommended_model=recommended,
         capped=capped,
