@@ -21,6 +21,12 @@ dependencies = [
     "anthropic>=0.40",
 ]
 
+# The analytics library core does not depend on Streamlit — the web app is an
+# optional extra so `pra` can be used headless. Streamlit is also in
+# requirements.txt for one-click Streamlit Community Cloud deployment.
+[project.optional-dependencies]
+app = ["streamlit>=1.40"]
+
 [project.urls]
 Repository = "https://github.com/lucasgrosales1/portfolio-risk-agent"
 

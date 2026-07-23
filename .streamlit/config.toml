@@ -1,0 +1,11 @@
+# Advisor Workbench theme — restrained, matching the report's navy accent.
+[theme]
+primaryColor = "#1f4e79"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f6f7f9"
+textColor = "#1a1d23"
+font = "sans serif"
+
+[server]
+# Uploaded portfolios are small CSVs; no need to accept large files.
+maxUploadSize = 5
