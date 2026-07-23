@@ -9,3 +9,7 @@ font = "sans serif"
 [server]
 # Uploaded portfolios are small CSVs; no need to accept large files.
 maxUploadSize = 5
+
+[browser]
+# No usage telemetry — suppresses the first-run email prompt too.
+gatherUsageStats = false
