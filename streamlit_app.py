@@ -30,8 +30,7 @@ from pra.suitability import (
     Experience,
     Objective,
     RiskTolerance,
-    assess_retirement_readiness,
-    score_profile,
+    build_recommendation,
 )
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -310,19 +309,16 @@ def render_plan_mode() -> None:
             social_security_income=float(ss_income),
             pension_income=float(pension_income),
         )
-        st.session_state["plan"] = {
-            "profile": profile,
-            "assessment": score_profile(profile),
-            "readiness": assess_retirement_readiness(profile),
-        }
+        st.session_state["plan"] = {"rec": build_recommendation(profile)}
 
     plan = st.session_state.get("plan")
     if not plan:
         return
 
-    profile = plan["profile"]
-    assessment = plan["assessment"]
-    readiness = plan["readiness"]
+    rec = plan["rec"]
+    profile = rec.profile
+    assessment = rec.assessment
+    readiness = rec.readiness
 
     st.success(f"Profile captured — {profile.summary_line()}")
 
@@ -351,21 +347,36 @@ def render_plan_mode() -> None:
 
     # --- The recommendation ------------------------------------------------
     st.markdown("### Recommendation")
-    rc1, rc2, rc3 = st.columns([2, 1, 1])
-    rc1.metric("Recommended model", assessment.profile_label)
-    rc2.metric("Risk score", f"{assessment.raw_score:.0f}/100")
-    rc3.metric("Capacity capped", "Yes" if assessment.was_capped else "No")
+    rc1, rc2, rc3, rc4 = st.columns(4)
+    rc1.metric("Recommended model", rec.recommended_label)
+    rc2.metric(
+        "Desired (score alone)", rec.desired_label,
+        "capped by capacity" if rec.capped else "capacity supports it",
+        delta_color="off",
+    )
+    rc3.metric("Risk score", f"{assessment.raw_score:.0f}/100")
+    rc4.metric("Equity ceiling", f"{rec.capacity.max_equity:.0%}")
 
-    if assessment.was_capped:
+    if rec.capped:
         st.warning(
-            "The client's stated risk profile was reduced by capacity constraints. "
-            "This is the suitability discipline at work — situation overriding attitude.",
+            f"The client's stated risk profile supports **{rec.desired_label}**, but "
+            f"capacity constraints cap the recommendation at **{rec.recommended_label}**. "
+            f"Situation overriding attitude — the core of suitability.",
             icon="🛡️",
         )
 
     st.markdown("**Why:**")
-    for line in assessment.rationale:
+    for line in rec.rationale:
         st.markdown(line if line.strip().startswith("•") else f"- {line}")
+
+    with st.expander("Capacity ceiling — every constraint"):
+        st.caption(
+            "The recommended equity is capped at the lowest of these. The binding "
+            "constraint (▶) is the one that set the ceiling."
+        )
+        for c in rec.capacity.constraints:
+            mark = "▶" if c.binding else "•"
+            st.markdown(f"{mark} **{c.ceiling:.0%}** — {c.label}")
 
     # --- Score breakdown ---------------------------------------------------
     with st.expander("Risk-score breakdown"):

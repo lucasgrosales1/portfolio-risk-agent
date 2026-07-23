@@ -11,6 +11,8 @@ from .profile import (
     Objective,
     RiskTolerance,
 )
+from .capacity import CapacityCeiling, Constraint, equity_ceiling
+from .recommend import Recommendation, build_recommendation
 from .retirement import RetirementReadiness, assess_retirement_readiness
 from .scoring import RiskAssessment, ScoreComponent, score_profile
 
@@ -25,4 +27,9 @@ __all__ = [
     "score_profile",
     "RetirementReadiness",
     "assess_retirement_readiness",
+    "CapacityCeiling",
+    "Constraint",
+    "equity_ceiling",
+    "Recommendation",
+    "build_recommendation",
 ]

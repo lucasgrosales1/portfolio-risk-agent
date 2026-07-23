@@ -210,75 +210,27 @@ def score_profile(profile: ClientProfile) -> RiskAssessment:
 
     raw_score = sum(c.contribution for c in components)
 
-    # Map the blended score to a model, then apply capacity overrides (down only).
+    # The score expresses DESIRE — how much risk the client's blended profile
+    # supports. It is not the final recommendation. Hard capacity constraints
+    # (the equity ceiling in pra.suitability.capacity) cap this downward during
+    # reconciliation. Keeping desire and capacity separate is the whole point of
+    # the capacity-first design.
     model = next(key for cutoff, key in SCORE_TO_MODEL if raw_score < cutoff)
-    overrides: list[Override] = []
-
-    def apply(ceiling: str, reason: str) -> None:
-        nonlocal model
-        if _model_index(model) > _model_index(ceiling):
-            model = _cap(model, ceiling)
-            overrides.append(Override(reason=reason, capped_to=ceiling))
-
-    if profile.time_horizon_years <= SHORT_HORIZON_HARD:
-        apply("conservative",
-              f"Time horizon of {profile.time_horizon_years} years leaves no time to "
-              f"recover from a decline before the funds are needed.")
-    elif profile.time_horizon_years <= SHORT_HORIZON_SOFT:
-        apply("moderate",
-              f"A {profile.time_horizon_years}-year horizon limits capacity for equity "
-              f"risk regardless of stated tolerance.")
-
-    if not profile.has_emergency_reserve:
-        apply("moderate",
-              "No emergency reserve is in place; the portfolio may have to be sold "
-              "into a downturn to cover an unexpected need.")
-
-    if profile.net_worth > 0 and (
-        profile.near_term_withdrawal / profile.net_worth > NEAR_TERM_WITHDRAWAL_FRAC
-    ):
-        apply("conservative",
-              "A large near-term withdrawal is planned; that portion cannot be exposed "
-              "to market risk.")
-
-    if profile.objective == Objective.PRESERVATION:
-        apply("moderate",
-              "The stated objective is capital preservation, which is inconsistent with "
-              "a growth-oriented allocation.")
-
-    if profile.age >= LATE_RETIREMENT_AGE:
-        apply("moderate",
-              f"At age {profile.age}, sequence-of-returns risk warrants a more "
-              f"conservative posture than the score alone suggests.")
-
     label = MODEL_PORTFOLIOS[model].name
 
-    # Build the plain-English rationale.
-    rationale: list[str] = []
     top = max(components, key=lambda c: c.contribution)
     low = min(components, key=lambda c: c.contribution)
-    rationale.append(
+    rationale = [
         f"The blended risk score is {raw_score:.0f} of 100, driven most by "
-        f"{top.name.lower()} and held back most by {low.name.lower()}."
-    )
-    if overrides:
-        rationale.append(
-            f"Capacity rules reduced the recommendation from "
-            f"{MODEL_PORTFOLIOS[next(k for c, k in SCORE_TO_MODEL if raw_score < c)].name} "
-            f"to {label}:"
-        )
-        rationale.extend(f"  • {o.reason}" for o in overrides)
-    else:
-        rationale.append(
-            f"No capacity constraints applied; the recommendation follows the score to "
-            f"the {label} model."
-        )
+        f"{top.name.lower()} and held back most by {low.name.lower()}. On its own "
+        f"the score supports the {label} model, before capacity constraints."
+    ]
 
     return RiskAssessment(
         raw_score=raw_score,
         recommended_model=model,
         profile_label=label,
         components=components,
-        overrides=overrides,
+        overrides=[],
         rationale=rationale,
     )
