@@ -30,6 +30,7 @@ from pra.suitability import (
     Experience,
     Objective,
     RiskTolerance,
+    score_profile,
 )
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -262,54 +263,88 @@ def render_plan_mode() -> None:
             "Constraints, existing concentrations, restrictions (optional)", ""
         )
 
-        submitted = st.form_submit_button("Capture profile", type="primary")
+        submitted = st.form_submit_button("Generate recommendation", type="primary")
 
-    if not submitted:
+    if submitted:
+        profile = ClientProfile(
+            client_name=name,
+            age=int(age),
+            dependents=int(dependents),
+            time_horizon_years=int(horizon),
+            employment=employment,
+            annual_income=float(income),
+            net_worth=float(net_worth),
+            liquid_net_worth=float(liquid),
+            marginal_tax_bracket=float(tax),
+            near_term_withdrawal=float(withdrawal),
+            has_emergency_reserve=bool(reserve),
+            objective=objective,
+            risk_tolerance=risk_tol,
+            drawdown_tolerance=float(drawdown),
+            experience=experience,
+            constraints=constraints,
+        )
+        st.session_state["plan"] = {"profile": profile, "assessment": score_profile(profile)}
+
+    plan = st.session_state.get("plan")
+    if not plan:
         return
 
-    profile = ClientProfile(
-        client_name=name,
-        age=int(age),
-        dependents=int(dependents),
-        time_horizon_years=int(horizon),
-        employment=employment,
-        annual_income=float(income),
-        net_worth=float(net_worth),
-        liquid_net_worth=float(liquid),
-        marginal_tax_bracket=float(tax),
-        near_term_withdrawal=float(withdrawal),
-        has_emergency_reserve=bool(reserve),
-        objective=objective,
-        risk_tolerance=risk_tol,
-        drawdown_tolerance=float(drawdown),
-        experience=experience,
-        constraints=constraints,
-    )
+    profile = plan["profile"]
+    assessment = plan["assessment"]
 
     st.success(f"Profile captured — {profile.summary_line()}")
 
-    # Preview the derived signals the engine will act on, so the intake is
-    # visibly doing something even before the engine exists.
-    st.markdown("##### Derived suitability signals")
-    s1, s2, s3 = st.columns(3)
-    s1.metric("Income need", "Yes" if profile.has_income_need else "No")
-    s2.metric("Liquid ratio", f"{profile.liquid_ratio:.0%}")
-    s3.metric("Sophisticated", "Yes" if profile.is_sophisticated else "No")
-    if profile.short_horizon:
-        st.info(
-            "Short horizon (≤5 years): the engine will cap equity regardless of "
-            "stated risk tolerance.",
-            icon="🕒",
+    # --- The recommendation ------------------------------------------------
+    st.markdown("### Recommendation")
+    rc1, rc2, rc3 = st.columns([2, 1, 1])
+    rc1.metric("Recommended model", assessment.profile_label)
+    rc2.metric("Risk score", f"{assessment.raw_score:.0f}/100")
+    rc3.metric("Capacity capped", "Yes" if assessment.was_capped else "No")
+
+    if assessment.was_capped:
+        st.warning(
+            "The client's stated risk profile was reduced by capacity constraints. "
+            "This is the suitability discipline at work — situation overriding attitude.",
+            icon="🛡️",
         )
 
-    with st.expander("What happens next"):
+    st.markdown("**Why:**")
+    for line in assessment.rationale:
+        st.markdown(line if line.strip().startswith("•") else f"- {line}")
+
+    # --- Score breakdown ---------------------------------------------------
+    with st.expander("Risk-score breakdown"):
+        st.caption("Each factor scores 0–100; the weighted blend is the risk score.")
+        for c in assessment.components:
+            bar_c1, bar_c2 = st.columns([3, 2])
+            bar_c1.markdown(f"**{c.name}** — {c.note}")
+            bar_c1.progress(int(c.raw))
+            bar_c2.caption(
+                f"{c.raw:.0f}/100 × weight {c.weight:.0%} = "
+                f"{c.contribution:.1f} pts"
+            )
+
+    # --- Derived structured-product signals (used by the next stage) -------
+    with st.expander("Suitability signals for structured products"):
+        s1, s2, s3 = st.columns(3)
+        s1.metric("Income need", "Yes" if profile.has_income_need else "No")
+        s2.metric("Liquid ratio", f"{profile.liquid_ratio:.0%}")
+        s3.metric("Sophisticated", "Yes" if profile.is_sophisticated else "No")
+        st.caption(
+            "The structured-product layer (next stage) gates income notes behind "
+            "all of: an income need, adequate liquidity, moderate-or-higher risk "
+            "tolerance, and sufficient sophistication — and documents the decision "
+            "either way."
+        )
+
+    with st.expander("Still to come"):
         st.markdown(
-            "The next build stage turns this profile into: a **risk score** with "
-            "capacity overrides, a **recommended allocation** (nearest model plus "
-            "tilts), a **structured-product analysis** (income notes and buffers "
-            "only when the profile warrants them — otherwise documented as "
-            "declined), and a draft **Investment Policy Statement**. The recommended "
-            "allocation then feeds the Phase 1 analysis, closing the loop."
+            "Next stages add: allocation **tilts** for client specifics, the "
+            "**structured-product analysis** (income notes and buffers, or a "
+            "documented decision to exclude them), a draft **Investment Policy "
+            "Statement**, and a button to run the recommended allocation straight "
+            "through the Phase 1 analysis — closing the loop."
         )
 
 
