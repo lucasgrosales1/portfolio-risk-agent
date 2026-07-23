@@ -11,6 +11,7 @@ from .profile import (
     Objective,
     RiskTolerance,
 )
+from .retirement import RetirementReadiness, assess_retirement_readiness
 from .scoring import RiskAssessment, ScoreComponent, score_profile
 
 __all__ = [
@@ -22,4 +23,6 @@ __all__ = [
     "RiskAssessment",
     "ScoreComponent",
     "score_profile",
+    "RetirementReadiness",
+    "assess_retirement_readiness",
 ]

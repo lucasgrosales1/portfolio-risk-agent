@@ -163,6 +163,63 @@ A draft Investment Policy Statement containing:
    Python payoff modeling + diagram, sleeve sizing, decline-with-reason output.
 4. **Deploy** to Streamlit Community Cloud for the live link.
 
+## Redesign (2026-07-23): capacity-first, goals-based
+
+The first scoring engine blended stated tolerance upward. Revised direction, at
+the client's (Series 66) request: **start from capacity, not attitude.** How real
+liability-driven planning works.
+
+**Governing principle: capacity sets the boundaries; tolerance positions within them.**
+
+Capacity produces an equity *band*; the behavioral/tolerance score only chooses
+where inside it to land.
+
+### The equity band (deterministic)
+
+- **Ceiling from drawdown tolerance.** Assume equities can fall ~50% in a severe
+  bear. To keep portfolio drawdown ≤ the client's stated tolerance T:
+  `max_equity ≈ T / 0.50`. A stated 15% tolerance → ~30% equity ceiling.
+- **Safe floor from reserve + income ladder.** Emergency reserve (months of
+  expenses) plus an N-year income ladder (annual withdrawal × ladder years) must
+  sit in cash/short bonds *before* any equity. That dollar floor further lowers
+  the equity ceiling.
+- **Floor from goal (optional).** If a growth goal is stated, compute the required
+  return and the minimum equity to plausibly reach it
+  (`e ≥ (r − bond_return) / (equity_return − bond_return)`).
+- **Conflict flag.** When the goal floor exceeds the drawdown ceiling, the client
+  wants returns their tolerance can't survive. Flag it explicitly and default to
+  the ceiling (protect the downside), recommending a structural fix.
+
+### Sequence-of-returns stress test
+
+Model a −25% year-one shock plus required withdrawals; show the trajectory and
+whether forced selling into the decline depletes the plan. The showpiece; built
+after the capacity core.
+
+### New intake fields required
+
+- Annual expenses (reserve sizing) and annual portfolio withdrawal (income ladder).
+- Optional growth goal (target amount) for the equity floor.
+- Later: behavioral questions (past-crash behavior, job security, regret) and a
+  personalized crash scenario, feeding a one-time revealed-capacity adjustment.
+
+### Honestly out of scope for this project
+
+Ongoing behavioral checkpoints, drift alerts, tracking whether the client
+actually rebalances, post-drawdown tolerance re-measurement — all require a live
+client relationship with real longitudinal account data. This tool runs once on
+synthetic data. The IPS can *describe* an ongoing monitoring plan; the tool
+cannot genuinely perform live tracking, and won't pretend to. A one-time
+behavioral-capacity read from stated history is buildable and in scope.
+
+### Build order (revised)
+
+1. Capacity core — reserve gate, income-ladder floor, drawdown ceiling, goal
+   floor, conflict flag; tolerance score positions within the band.
+2. Sequence-of-returns stress test.
+3. Behavioral intake fields → revealed-capacity adjustment.
+4. Structured products, then IPS, then deploy.
+
 ## Open items to resolve with the client's Series 66 input
 
 - The exact questionnaire items and their scoring weights.

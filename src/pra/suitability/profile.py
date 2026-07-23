@@ -80,6 +80,16 @@ class ClientProfile:
     liquid_net_worth: float = 250_000.0
     marginal_tax_bracket: float = 0.24  # federal marginal rate as a decimal
 
+    # --- Retirement income (decumulation branch) -------------------------
+    # Investable portfolio value — distinct from net worth, which may include a
+    # home and other illiquid assets that don't fund withdrawals.
+    investable_assets: float = 500_000.0
+    # Total annual spending the client needs to fund.
+    annual_spending: float = 0.0
+    # Guaranteed income that offsets the portfolio withdrawal need.
+    social_security_income: float = 0.0
+    pension_income: float = 0.0
+
     # --- Liquidity & reserves --------------------------------------------
     # Cash the client expects to withdraw within the next ~2 years.
     near_term_withdrawal: float = 0.0
@@ -103,14 +113,35 @@ class ClientProfile:
     # --- Derived conveniences --------------------------------------------
 
     @property
+    def net_withdrawal_need(self) -> float:
+        """Annual dollars the portfolio must provide, after guaranteed income.
+
+        Spending minus Social Security and pension. This — not gross spending —
+        is what the portfolio actually has to fund, and what the withdrawal rate
+        is measured against.
+        """
+        covered = self.social_security_income + self.pension_income
+        return max(0.0, self.annual_spending - covered)
+
+    @property
+    def withdrawal_rate(self) -> float:
+        """Net portfolio withdrawal as a fraction of investable assets."""
+        if self.investable_assets <= 0:
+            return 0.0
+        return self.net_withdrawal_need / self.investable_assets
+
+    @property
     def has_income_need(self) -> bool:
         """A stated need for portfolio income.
 
-        True when the objective is income, or when the client is retired and
-        drawing down. The first of the four income-note gates.
+        True when the objective is income, the client is retired and drawing
+        down, or the portfolio must fund ongoing withdrawals. The first of the
+        four income-note gates, and the switch into the decumulation branch.
         """
-        return self.objective == Objective.INCOME or (
-            self.employment == Employment.RETIRED and self.near_term_withdrawal > 0
+        return (
+            self.objective == Objective.INCOME
+            or self.net_withdrawal_need > 0
+            or (self.employment == Employment.RETIRED and self.near_term_withdrawal > 0)
         )
 
     @property

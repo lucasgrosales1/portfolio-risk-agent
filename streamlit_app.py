@@ -30,6 +30,7 @@ from pra.suitability import (
     Experience,
     Objective,
     RiskTolerance,
+    assess_retirement_readiness,
     score_profile,
 )
 
@@ -231,6 +232,27 @@ def render_plan_mode() -> None:
         )
         tax = b3.slider("Marginal tax bracket", 0.0, 0.5, 0.24, 0.01, format="%.0f%%")
 
+        st.markdown("##### Retirement income")
+        st.caption("Leave spending at 0 if the client is still accumulating.")
+        ri1, ri2 = st.columns(2)
+        investable = ri1.number_input(
+            "Investable assets ($)", min_value=0, value=500_000, step=10_000,
+            help="The portfolio that funds withdrawals — excludes home equity and "
+                 "other illiquid assets.",
+        )
+        spending = ri2.number_input(
+            "Annual spending need ($)", min_value=0, value=0, step=5_000,
+            help="Total annual spending to fund. The withdrawal rate is measured "
+                 "against this, net of guaranteed income.",
+        )
+        ri3, ri4 = st.columns(2)
+        ss_income = ri3.number_input(
+            "Social Security ($/yr)", min_value=0, value=0, step=1_000
+        )
+        pension_income = ri4.number_input(
+            "Pension / other guaranteed income ($/yr)", min_value=0, value=0, step=1_000
+        )
+
         st.markdown("##### Liquidity & reserves")
         l1, l2 = st.columns(2)
         withdrawal = l1.number_input(
@@ -283,8 +305,16 @@ def render_plan_mode() -> None:
             drawdown_tolerance=float(drawdown),
             experience=experience,
             constraints=constraints,
+            investable_assets=float(investable),
+            annual_spending=float(spending),
+            social_security_income=float(ss_income),
+            pension_income=float(pension_income),
         )
-        st.session_state["plan"] = {"profile": profile, "assessment": score_profile(profile)}
+        st.session_state["plan"] = {
+            "profile": profile,
+            "assessment": score_profile(profile),
+            "readiness": assess_retirement_readiness(profile),
+        }
 
     plan = st.session_state.get("plan")
     if not plan:
@@ -292,8 +322,32 @@ def render_plan_mode() -> None:
 
     profile = plan["profile"]
     assessment = plan["assessment"]
+    readiness = plan["readiness"]
 
     st.success(f"Profile captured — {profile.summary_line()}")
+
+    # --- Retirement-income readiness (decumulation branch) -----------------
+    # When the portfolio must fund withdrawals, feasibility comes before risk:
+    # an allocation is meaningless if the withdrawal rate is unsustainable.
+    if readiness.applicable:
+        st.markdown("### Retirement income readiness")
+        status_icon = {"Safe": "✅", "Caution": "⚠️", "Unsafe": "🛑"}[readiness.status]
+        wc1, wc2, wc3 = st.columns(3)
+        wc1.metric("Withdrawal rate", f"{readiness.withdrawal_rate:.1%}",
+                   f"benchmark {readiness.benchmark_rate:.0%}", delta_color="off")
+        wc2.metric("Status", f"{status_icon} {readiness.status}")
+        wc3.metric("Suggested split", readiness.suggested_split_label)
+
+        for f in readiness.findings:
+            st.markdown(f"- {f}")
+        for rf in readiness.red_flags:
+            st.error(rf, icon="🚩")
+        st.caption(
+            "The 4% benchmark assumes roughly a 30-year horizon and historical US "
+            "returns; it is a starting reference, not a guarantee. Reserve sizing, "
+            "sequence-of-returns stress testing, and Monte Carlo come in later stages."
+        )
+        st.divider()
 
     # --- The recommendation ------------------------------------------------
     st.markdown("### Recommendation")
