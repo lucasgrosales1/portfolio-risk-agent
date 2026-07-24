@@ -37,6 +37,7 @@ from pra.suitability import (
     Objective,
     RiskTolerance,
     build_recommendation,
+    render_ips_html,
 )
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -372,6 +373,19 @@ def _render_recommendation(rec) -> None:
     st.caption("Payoff diagrams use illustrative, clearly-stated assumed terms at maturity — "
                "not a quote for any real issued product. Structured products carry issuer "
                "credit risk, limited liquidity, and defined terms.")
+
+    # --- Investment Policy Statement -------------------------------------
+    st.divider()
+    st.markdown("#### Investment Policy Statement")
+    st.caption("A draft IPS assembled from the analysis above — objectives, allocation, "
+               "rebalancing, constraints, retirement-income and structured-product policy.")
+    ips_html = render_ips_html(rec)
+    st.download_button(
+        "Download IPS (HTML)", data=ips_html,
+        file_name=f"{rec.profile.client_name.replace(' ', '_').lower()}_ips.html",
+        mime="text/html", type="primary", key="ips_dl")
+    with st.expander("Preview IPS"):
+        st.components.v1.html(ips_html, height=760, scrolling=True)
 
 
 def _render_survey_subject(rec_wrap: dict) -> None:

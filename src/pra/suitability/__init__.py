@@ -16,6 +16,7 @@ from .recommend import Recommendation, build_recommendation
 from .retirement import RetirementReadiness, assess_retirement_readiness
 from .scoring import RiskAssessment, ScoreComponent, score_profile
 from .stress import Scenario, StressTest, run_stress_test
+from .ips import IPSDocument, build_ips, render_ips_html
 from .structured import (
     StructuredAssessment,
     StructuredProduct,
@@ -44,4 +45,7 @@ __all__ = [
     "StructuredAssessment",
     "StructuredProduct",
     "evaluate_structured_products",
+    "IPSDocument",
+    "build_ips",
+    "render_ips_html",
 ]
