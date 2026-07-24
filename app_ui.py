@@ -20,9 +20,7 @@ NAV_ITEMS = [
     ("Home", "Home"),
     ("Dashboard", "Dashboard"),
     ("Portfolio Analysis", "Portfolio Analysis"),
-    ("Rebalancing", "Rebalancing"),
-    ("Planning", "Planning"),
-    ("Reports", "Reports"),
+    ("Client Survey", "Client Survey"),
     ("Settings", "Settings"),
 ]
 
@@ -68,9 +66,12 @@ def inject_theme() -> None:
           .aw-brand .name {{ font-size: 19px; font-weight: 700; color: {NAVY_DARK}; }}
           .aw-brand .tag  {{ font-size: 12px; color: #6b7280; margin-top: -2px; }}
 
-          /* Nav buttons styled as a tab row */
-          div[data-testid="stHorizontalBlock"]:has(.aw-navrow) + div button,
+          /* Nav buttons styled as a roomy tab row */
           .aw-nav button {{ border-radius: 8px; }}
+          .aw-navsep {{
+            border: none; border-top: 1px solid #e5e7eb;
+            margin: 6px 0 18px; opacity: 1;
+          }}
 
           /* --- Hero --- */
           .aw-hero {{
@@ -161,7 +162,9 @@ def top_nav() -> str:
             unsafe_allow_html=True,
         )
 
-    st.markdown('<div class="aw-nav aw-navrow"></div>', unsafe_allow_html=True)
+    # Nav row: fewer, roomier buttons. A subtle hairline replaces the heavy
+    # default divider the previous design drew across the page.
+    st.markdown('<div class="aw-nav"></div>', unsafe_allow_html=True)
     cols = st.columns(len(NAV_ITEMS))
     for col, (label, key) in zip(cols, NAV_ITEMS):
         active = st.session_state["page"] == key
@@ -174,7 +177,7 @@ def top_nav() -> str:
             st.session_state["page"] = key
             st.rerun()
 
-    st.divider()
+    st.markdown('<hr class="aw-navsep">', unsafe_allow_html=True)
     return st.session_state["page"]
 
 

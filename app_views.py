@@ -1,13 +1,15 @@
 """Page views for the Advisor Workbench web app.
 
-Every page reads from the real `pra` engine — no mock data. Portfolio-driven
-pages (Dashboard, Portfolio Analysis, Rebalancing, Reports) share one computed
-analysis held in session_state, so the advisor selects a portfolio once and
-every tab reflects it, the way real software behaves.
+Analytics pages read from the real `pra` engine — no mock numbers. The advisor
+Dashboard uses clearly-labeled *simulated* workflow data (a demo client pipeline
+and meeting calendar), which is context, not investment figures. The Client
+Survey and "connect a representative" actions are simulated too — nothing is
+actually sent anywhere.
 """
 
 from __future__ import annotations
 
+import datetime as dt
 from pathlib import Path
 
 import pandas as pd
@@ -44,7 +46,6 @@ def _active() -> AnalysisResult | None:
 
 
 def _compute_active(label: str, model_key: str, upload_text: str | None) -> bool:
-    """Run the pipeline for the chosen portfolio; store it. Returns success."""
     try:
         if upload_text is not None:
             portfolio = parse_portfolio(upload_text, default_name="Uploaded Portfolio")
@@ -66,8 +67,7 @@ def _compute_active(label: str, model_key: str, upload_text: str | None) -> bool
     return True
 
 
-def _portfolio_picker(context: str) -> None:
-    """A compact select-and-load control shared by Dashboard and Settings."""
+def _portfolio_picker(context: str, navigate: bool = False) -> None:
     c1, c2 = st.columns([2, 1])
     with c1:
         source = st.radio(
@@ -93,8 +93,10 @@ def _portfolio_picker(context: str) -> None:
 
     disabled = source == "Upload a CSV" and upload_text is None
     if st.button("Load portfolio", type="primary", disabled=disabled, key=f"load_{context}"):
-        if _compute_active(label, model_key, upload_text):
-            st.session_state["page"] = "Dashboard"
+        if _compute_active(label, model_key, upload_text) and navigate:
+            st.session_state["page"] = "Portfolio Analysis"
+            st.rerun()
+        elif _active() is not None:
             st.rerun()
 
 
@@ -121,27 +123,29 @@ def home() -> None:
     )
     st.write("")
 
-    b1, b2, _ = st.columns([1, 1, 3])
+    b1, b2, b3, _ = st.columns([1, 1, 1, 2])
     if b1.button("Open Dashboard", type="primary", width="stretch"):
         ui.go_to("Dashboard")
-    if b2.button("Build a client plan", width="stretch"):
-        ui.go_to("Planning")
+    if b2.button("Portfolio Analysis", width="stretch"):
+        ui.go_to("Portfolio Analysis")
+    if b3.button("Take Client Survey", width="stretch"):
+        ui.go_to("Client Survey")
 
     st.write("")
     st.markdown('<div class="aw-section-label">What it does</div>', unsafe_allow_html=True)
     r1 = st.columns(3)
     with r1[0]:
         ui.card("📊", "Portfolio Analysis",
-                "Live valuation, allocation by asset class and sector, volatility, "
-                "max drawdown, Sharpe, and beta against the S&P 500.")
+                "Live valuation, allocation, volatility, max drawdown, Sharpe, and "
+                "beta — plus tax-aware rebalancing and a client-ready report.")
     with r1[1]:
-        ui.card("⚖️", "Tax-Aware Rebalancing",
-                "Drift from target with a trade plan that sources sales from "
-                "sheltered accounts first and prices the tax cost of the rest.")
-    with r1[2]:
         ui.card("🧭", "Suitability Planning",
                 "Capacity-first recommendations, retirement-income readiness, and a "
                 "sequence-of-returns stress test — reconciled into one allocation.")
+    with r1[2]:
+        ui.card("📝", "Client Survey",
+                "A short questionnaire clients complete before meeting — so their "
+                "advisor arrives already understanding their needs.")
 
     st.write("")
     st.markdown('<div class="aw-section-label">Why it is different</div>', unsafe_allow_html=True)
@@ -151,26 +155,126 @@ def home() -> None:
         "- **Suitability discipline built in.** Capacity constraints cap the "
         "recommendation, and the tool documents *why* — including when it declines a "
         "product.\n"
-        "- **Client-ready output.** One command produces a report you could hand to a "
-        "client."
+        "- **Client-ready output.** One click produces a report you could hand to a client."
     )
+
+    # --- Connect with a representative (simulated) -------------------------
+    st.write("")
+    st.markdown('<div class="aw-section-label">Talk to an advisor</div>', unsafe_allow_html=True)
+    with st.container(border=True):
+        cc1, cc2 = st.columns([3, 1])
+        with cc1:
+            st.markdown(
+                f"**Have questions? Connect with a {ui.FIRM_NAME} representative.** "
+                "Request a callback and an advisor will reach out to walk through your "
+                "situation."
+            )
+        with cc2:
+            if st.button("Connect now", type="primary", width="stretch", key="connect_rep"):
+                st.session_state["rep_requested"] = True
+        if st.session_state.get("rep_requested"):
+            st.success(
+                "✓ Request received — a representative will reach out shortly. "
+                "*(Simulated: this demo does not send a real message.)*"
+            )
+
     st.caption("Educational portfolio project — not investment advice. All sample data is synthetic.")
 
 
 # ==========================================================================
-# Dashboard
+# Dashboard — advisor CRM view (simulated workflow data)
 # ==========================================================================
+def _sim_clients() -> list[dict]:
+    """Clearly-simulated advisor pipeline. Meeting dates are relative to today."""
+    today = dt.date.today()
+
+    def d(days: int) -> dt.date:
+        return today + dt.timedelta(days=days)
+
+    return [
+        {"name": "Robert & Susan Hale", "meeting": d(1), "time": "9:00 AM",
+         "complete": True, "aum": 2_450_000, "reason": "Annual review"},
+        {"name": "Priya Nadella", "meeting": d(1), "time": "1:30 PM",
+         "complete": False, "aum": 780_000, "reason": "New client onboarding"},
+        {"name": "James Okoro", "meeting": d(2), "time": "11:00 AM",
+         "complete": True, "aum": 1_120_000, "reason": "Rebalancing discussion"},
+        {"name": "The Delgado Family Trust", "meeting": d(3), "time": "3:00 PM",
+         "complete": False, "aum": 4_300_000, "reason": "Estate & concentration review"},
+        {"name": "Marcus Webb", "meeting": d(6), "time": "10:00 AM",
+         "complete": False, "aum": 340_000, "reason": "Survey submitted — needs review"},
+        {"name": "Helen Yoshida", "meeting": d(9), "time": "2:00 PM",
+         "complete": True, "aum": 1_875_000, "reason": "Retirement income planning"},
+    ]
+
+
 def dashboard() -> None:
-    ui.page_title("Dashboard", "Overview of the loaded portfolio.")
+    ui.page_title("Advisor Dashboard",
+                  "Your client pipeline for the week. (Simulated workflow data.)")
+    clients = _sim_clients()
+    today = dt.date.today()
+    incomplete = [c for c in clients if not c["complete"]]
+    week = [c for c in clients if 0 <= (c["meeting"] - today).days <= 7]
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Active clients", len(clients))
+    m2.metric("Profiles incomplete", len(incomplete))
+    m3.metric("Meetings this week", len(week))
+    m4.metric("Assets under advisement", f"${sum(c['aum'] for c in clients)/1e6:.1f}M")
+
+    st.write("")
+    left, right = st.columns([1, 1])
+
+    with left:
+        st.markdown("**⏱️ Priority clients** — by next meeting")
+        for c in sorted(clients, key=lambda c: c["meeting"])[:4]:
+            days = (c["meeting"] - today).days
+            when = "Today" if days == 0 else ("Tomorrow" if days == 1 else f"in {days} days")
+            flag = "🔴" if days <= 1 else ("🟠" if days <= 3 else "🟢")
+            with st.container(border=True):
+                st.markdown(f"{flag} **{c['name']}** — {when}, {c['time']}  \n"
+                            f"<span style='color:#6b7280;font-size:13px'>{c['reason']} · "
+                            f"${c['aum']:,.0f}</span>", unsafe_allow_html=True)
+
+    with right:
+        st.markdown("**📋 Profiles awaiting completion**")
+        if not incomplete:
+            st.success("All client profiles are complete.", icon="✅")
+        for c in incomplete:
+            with st.container(border=True):
+                st.markdown(f"**{c['name']}**  \n"
+                            f"<span style='color:#6b7280;font-size:13px'>{c['reason']}</span>",
+                            unsafe_allow_html=True)
+
+    st.write("")
+    st.markdown("**📅 Upcoming meetings**")
+    rows = [{"Client": c["name"], "Date": c["meeting"].strftime("%a %b %d"),
+             "Time": c["time"], "Profile": "Complete" if c["complete"] else "Incomplete",
+             "Purpose": c["reason"]}
+            for c in sorted(clients, key=lambda c: c["meeting"])]
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    st.caption("Demo pipeline for illustration. In production this would connect to the "
+               "firm's CRM and calendar.")
+
+
+# ==========================================================================
+# Portfolio Analysis — merged workspace (holdings, risk, rebalancing, report)
+# ==========================================================================
+def portfolio_analysis() -> None:
+    ui.page_title("Portfolio Analysis",
+                  "Holdings, risk, concentration, rebalancing, and the client report.")
     result = _active()
     if result is None:
         _needs_portfolio_notice()
         return
 
-    a, r = result.allocation, result.risk
-    meta = st.session_state.get("active_meta", {})
-    st.caption(f"**{result.portfolio.client_name}** · target {result.model.name} · "
-               f"benchmark {BENCHMARK_NAME}")
+    a, r, plan = result.allocation, result.risk, result.plan
+    with st.container(border=True):
+        cc = st.columns([3, 1])
+        cc[0].markdown(f"**{result.portfolio.client_name}** · target {result.model.name} · "
+                       f"benchmark {BENCHMARK_NAME}")
+        if cc[1].button("Change portfolio", width="stretch", key="change_pf"):
+            st.session_state.pop("active", None)
+            st.rerun()
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Portfolio value", f"${a.total_value:,.0f}", f"{len(a.positions)} positions")
@@ -181,57 +285,13 @@ def dashboard() -> None:
     c4.metric("Max drawdown", f"{r.max_drawdown:.1%}",
               f"S&P {r.benchmark_max_drawdown:.1%}", delta_color="off")
 
-    st.write("")
-    left, right = st.columns([1, 1])
-    with left:
-        st.markdown("**Allocation by asset class**")
-        alloc = pd.Series(a.by_asset_class).sort_values(ascending=False)
-        st.bar_chart(alloc, height=260, horizontal=True)
-    with right:
-        st.markdown("**Largest holdings**")
-        top = sorted(a.positions, key=lambda p: p.market_value, reverse=True)[:6]
-        df = pd.DataFrame(
-            {"Ticker": p.ticker,
-             "Weight": p.market_value / a.total_value,
-             "Value": p.market_value} for p in top
-        )
-        st.dataframe(
-            df, hide_index=True, width="stretch",
-            column_config={
-                "Weight": st.column_config.ProgressColumn(
-                    "Weight", format="%.1f%%", min_value=0, max_value=float(df["Weight"].max())),
-                "Value": st.column_config.NumberColumn("Value", format="$%,.0f"),
-            },
-        )
-
-    if result.concentration.flags:
-        high = sum(1 for f in result.concentration.flags if f.severity == "high")
-        st.warning(f"{len(result.concentration.flags)} concentration flag(s), {high} high "
-                   f"severity — see Portfolio Analysis.", icon="⚠️")
-
-
-# ==========================================================================
-# Portfolio Analysis
-# ==========================================================================
-def portfolio_analysis() -> None:
-    ui.page_title("Portfolio Analysis", "Holdings, allocation, and risk metrics.")
-    result = _active()
-    if result is None:
-        _needs_portfolio_notice()
-        return
-
-    a, r = result.allocation, result.risk
-
-    st.markdown("**Holdings**")
-    rows = []
-    for p in a.positions:
-        rows.append({
-            "Ticker": p.ticker, "Name": p.name, "Class": p.asset_class,
-            "Value": p.market_value, "Weight": p.market_value / a.total_value,
-            "Cost basis": p.cost_basis, "Unrealized": p.unrealized_gain,
-            "Return": p.gain_pct,
-        })
-    df = pd.DataFrame(rows)
+    # --- Holdings ---------------------------------------------------------
+    st.markdown("#### Holdings")
+    df = pd.DataFrame([{
+        "Ticker": p.ticker, "Name": p.name, "Class": p.asset_class,
+        "Value": p.market_value, "Weight": p.market_value / a.total_value,
+        "Cost basis": p.cost_basis, "Unrealized": p.unrealized_gain, "Return": p.gain_pct,
+    } for p in a.positions])
     st.dataframe(
         df, hide_index=True, width="stretch",
         column_config={
@@ -243,10 +303,11 @@ def portfolio_analysis() -> None:
         },
     )
 
-    st.write("")
+    # --- Risk + concentration --------------------------------------------
     left, right = st.columns([1, 1])
     with left:
-        st.markdown("**Risk & return** — 3-year, current weights")
+        st.markdown("#### Risk & return")
+        st.caption("3-year, current weights")
         risk_df = pd.DataFrame({
             "Measure": ["Volatility (ann.)", "Max drawdown", "Annualized return",
                         "Sharpe ratio", "Beta vs S&P 500", "Correlation"],
@@ -258,26 +319,15 @@ def portfolio_analysis() -> None:
         })
         st.dataframe(risk_df, hide_index=True, width="stretch")
     with right:
-        st.markdown("**Concentration**")
+        st.markdown("#### Concentration")
         if not result.concentration.flags:
             st.success("No concentration guidelines exceeded.", icon="✅")
         for f in result.concentration.flags:
             color = {"high": "🔴", "moderate": "🟠", "low": "🟡"}.get(f.severity, "⚪")
             st.markdown(f"{color} **{f.subject}** ({f.weight:.0%}) — {f.message}")
 
-
-# ==========================================================================
-# Rebalancing
-# ==========================================================================
-def rebalancing() -> None:
-    ui.page_title("Rebalancing", "Drift from target and a tax-aware trade plan.")
-    result = _active()
-    if result is None:
-        _needs_portfolio_notice()
-        return
-
-    plan = result.plan
-    st.markdown(f"**Allocation vs. {result.model.name} target**")
+    # --- Rebalancing ------------------------------------------------------
+    st.markdown("#### Rebalancing")
     drift_df = pd.DataFrame({
         "Asset class": [d.asset_class for d in plan.drifts],
         "Current": [d.current_weight for d in plan.drifts],
@@ -294,61 +344,178 @@ def rebalancing() -> None:
             "Dollar gap": st.column_config.NumberColumn(format="$%,.0f"),
         },
     )
+    if plan.needs_rebalancing:
+        trade_df = pd.DataFrame({
+            "Reduce": [leg.ticker for leg in plan.sells],
+            "Account": [leg.account_type.title() for leg in plan.sells],
+            "Amount": [leg.dollars for leg in plan.sells],
+            "Gain realized": [leg.realized_gain for leg in plan.sells],
+            "Term": ["Long-term" if leg.is_long_term else "Short-term" for leg in plan.sells],
+            "Est. tax": [leg.estimated_tax for leg in plan.sells],
+        })
+        st.dataframe(
+            trade_df, hide_index=True, width="stretch",
+            column_config={
+                "Amount": st.column_config.NumberColumn(format="$%,.0f"),
+                "Gain realized": st.column_config.NumberColumn(format="$%,.0f"),
+                "Est. tax": st.column_config.NumberColumn(format="$%,.0f"),
+            },
+        )
+        t1, t2, t3 = st.columns(3)
+        t1.metric("Turnover", f"${plan.total_turnover:,.0f}")
+        t2.metric("Est. tax cost", f"${plan.total_tax_cost:,.0f}",
+                  f"{plan.tax_cost_pct_of_turnover:.1%} of turnover", delta_color="off")
+        t3.metric("Sourced tax-free", f"${plan.tax_free_proceeds:,.0f}")
+        for n in plan.notes:
+            st.caption(f"• {n}")
+    else:
+        st.success("Within tolerance of target. No trades indicated.", icon="✅")
 
-    if not plan.needs_rebalancing:
-        st.success("Every asset class is within tolerance of the target. No trades indicated.",
-                   icon="✅")
-        return
-
-    st.write("")
-    st.markdown("**Proposed trades** — sourced sheltered-first, tax priced")
-    trade_df = pd.DataFrame({
-        "Reduce": [leg.ticker for leg in plan.sells],
-        "Account": [leg.account_type.title() for leg in plan.sells],
-        "Amount": [leg.dollars for leg in plan.sells],
-        "Gain realized": [leg.realized_gain for leg in plan.sells],
-        "Term": ["Long-term" if leg.is_long_term else "Short-term" for leg in plan.sells],
-        "Est. tax": [leg.estimated_tax for leg in plan.sells],
-    })
-    st.dataframe(
-        trade_df, hide_index=True, width="stretch",
-        column_config={
-            "Amount": st.column_config.NumberColumn(format="$%,.0f"),
-            "Gain realized": st.column_config.NumberColumn(format="$%,.0f"),
-            "Est. tax": st.column_config.NumberColumn(format="$%,.0f"),
-        },
-    )
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Turnover", f"${plan.total_turnover:,.0f}")
-    m2.metric("Est. tax cost", f"${plan.total_tax_cost:,.0f}",
-              f"{plan.tax_cost_pct_of_turnover:.1%} of turnover", delta_color="off")
-    m3.metric("Sourced tax-free", f"${plan.tax_free_proceeds:,.0f}")
-    for n in plan.notes:
-        st.caption(f"• {n}")
-
-
-# ==========================================================================
-# Reports
-# ==========================================================================
-def reports() -> None:
-    ui.page_title("Reports", "Generate a client-ready report from the loaded portfolio.")
-    result = _active()
-    if result is None:
-        _needs_portfolio_notice()
-        return
-
-    html = render_html(
-        result.portfolio, result.allocation, result.risk, result.concentration,
-        result.plan, result.model, result.narrative, result.market,
-    )
+    # --- Report -----------------------------------------------------------
+    st.markdown("#### Client report")
+    html = render_html(result.portfolio, a, r, result.concentration, plan,
+                       result.model, result.narrative, result.market)
     st.download_button(
         "Download report (HTML)", data=html,
         file_name=f"{result.portfolio.client_name.replace(' ', '_').lower()}_report.html",
         mime="text/html", type="primary",
     )
-    st.caption("Opens in any browser; print to PDF for a client-quality one-pager.")
+    with st.expander("Preview report"):
+        st.components.v1.html(html, height=760, scrolling=True)
+
+
+# ==========================================================================
+# Client Survey — client-facing suitability intake
+# ==========================================================================
+def client_survey() -> None:
+    # Completion screen takes over once submitted.
+    if st.session_state.get("survey_done"):
+        _survey_thank_you()
+        return
+
+    st.markdown(
+        f"""
+        <div class="aw-hero" style="padding:34px 40px">
+          <div class="eyebrow">{ui.FIRM_NAME}</div>
+          <h1 style="font-size:28px">Tell us about your goals.</h1>
+          <p>A few minutes now helps your advisor arrive already understanding your
+             situation — so your first meeting is spent on advice, not paperwork.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.write("")
-    st.components.v1.html(html, height=820, scrolling=True)
+
+    with st.form("survey"):
+        st.markdown("##### About you")
+        p1, p2, p3 = st.columns(3)
+        name = p1.text_input("Your name", "")
+        age = p2.number_input("Age", 18, 100, 45)
+        dependents = p3.number_input("Dependents", 0, 15, 0)
+
+        st.markdown("##### Your timeline & work")
+        h1, h2, h3 = st.columns(3)
+        horizon = h1.number_input("Years until you need this money", 1, 50, 15)
+        employment = h2.selectbox("Employment", list(Employment),
+                                  format_func=lambda e: e.value.replace("_", " ").title())
+        income = h3.number_input("Annual income ($)", 0, value=100_000, step=5_000)
+
+        st.markdown("##### Your finances")
+        b1, b2, b3 = st.columns(3)
+        net_worth = b1.number_input("Net worth ($)", 0, value=500_000, step=10_000)
+        liquid = b2.number_input("Cash & liquid savings ($)", 0, value=250_000, step=10_000)
+        investable = b3.number_input("Investable assets ($)", 0, value=500_000, step=10_000)
+
+        st.markdown("##### If you're retired or nearing retirement")
+        st.caption("Leave spending at 0 if you're still saving.")
+        ri1, ri2, ri3 = st.columns(3)
+        spending = ri1.number_input("Annual spending need ($)", 0, value=0, step=5_000)
+        ss_income = ri2.number_input("Social Security ($/yr)", 0, value=0, step=1_000)
+        pension_income = ri3.number_input("Pension / other income ($/yr)", 0, value=0, step=1_000)
+
+        st.markdown("##### Your comfort with risk")
+        o1, o2 = st.columns(2)
+        objective = o1.selectbox("What's your main goal?", list(Objective), index=2,
+                                 format_func=lambda o: o.value.title())
+        risk_tol = o2.selectbox("How would you describe your risk tolerance?",
+                                list(RiskTolerance), index=2,
+                                format_func=lambda r: r.value.replace("_", " ").title())
+        d1, d2 = st.columns(2)
+        drawdown = d1.slider("Largest drop you could sit through", 0.0, 0.6, 0.20, 0.05,
+                             format="%.0f%%")
+        experience = d2.selectbox("Investing experience", list(Experience), index=1,
+                                  format_func=lambda e: e.value.title())
+        reserve = st.checkbox("I have an emergency reserve (3–6 months of expenses)", value=True)
+
+        share = st.checkbox(
+            f"Share my responses with a {ui.FIRM_NAME} advisor so they can prepare for "
+            f"our meeting", value=True)
+
+        submitted = st.form_submit_button("Submit survey", type="primary")
+
+    if submitted:
+        profile = ClientProfile(
+            client_name=name or "Prospective Client", age=int(age),
+            dependents=int(dependents), time_horizon_years=int(horizon),
+            employment=employment, annual_income=float(income),
+            net_worth=float(net_worth), liquid_net_worth=float(liquid),
+            near_term_withdrawal=0.0, has_emergency_reserve=bool(reserve),
+            objective=objective, risk_tolerance=risk_tol,
+            drawdown_tolerance=float(drawdown), experience=experience,
+            investable_assets=float(investable), annual_spending=float(spending),
+            social_security_income=float(ss_income), pension_income=float(pension_income),
+        )
+        st.session_state["survey_rec"] = build_recommendation(profile)
+        st.session_state["survey_shared"] = bool(share)
+        st.session_state["survey_done"] = True
+        st.rerun()
+
+
+def _survey_thank_you() -> None:
+    rec = st.session_state.get("survey_rec")
+    shared = st.session_state.get("survey_shared", False)
+    name = rec.profile.client_name if rec else "there"
+
+    st.markdown(
+        f"""
+        <div class="aw-hero" style="text-align:center; padding:56px 40px">
+          <div style="font-size:52px; margin-bottom:10px">✓</div>
+          <h1 style="font-size:30px; max-width:none">Thank you, {name}.</h1>
+          <p style="margin:0 auto">Your responses have been received. An advisor will be
+             with you shortly to review your goals and build a plan tailored to you.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.write("")
+
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c2:
+        if shared:
+            st.success(
+                f"✓ Your responses were shared with the {ui.FIRM_NAME} advisory team. "
+                "*(Simulated — this demo does not transmit real data.)*"
+            )
+        else:
+            st.info("Your responses were saved but not shared. You can share them with "
+                    "your advisor at your meeting.")
+
+        # A friendly, non-technical summary for the client.
+        if rec is not None:
+            with st.container(border=True):
+                st.markdown("**What we heard**")
+                st.markdown(
+                    f"- Time horizon: **{rec.profile.time_horizon_years} years**\n"
+                    f"- Comfort with risk: **{rec.profile.risk_tolerance.value.replace('_',' ')}**\n"
+                    f"- Primary goal: **{rec.profile.objective.value.title()}**"
+                )
+                st.caption("Your advisor will translate this into a specific, suitable "
+                           "allocation when you meet.")
+
+        if st.button("Start a new survey", width="stretch"):
+            for k in ("survey_done", "survey_rec", "survey_shared"):
+                st.session_state.pop(k, None)
+            st.rerun()
 
 
 # ==========================================================================
@@ -357,152 +524,15 @@ def reports() -> None:
 def settings() -> None:
     ui.page_title("Settings", "Portfolio selection and configuration.")
     st.markdown("**Active portfolio**")
-    _portfolio_picker("settings")
+    _portfolio_picker("settings", navigate=True)
 
     st.write("")
     st.markdown("**Configuration**")
-    st.write(f"- Commentary engine: {'AI (Anthropic key detected)' if has_api_key() else 'Rule-based (no API key)'}")
+    st.write(f"- Commentary engine: "
+             f"{'AI (Anthropic key detected)' if has_api_key() else 'Rule-based (no API key)'}")
     st.write(f"- Benchmark: {BENCHMARK_NAME}")
-    st.write(f"- Firm name: {ui.FIRM_NAME}  \n"
-             f"  *(change `FIRM_NAME` in app_ui.py to rebrand)*")
+    st.write(f"- Firm name: **{ui.FIRM_NAME}** — *change `FIRM_NAME` in app_ui.py to rebrand*")
     st.caption("Educational project — not investment advice. All sample data is synthetic.")
-
-
-# ==========================================================================
-# Planning  (the suitability flow)
-# ==========================================================================
-def planning() -> None:
-    ui.page_title(
-        "Planning",
-        "Capacity-first suitability: risk profile, allocation, retirement-income "
-        "readiness, and a sequence-of-returns stress test.",
-    )
-
-    with st.form("intake"):
-        st.markdown("##### Personal")
-        p1, p2, p3 = st.columns(3)
-        name = p1.text_input("Client name", "New Client")
-        age = p2.number_input("Age", 18, 100, 45)
-        dependents = p3.number_input("Dependents", 0, 15, 0)
-
-        st.markdown("##### Time horizon & employment")
-        h1, h2, h3 = st.columns(3)
-        horizon = h1.number_input("Time horizon (years)", 1, 50, 15,
-                                  help="Years until the funds are needed.")
-        employment = h2.selectbox("Employment", list(Employment),
-                                  format_func=lambda e: e.value.replace("_", " ").title())
-        income = h3.number_input("Annual income ($)", 0, value=100_000, step=5_000)
-
-        st.markdown("##### Balance sheet")
-        b1, b2, b3 = st.columns(3)
-        net_worth = b1.number_input("Net worth ($)", 0, value=500_000, step=10_000)
-        liquid = b2.number_input("Liquid net worth ($)", 0, value=250_000, step=10_000)
-        tax = b3.slider("Marginal tax bracket", 0.0, 0.5, 0.24, 0.01, format="%.0f%%")
-
-        st.markdown("##### Retirement income")
-        st.caption("Leave spending at 0 if the client is still accumulating.")
-        ri1, ri2 = st.columns(2)
-        investable = ri1.number_input("Investable assets ($)", 0, value=500_000, step=10_000)
-        spending = ri2.number_input("Annual spending need ($)", 0, value=0, step=5_000)
-        ri3, ri4 = st.columns(2)
-        ss_income = ri3.number_input("Social Security ($/yr)", 0, value=0, step=1_000)
-        pension_income = ri4.number_input("Pension / other income ($/yr)", 0, value=0, step=1_000)
-
-        st.markdown("##### Liquidity & reserves")
-        l1, l2 = st.columns(2)
-        withdrawal = l1.number_input("Near-term withdrawal need ($)", 0, value=0, step=5_000)
-        reserve = l2.checkbox("Emergency reserve in place (3–6 months)", value=True)
-
-        st.markdown("##### Objectives & risk")
-        o1, o2 = st.columns(2)
-        objective = o1.selectbox("Primary objective", list(Objective), index=2,
-                                 format_func=lambda o: o.value.title())
-        risk_tol = o2.selectbox("Stated risk tolerance", list(RiskTolerance), index=2,
-                                format_func=lambda r: r.value.replace("_", " ").title())
-        d1, d2 = st.columns(2)
-        drawdown = d1.slider("Drawdown tolerance", 0.0, 0.6, 0.20, 0.05, format="%.0f%%")
-        experience = d2.selectbox("Investment experience", list(Experience), index=1,
-                                  format_func=lambda e: e.value.title())
-        constraints = st.text_area("Constraints / existing concentrations (optional)", "")
-
-        submitted = st.form_submit_button("Generate recommendation", type="primary")
-
-    if submitted:
-        profile = ClientProfile(
-            client_name=name, age=int(age), dependents=int(dependents),
-            time_horizon_years=int(horizon), employment=employment,
-            annual_income=float(income), net_worth=float(net_worth),
-            liquid_net_worth=float(liquid), marginal_tax_bracket=float(tax),
-            near_term_withdrawal=float(withdrawal), has_emergency_reserve=bool(reserve),
-            objective=objective, risk_tolerance=risk_tol,
-            drawdown_tolerance=float(drawdown), experience=experience,
-            constraints=constraints, investable_assets=float(investable),
-            annual_spending=float(spending), social_security_income=float(ss_income),
-            pension_income=float(pension_income),
-        )
-        st.session_state["plan"] = build_recommendation(profile)
-
-    rec = st.session_state.get("plan")
-    if rec is None:
-        return
-
-    profile, assessment, readiness = rec.profile, rec.assessment, rec.readiness
-    st.success(f"Profile captured — {profile.summary_line()}")
-
-    if readiness.applicable:
-        st.markdown("#### Retirement income readiness")
-        icon = {"Safe": "✅", "Caution": "⚠️", "Unsafe": "🛑"}[readiness.status]
-        w1, w2, w3 = st.columns(3)
-        w1.metric("Withdrawal rate", f"{readiness.withdrawal_rate:.1%}",
-                  f"benchmark {readiness.benchmark_rate:.0%}", delta_color="off")
-        w2.metric("Status", f"{icon} {readiness.status}")
-        w3.metric("Suggested split", readiness.suggested_split_label)
-        for f in readiness.findings:
-            st.markdown(f"- {f}")
-        for rf in readiness.red_flags:
-            st.error(rf, icon="🚩")
-        st.divider()
-
-    st.markdown("#### Recommendation")
-    rc1, rc2, rc3, rc4 = st.columns(4)
-    rc1.metric("Recommended model", rec.recommended_label)
-    rc2.metric("Desired (score alone)", rec.desired_label,
-               "capped by capacity" if rec.capped else "capacity supports it",
-               delta_color="off")
-    rc3.metric("Risk score", f"{assessment.raw_score:.0f}/100")
-    rc4.metric("Equity ceiling", f"{rec.capacity.max_equity:.0%}")
-
-    if rec.capped:
-        st.warning(f"Stated profile supports **{rec.desired_label}**, but capacity caps the "
-                   f"recommendation at **{rec.recommended_label}** — situation overriding "
-                   f"attitude.", icon="🛡️")
-    for line in rec.rationale:
-        st.markdown(line if line.strip().startswith("•") else f"- {line}")
-
-    with st.expander("Capacity ceiling — every constraint"):
-        for c in rec.capacity.constraints:
-            st.markdown(f"{'▶' if c.binding else '•'} **{c.ceiling:.0%}** — {c.label}")
-
-    stress = rec.stress
-    if stress.applicable:
-        st.divider()
-        st.markdown("#### Sequence-of-returns stress test")
-        st.caption(f"{stress.equity_fraction:.0%} equity, ${stress.base_withdrawal:,.0f}/yr "
-                   f"withdrawal over {stress.horizon_years} years.")
-        chart_df = pd.DataFrame(
-            {sc.name: sc.values for sc in stress.scenarios},
-            index=range(1, stress.horizon_years + 1),
-        )
-        chart_df.index.name = "Year"
-        st.line_chart(chart_df, height=320)
-        cols = st.columns(3)
-        for col, sc in zip(cols, stress.scenarios):
-            status = "Survived" if sc.survived else f"Depleted yr {sc.depletion_year}"
-            col.metric(sc.name, f"${sc.terminal_value:,.0f}", status, delta_color="off")
-        for f in stress.findings:
-            st.info(f, icon="📉")
-        st.caption("Early bear and Late bear use the identical annual returns in reverse "
-                   "order — any gap is pure sequence-of-returns risk. Illustrative, not a forecast.")
 
 
 # Router table.
@@ -510,8 +540,6 @@ PAGES = {
     "Home": home,
     "Dashboard": dashboard,
     "Portfolio Analysis": portfolio_analysis,
-    "Rebalancing": rebalancing,
-    "Planning": planning,
-    "Reports": reports,
+    "Client Survey": client_survey,
     "Settings": settings,
 }
