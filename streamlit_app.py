@@ -9,10 +9,21 @@ package. Streamlit Community Cloud runs this file.
 
 from __future__ import annotations
 
-import streamlit as st
+import sys
+from pathlib import Path
 
-import app_ui as ui
-from app_views import PAGES
+# Make the `pra` package importable without installation. Locally the package is
+# `pip install -e .`; on Streamlit Community Cloud (which installs only
+# requirements.txt) `src/` must be added to the path explicitly. This must run
+# before importing app_ui / app_views, which import pra.
+_SRC = Path(__file__).parent / "src"
+if _SRC.exists() and str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
+import streamlit as st  # noqa: E402
+
+import app_ui as ui  # noqa: E402
+from app_views import PAGES  # noqa: E402
 
 st.set_page_config(page_title="WealthSync Advisors", page_icon="📊", layout="wide")
 
