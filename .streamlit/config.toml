@@ -1,15 +1,13 @@
-# Advisor Workbench theme — restrained, matching the report's navy accent.
+# WealthSync Advisors theme — institutional navy with a teal accent.
 [theme]
-primaryColor = "#1f4e79"
+primaryColor = "#17a2b8"
 backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f6f7f9"
-textColor = "#1a1d23"
+secondaryBackgroundColor = "#f4f7fa"
+textColor = "#1f2937"
 font = "sans serif"
 
 [server]
-# Uploaded portfolios are small CSVs; no need to accept large files.
 maxUploadSize = 5
 
 [browser]
-# No usage telemetry — suppresses the first-run email prompt too.
 gatherUsageStats = false
