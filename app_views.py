@@ -531,77 +531,96 @@ def client_survey() -> None:
     )
     st.write("")
 
-    tabs = st.tabs(["🧭 Your Goals", "🏠 Family Balance Sheet", "👤 About You"])
+    st.info("Please complete every section. Enter **0** for any dollar amount that "
+            "doesn't apply to you (N/A).", icon="📝")
 
-    # --- Goals: the risk triangle (live) ---------------------------------
-    with tabs[0]:
-        st.markdown("**Where does your family sit between growth, income, and safety?**")
-        st.caption("Adjust the sliders — the marker moves inside the triangle to show your balance.")
-        tri_col, ctrl_col = st.columns([1, 1])
-        with ctrl_col:
-            wg = st.slider("Growth — build wealth over time", 0, 100, 50, key="tri_g")
-            wi = st.slider("Income — steady cash flow", 0, 100, 25, key="tri_i")
-            ws = st.slider("Safety — protect what I have", 0, 100, 25, key="tri_s")
-            horizon = st.number_input("Years until you need this money", 1, 50, 15, key="sv_h")
-            drawdown = st.slider("Largest drop you could sit through", 0.0, 0.6, 0.20, 0.05,
-                                 format="%.0f%%", key="sv_dd")
-            experience = st.selectbox("Investing experience", list(Experience), index=1,
-                                      format_func=lambda e: e.value.title(), key="sv_exp")
-        with tri_col:
-            st.markdown(_risk_triangle_svg(wg, wi, ws), unsafe_allow_html=True)
-            obj = _triangle_to_objective(wg, wi, ws)
-            st.caption(f"Your balance reads as a **{obj.value.title()}** orientation.")
+    # ===== 1) Your Goals — the risk triangle (live) ======================
+    st.markdown("### 🧭 Your Goals")
+    st.markdown("**Where does your family sit between growth, income, and safety?**")
+    st.caption("Adjust the sliders — the marker moves inside the triangle to show your balance.")
+    tri_col, ctrl_col = st.columns([1, 1])
+    with ctrl_col:
+        wg = st.slider("Growth — build wealth over time", 0, 100, 50, key="tri_g")
+        wi = st.slider("Income — steady cash flow", 0, 100, 25, key="tri_i")
+        ws = st.slider("Safety — protect what I have", 0, 100, 25, key="tri_s")
+        horizon = st.number_input("Years until you need this money", 1, 50, 15, key="sv_h")
+        drawdown = st.slider("Largest drop you could sit through", 0.0, 0.6, 0.20, 0.05,
+                             format="%.0f%%", key="sv_dd")
+        experience = st.selectbox("Investing experience", list(Experience), index=1,
+                                  format_func=lambda e: e.value.title(), key="sv_exp")
+    with tri_col:
+        st.markdown(_risk_triangle_svg(wg, wi, ws), unsafe_allow_html=True)
+        obj = _triangle_to_objective(wg, wi, ws)
+        st.caption(f"Your balance reads as a **{obj.value.title()}** orientation.")
 
-    # --- Family balance sheet --------------------------------------------
-    with tabs[1]:
-        st.markdown("**Your family's assets and liabilities**")
-        st.caption("Approximate values are fine — this helps size your plan.")
-        ac, lc = st.columns(2)
-        assets: dict[str, float] = {}
-        with ac:
-            st.markdown("Assets")
-            defaults = [50_000, 200_000, 250_000, 400_000, 0]
-            for lab, dv in zip(ASSET_LABELS, defaults):
-                assets[lab] = float(st.number_input(lab, 0, value=dv, step=5_000, key=f"as_{lab}"))
-        liabs: dict[str, float] = {}
-        with lc:
-            st.markdown("Liabilities")
-            ldef = [280_000, 20_000, 0, 0]
-            for lab, dv in zip(LIABILITY_LABELS, ldef):
-                liabs[lab] = float(st.number_input(lab, 0, value=dv, step=5_000, key=f"li_{lab}"))
-        ta, tl = sum(assets.values()), sum(liabs.values())
-        s1, s2, s3 = st.columns(3)
-        s1.metric("Total assets", f"${ta:,.0f}")
-        s2.metric("Total liabilities", f"${tl:,.0f}")
-        s3.metric("Net worth", f"${ta - tl:,.0f}")
+    # ===== 2) Family Balance Sheet =======================================
+    st.divider()
+    st.markdown("### 🏠 Family Balance Sheet")
+    st.caption("Approximate values are fine. Enter 0 for anything you don't have (N/A).")
+    ac, lc = st.columns(2)
+    assets: dict[str, float] = {}
+    with ac:
+        st.markdown("**Assets**")
+        defaults = [50_000, 200_000, 250_000, 400_000, 0]
+        for lab, dv in zip(ASSET_LABELS, defaults):
+            assets[lab] = float(st.number_input(lab, 0, value=dv, step=5_000, key=f"as_{lab}"))
+    liabs: dict[str, float] = {}
+    with lc:
+        st.markdown("**Liabilities**")
+        ldef = [280_000, 20_000, 0, 0]
+        for lab, dv in zip(LIABILITY_LABELS, ldef):
+            liabs[lab] = float(st.number_input(lab, 0, value=dv, step=5_000, key=f"li_{lab}"))
+    ta, tl = sum(assets.values()), sum(liabs.values())
+    s1, s2, s3 = st.columns(3)
+    s1.metric("Total assets", f"${ta:,.0f}")
+    s2.metric("Total liabilities", f"${tl:,.0f}")
+    s3.metric("Net worth", f"${ta - tl:,.0f}")
 
-    # --- About you --------------------------------------------------------
-    with tabs[2]:
-        a1, a2, a3 = st.columns(3)
-        name = a1.text_input("Your name", "", key="sv_name")
-        age = a2.number_input("Age", 18, 100, 45, key="sv_age")
-        dependents = a3.number_input("Dependents", 0, 15, 0, key="sv_dep")
-        e1, e2 = st.columns(2)
-        employment = e1.selectbox("Employment", list(Employment),
-                                  format_func=lambda e: e.value.replace("_", " ").title(), key="sv_emp")
-        income = e2.number_input("Annual income ($)", 0, value=100_000, step=5_000, key="sv_inc")
-        st.caption("If you're retired or nearing it:")
-        r1, r2, r3 = st.columns(3)
-        spending = r1.number_input("Annual spending need ($)", 0, value=0, step=5_000, key="sv_sp")
-        ss_income = r2.number_input("Social Security ($/yr)", 0, value=0, step=1_000, key="sv_ss")
-        pension = r3.number_input("Pension / other ($/yr)", 0, value=0, step=1_000, key="sv_pen")
-        reserve = st.checkbox("We have an emergency reserve (3–6 months)", value=True, key="sv_res")
+    # ===== 3) About You ==================================================
+    st.divider()
+    st.markdown("### 👤 About You")
+    a1, a2, a3 = st.columns(3)
+    name = a1.text_input("Your name", "", key="sv_name")
+    age = a2.number_input("Age", 18, 100, 45, key="sv_age")
+    dependents = a3.number_input("Dependents", 0, 15, 0, key="sv_dep")
+    e1, e2 = st.columns(2)
+    employment = e1.selectbox("Employment", list(Employment),
+                              format_func=lambda e: e.value.replace("_", " ").title(), key="sv_emp")
+    income = e2.number_input("Annual income ($) — enter 0 if retired/none", 0, value=100_000,
+                             step=5_000, key="sv_inc")
+    st.caption("If you're retired or nearing it (enter 0 for N/A):")
+    r1, r2, r3 = st.columns(3)
+    spending = r1.number_input("Annual spending need ($)", 0, value=0, step=5_000, key="sv_sp")
+    ss_income = r2.number_input("Social Security ($/yr)", 0, value=0, step=1_000, key="sv_ss")
+    pension = r3.number_input("Pension / other ($/yr)", 0, value=0, step=1_000, key="sv_pen")
+    reserve = st.checkbox("We have an emergency reserve (3–6 months)", value=True, key="sv_res")
 
-    st.write("")
+    # ===== Submit (single, at the bottom) ================================
+    st.divider()
     share = st.checkbox(f"Share my responses with a {ui.FIRM_NAME} advisor to prepare for our "
                         "meeting", value=True, key="sv_share")
+
     if st.button("Submit survey", type="primary", key="sv_submit"):
-        # Derive engine inputs from the survey.
+        # Validate the important fields; 0 is an acceptable "N/A" for dollar amounts.
+        missing = []
+        if not name.strip():
+            missing.append("your name")
+        if (wg + wi + ws) == 0:
+            missing.append("your goals balance (Growth / Income / Safety)")
+        if sum(assets.values()) <= 0:
+            missing.append("at least one asset on the balance sheet")
+        if income <= 0 and spending <= 0:
+            missing.append("annual income, or a spending need if retired")
+        if missing:
+            st.error("Please complete: " + "; ".join(missing) +
+                     ". Enter 0 only for amounts that genuinely don't apply.")
+            return
+
         investable = assets["Taxable investments"] + assets["Retirement accounts"]
         liquid = assets["Cash & savings"]
         net_worth = sum(assets.values()) - sum(liabs.values())
         profile = ClientProfile(
-            client_name=name or "Prospective Client", age=int(age), dependents=int(dependents),
+            client_name=name.strip(), age=int(age), dependents=int(dependents),
             time_horizon_years=int(horizon), employment=employment, annual_income=float(income),
             net_worth=float(net_worth), liquid_net_worth=float(liquid),
             has_emergency_reserve=bool(reserve),
