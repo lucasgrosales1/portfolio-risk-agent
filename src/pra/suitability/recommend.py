@@ -23,6 +23,7 @@ from .profile import ClientProfile
 from .retirement import RetirementReadiness, assess_retirement_readiness
 from .scoring import RiskAssessment, score_profile
 from .stress import StressTest, run_stress_test
+from .structured import StructuredAssessment, evaluate_structured_products
 
 # Models ordered least to most equity, with their equity fraction.
 _MODELS_BY_EQUITY = sorted(
@@ -49,6 +50,7 @@ class Recommendation:
     readiness: RetirementReadiness
     capacity: CapacityCeiling
     stress: StressTest
+    structured: StructuredAssessment
 
     desired_model: str          # what the risk score alone supports
     recommended_model: str      # after capacity reconciliation
@@ -93,6 +95,8 @@ def build_recommendation(profile: ClientProfile) -> Recommendation:
         base_withdrawal=profile.net_withdrawal_need,
     )
 
+    structured = evaluate_structured_products(profile)
+
     rationale: list[str] = list(assessment.rationale)
     if capped:
         rationale.append(
@@ -115,6 +119,7 @@ def build_recommendation(profile: ClientProfile) -> Recommendation:
         readiness=readiness,
         capacity=capacity,
         stress=stress,
+        structured=structured,
         desired_model=desired,
         recommended_model=recommended,
         capped=capped,

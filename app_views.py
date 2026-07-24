@@ -346,6 +346,33 @@ def _render_recommendation(rec) -> None:
         for f in stress.findings:
             st.info(f, icon="📉")
 
+    # --- Structured products ---------------------------------------------
+    sp = rec.structured
+    st.markdown("#### Structured products")
+    st.caption(sp.sleeve_note)
+    if sp.any_recommended:
+        st.success(sp.headline, icon="✅")
+    else:
+        st.info(sp.headline, icon="🚫")
+
+    for p in sp.considered:
+        if p.recommended:
+            with st.container(border=True):
+                st.markdown(f"**✅ {p.name}**")
+                st.markdown(p.rationale)
+                if p.payoff:
+                    df = pd.DataFrame(
+                        {"Product return %": [r * 100 for _, r in p.payoff],
+                         "Underlying (1:1) %": [u * 100 for u, _ in p.payoff]},
+                        index=[round(u * 100, 1) for u, _ in p.payoff])
+                    df.index.name = "Underlying return %"
+                    st.line_chart(df, height=230)
+        else:
+            st.markdown(f"**✗ {p.name}** — {p.rationale}")
+    st.caption("Payoff diagrams use illustrative, clearly-stated assumed terms at maturity — "
+               "not a quote for any real issued product. Structured products carry issuer "
+               "credit risk, limited liquidity, and defined terms.")
+
 
 def _render_survey_subject(rec_wrap: dict) -> None:
     rec = rec_wrap["rec"]
@@ -477,28 +504,28 @@ def portfolio_analysis() -> None:
     surveys = st.session_state.get("surveys", [])
     active = _active()
 
-    # Build the subject options: filed surveys first, then a loaded portfolio.
-    options: list[tuple[str, str]] = []
+    # Build the subject options (plain string keys + a label lookup).
+    keys: list[str] = []
+    labels: dict[str, str] = {}
     for w in reversed(surveys):
-        options.append((f"survey:{w['id']}", f"📝 Survey — {w['name']} ({w['submitted_at']:%b %d})"))
+        k = f"survey:{w['id']}"
+        keys.append(k)
+        labels[k] = f"📝 Survey — {w['name']} ({w['submitted_at']:%b %d})"
     if active is not None:
-        options.append(("active", f"📊 Portfolio — {active.portfolio.client_name}"))
-    options.append(("load", "➕ Load a new portfolio…"))
+        keys.append("active")
+        labels["active"] = f"📊 Portfolio — {active.portfolio.client_name}"
+    keys.append("load")
+    labels["load"] = "➕ Load a new portfolio…"
 
     # Default selection: a survey we were sent to review, else first option.
     default_idx = 0
     review_id = st.session_state.pop("review_survey_id", None)
-    if review_id is not None:
-        for i, (val, _) in enumerate(options):
-            if val == f"survey:{review_id}":
-                default_idx = i
-                break
+    if review_id is not None and f"survey:{review_id}" in keys:
+        default_idx = keys.index(f"survey:{review_id}")
 
-    choice = st.selectbox("Select a portfolio or survey", options,
-                          format_func=lambda o: o[1], index=default_idx, key="subject_sel")
+    kind = st.selectbox("Select a portfolio or survey", keys,
+                        format_func=lambda k: labels[k], index=default_idx, key="subject_sel")
     st.divider()
-
-    kind = choice[0]
     if kind == "load":
         _portfolio_picker("inline", navigate=False)
     elif kind == "active" and active is not None:
