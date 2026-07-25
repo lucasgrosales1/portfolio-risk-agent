@@ -58,8 +58,8 @@ SAMPLE_PORTFOLIOS = {
     "Pre-retiree, over-allocated (Margaret Chen)": "sample_preretiree.csv",
 }
 
-ASSET_LABELS = ["Cash & savings", "Taxable investments", "Retirement accounts",
-                "Home value", "Other assets"]
+ASSET_LABELS = ["Cash & savings", "Brokerage & investment accounts",
+                "Retirement accounts (401k, IRA)", "Home value", "Other assets"]
 LIABILITY_LABELS = ["Mortgage", "Auto & student loans", "Credit cards", "Other debt"]
 
 
@@ -116,6 +116,37 @@ def _portfolio_picker(context: str, navigate: bool = False) -> None:
                 ui.go_to("Portfolio Analysis")
             else:
                 st.rerun()
+
+
+def _ensure_demo_survey() -> None:
+    """Seed one realistic demo client so the Monte Carlo and IPS can be shown
+    without filling out the survey first."""
+    if st.session_state.get("demo_seeded"):
+        return
+    st.session_state["demo_seeded"] = True
+    p = ClientProfile(
+        client_name="The Rivera Family", age=52, dependents=2, time_horizon_years=13,
+        employment=Employment.EMPLOYED, annual_income=220_000, net_worth=1_400_000,
+        liquid_net_worth=350_000, marginal_tax_bracket=0.32, has_emergency_reserve=True,
+        objective=Objective.GROWTH, risk_tolerance=RiskTolerance.MODERATE_AGGRESSIVE,
+        drawdown_tolerance=0.25, experience=Experience.GOOD, investable_assets=900_000,
+        goals=[FinancialGoal(GoalType.RETIREMENT, 2_500_000, 13, "high"),
+               FinancialGoal(GoalType.COLLEGE, 200_000, 9, "medium")])
+    st.session_state.setdefault("surveys", [])
+    st.session_state.setdefault("survey_seq", 0)
+    st.session_state["survey_seq"] += 1
+    st.session_state["surveys"].append({
+        "id": st.session_state["survey_seq"], "name": p.client_name,
+        "phone": "(305) 555-0148", "email": "rivera.family@example.com",
+        "submitted_at": dt.datetime.now() - dt.timedelta(hours=3),
+        "rec": build_recommendation(p),
+        "assets": {"Cash & savings": 60_000, "Brokerage & investment accounts": 500_000,
+                   "Retirement accounts (401k, IRA)": 400_000, "Home value": 620_000,
+                   "Other assets": 0},
+        "liabilities": {"Mortgage": 240_000, "Auto & student loans": 18_000,
+                        "Credit cards": 0, "Other debt": 0},
+        "net_worth": 1_322_000, "demo": True,
+    })
 
 
 # ==========================================================================
@@ -218,6 +249,32 @@ def home() -> None:
                 "Live valuation, concentration and risk, tax-aware rebalancing, and a "
                 "report you can keep — every figure computed, never guessed.")
 
+    # --- About us ---------------------------------------------------------
+    st.write("")
+    st.markdown('<div class="aw-section-label">About us</div>', unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown(
+            f"""
+##### A Florida firm built around families, not products.
+
+{ui.FIRM_NAME} was founded on a simple idea: good financial advice starts with
+truly understanding a family — their goals, their worries, and what *enough*
+looks like to them. We're an independent, fiduciary practice based on Florida's
+Gulf Coast, and we work with a limited number of households so every plan gets
+real attention.
+
+We believe the numbers should be honest and the reasoning should be visible. Every
+recommendation we make is backed by analysis you can see — risk you can quantify,
+trade-offs we'll name out loud, and a written plan you keep. We don't sell products
+off a shelf; we build a strategy around your life and adjust it as your life changes.
+
+Whether you're raising children, nearing retirement, or somewhere in between, our
+job is the same: help your family make confident decisions and stay on track for
+the things that matter most.
+            """
+        )
+
+    # --- Talk to an advisor ----------------------------------------------
     st.write("")
     st.markdown('<div class="aw-section-label">Talk to an advisor</div>', unsafe_allow_html=True)
     with st.container(border=True):
@@ -226,6 +283,41 @@ def home() -> None:
                      "advisor will follow up to build your plan.")
         if cc2.button("Connect now", type="primary", width="stretch", key="connect_rep"):
             ui.go_to("Client Survey")
+
+    # --- Contact us + FAQ -------------------------------------------------
+    st.write("")
+    contact_col, faq_col = st.columns(2)
+    with contact_col:
+        st.markdown('<div class="aw-section-label">Contact us</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown(
+                f"""
+**{ui.FIRM_NAME}**
+📍 1200 Harborview Blvd, Suite 300 · Sarasota, FL 34236
+📞 (941) 555-0192
+✉️ hello@wealthsyncadvisors.com
+🕘 Mon–Fri, 9:00 AM – 5:00 PM ET
+                """
+            )
+            st.caption("Sample contact details for this demo.")
+    with faq_col:
+        st.markdown('<div class="aw-section-label">FAQ</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            with st.expander("How much does a first meeting cost?"):
+                st.write("Your first conversation is complimentary. We'll review your "
+                         "survey together and outline how we can help before you commit "
+                         "to anything.")
+            with st.expander("Do I need a minimum amount to invest?"):
+                st.write("We work with families at many stages. What matters most is that "
+                         "we're a good fit for your goals and how you like to work.")
+            with st.expander("Are you a fiduciary?"):
+                st.write("Yes. We're an independent, fiduciary practice — we're obligated "
+                         "to act in your best interest, and we're paid for advice, not for "
+                         "selling products.")
+            with st.expander("What happens after I submit the survey?"):
+                st.write("Your responses go straight to your advisor, who reviews your "
+                         "goals and balance sheet and prepares a tailored plan before your "
+                         "first meeting — so your time together is spent on advice.")
 
     st.caption("Educational portfolio project — not investment advice. All sample data is synthetic.")
 
@@ -238,21 +330,27 @@ def _sim_clients() -> list[dict]:
     d = lambda n: today + dt.timedelta(days=n)
     return [
         {"name": "Robert & Susan Hale", "meeting": d(1), "time": "9:00 AM",
-         "complete": True, "aum": 2_450_000, "reason": "Annual review"},
+         "complete": True, "aum": 2_450_000, "reason": "Annual review",
+         "phone": "(941) 555-0114", "email": "r.hale@example.com"},
         {"name": "Priya Nadella", "meeting": d(1), "time": "1:30 PM",
-         "complete": False, "aum": 780_000, "reason": "New client onboarding"},
+         "complete": False, "aum": 780_000, "reason": "New client onboarding",
+         "phone": "(813) 555-0176", "email": "priya.n@example.com"},
         {"name": "James Okoro", "meeting": d(2), "time": "11:00 AM",
-         "complete": True, "aum": 1_120_000, "reason": "Rebalancing discussion"},
+         "complete": True, "aum": 1_120_000, "reason": "Rebalancing discussion",
+         "phone": "(305) 555-0133", "email": "j.okoro@example.com"},
         {"name": "The Delgado Family Trust", "meeting": d(3), "time": "3:00 PM",
-         "complete": False, "aum": 4_300_000, "reason": "Estate & concentration review"},
+         "complete": False, "aum": 4_300_000, "reason": "Estate & concentration review",
+         "phone": "(561) 555-0188", "email": "delgado.trust@example.com"},
         {"name": "Helen Yoshida", "meeting": d(9), "time": "2:00 PM",
-         "complete": True, "aum": 1_875_000, "reason": "Retirement income planning"},
+         "complete": True, "aum": 1_875_000, "reason": "Retirement income planning",
+         "phone": "(727) 555-0159", "email": "h.yoshida@example.com"},
     ]
 
 
 def dashboard() -> None:
     ui.page_title("Advisor Dashboard",
                   "Your client pipeline for the week. (Simulated workflow data.)")
+    _ensure_demo_survey()
     clients = _sim_clients()
     surveys = st.session_state.get("surveys", [])
     today = dt.date.today()
@@ -290,6 +388,7 @@ def dashboard() -> None:
     st.write("")
     st.markdown("**📅 Upcoming meetings**")
     rows = [{"Client": c["name"], "Date": c["meeting"].strftime("%a %b %d"), "Time": c["time"],
+             "Phone": c["phone"], "Email": c["email"],
              "Profile": "Complete" if c["complete"] else "Incomplete", "Purpose": c["reason"]}
             for c in sorted(clients, key=lambda c: c["meeting"])]
     st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
@@ -307,7 +406,7 @@ def dashboard() -> None:
             a.markdown(
                 f"**{rec_wrap['name']}** · submitted {rec_wrap['submitted_at']:%b %d, %I:%M %p}  \n"
                 f"<span style='color:#6b7280;font-size:13px'>"
-                f"Goal: {rec.profile.objective.value.title()} · "
+                f"📞 {rec_wrap.get('phone', '—')} · ✉️ {rec_wrap.get('email', '—')} · "
                 f"Recommended: {rec.recommended_label} · "
                 f"Net worth ${rec_wrap['net_worth']:,.0f}</span>",
                 unsafe_allow_html=True)
@@ -342,16 +441,17 @@ def _render_structured_gallery() -> None:
             st.line_chart(_payoff_df(_payoff_curve(_income_note_payoff, t), "Note return %"),
                           height=190)
             st.markdown(
-                f"**How it works.** Pays a **{t['contingent_coupon']:.0%} annual coupon** as "
-                f"long as the underlying index stays above **{t['coupon_barrier']:.0%}** of its "
-                f"start. It may 'autocall' (redeem early) if the index is up. At maturity, "
-                f"principal is returned in full *unless* the index has fallen below "
-                f"**{t['principal_barrier']:.0%}** — below that barrier you take the full loss.")
+                f"**In the portfolio.** Held as a small satellite sleeve, an income note can "
+                f"raise a portfolio's cash flow beyond what bonds yield today — an illustrative "
+                f"**{t['contingent_coupon']:.0%} contingent coupon** while the index holds above "
+                f"**{t['coupon_barrier']:.0%}** — without adding pure equity risk. It trades away "
+                f"market upside (flat payoff) for that income, so it complements a core "
+                f"allocation rather than replacing it.")
             st.markdown(
-                "**When to use it.** A client who wants **supplemental income** and can accept "
-                "that the coupon is *contingent*, not guaranteed, and that principal is at risk "
-                "in a severe decline. **Not a bond substitute.** Flat payoff means you give up "
-                "market upside in exchange for the coupon.")
+                "**Account placement.** Its coupons are taxed as ordinary income, so it usually "
+                "belongs in a **traditional IRA or other tax-deferred account**, where the "
+                "income isn't taxed yearly. Best for a client who wants supplemental income and "
+                "accepts that principal is at risk in a severe decline.")
 
     with g2:
         t = PRINCIPAL_PROTECTED_TERMS
@@ -360,15 +460,17 @@ def _render_structured_gallery() -> None:
             st.line_chart(_payoff_df(_payoff_curve(_principal_protected_payoff, t), "PPN return %"),
                           height=190)
             st.markdown(
-                f"**How it works.** Returns your **principal at maturity** regardless of the "
-                f"market, plus **{t['participation']:.0%} of the index's gain** up to a cap near "
-                f"**{t['cap']:.0%}** over {t['term_years']} years. The flat floor at 0% is the "
-                f"protection; the ceiling is the trade-off.")
+                f"**In the portfolio.** For a nervous client sitting in cash, a PPN can be the "
+                f"bridge back into the market: principal is returned at maturity while capturing "
+                f"**{t['participation']:.0%} of the index's gain** up to ~**{t['cap']:.0%}**. It "
+                f"lets money that would otherwise earn nothing participate in an upside, which "
+                f"can be the difference between a plan that keeps pace with inflation and one "
+                f"that doesn't.")
             st.markdown(
-                "**When to use it.** A **very loss-averse** client who still wants some market "
-                "upside and can lock money up for years. **Weigh the cost:** opportunity cost "
-                "(capped upside), a long lockup, inflation eroding a flat return, and the "
-                "**issuer's credit risk** — protection only holds if the issuer stays solvent.")
+                "**Account placement.** Because the payoff is a single lump at maturity, it fits "
+                "money with a matching multi-year horizon — often a **Roth or taxable account** "
+                "earmarked for a dated goal. Weigh the lockup, capped upside, and the issuer's "
+                "credit risk against simply holding a conservative allocation.")
 
     with g3:
         t = BUFFERED_ETF_TERMS
@@ -377,15 +479,16 @@ def _render_structured_gallery() -> None:
             st.line_chart(_payoff_df(_payoff_curve(_buffered_payoff, t), "Buffered return %"),
                           height=190)
             st.markdown(
-                f"**How it works.** Absorbs the **first {t['buffer']:.0%} of losses** — you lose "
-                f"nothing until the market falls past that — while your upside is **capped near "
-                f"{t['cap']:.0%}** over the {t['term_years']}-year outcome period. Beyond the "
-                f"buffer, losses pass through.")
+                f"**In the portfolio.** A buffer lets a cautious client hold more growth exposure "
+                f"than they otherwise could: it absorbs the **first {t['buffer']:.0%} of losses**, "
+                f"so the equity sleeve can be larger without breaching the client's drawdown "
+                f"limit — often improving the odds of reaching a goal versus an all-bond "
+                f"defensive position. Upside is **capped near {t['cap']:.0%}** in exchange.")
             st.markdown(
-                "**When to use it.** A client who **wants growth but can't stomach a large "
-                "drawdown.** The **defined-outcome ETF** version is usually preferred — it's "
-                "exchange-traded, liquid, and carries **no single-issuer credit risk**, unlike "
-                "a buffered *note*.")
+                "**Account placement.** The **defined-outcome ETF** version is liquid, "
+                "exchange-traded, and carries no single-issuer credit risk, so it drops cleanly "
+                "into **any account — taxable, IRA, or Roth**. A buffered *note* only adds value "
+                "when a longer defined term is specifically wanted.")
 
 
 def _render_recommendation(rec) -> None:
@@ -530,6 +633,7 @@ def _render_survey_subject(rec_wrap: dict) -> None:
     rec = rec_wrap["rec"]
     st.success(f"Reviewing survey — **{rec_wrap['name']}**, submitted "
                f"{rec_wrap['submitted_at']:%b %d, %Y %I:%M %p}", icon="📝")
+    st.caption(f"📞 {rec_wrap.get('phone', '—')}  ·  ✉️ {rec_wrap.get('email', '—')}")
 
     st.markdown("#### Client answers at a glance")
     p = rec.profile
@@ -663,6 +767,7 @@ def _render_portfolio_subject(result: AnalysisResult) -> None:
 def portfolio_analysis() -> None:
     ui.page_title("Portfolio Analysis",
                   "Analyze a holdings portfolio, or review a recently filed client survey.")
+    _ensure_demo_survey()
     surveys = st.session_state.get("surveys", [])
     active = _active()
 
@@ -801,6 +906,10 @@ def client_survey() -> None:
     name = a1.text_input("Your name", "", key="sv_name")
     age = a2.number_input("Age", 18, 100, 45, key="sv_age")
     dependents = a3.number_input("Dependents", 0, 15, 0, key="sv_dep")
+    ct1, ct2 = st.columns(2)
+    phone = ct1.text_input("Phone number", "", key="sv_phone",
+                           placeholder="(555) 123-4567")
+    email = ct2.text_input("Email", "", key="sv_email", placeholder="you@email.com")
     e1, e2 = st.columns(2)
     employment = e1.selectbox("Employment", list(Employment),
                               format_func=lambda e: e.value.replace("_", " ").title(), key="sv_emp")
@@ -834,7 +943,8 @@ def client_survey() -> None:
                      ". Enter 0 only for amounts that genuinely don't apply.")
             return
 
-        investable = assets["Taxable investments"] + assets["Retirement accounts"]
+        investable = (assets["Brokerage & investment accounts"]
+                      + assets["Retirement accounts (401k, IRA)"])
         liquid = assets["Cash & savings"]
         net_worth = sum(assets.values()) - sum(liabs.values())
         goals = [FinancialGoal(g, amt, yrs, pri)
@@ -857,6 +967,7 @@ def client_survey() -> None:
         st.session_state["surveys"].append({
             "id": st.session_state["survey_seq"],
             "name": profile.client_name,
+            "phone": phone.strip() or "—", "email": email.strip() or "—",
             "submitted_at": dt.datetime.now(),
             "rec": build_recommendation(profile),
             "assets": assets, "liabilities": liabs, "net_worth": net_worth,
