@@ -96,10 +96,14 @@ def _portfolio_picker(context: str, navigate: bool = False) -> None:
                                  key=f"model_{context}")
     disabled = source == "Upload a CSV" and upload_text is None
     if st.button("Load portfolio", type="primary", disabled=disabled, key=f"load_{context}"):
-        if _compute_active(label, model_key, upload_text) and navigate:
-            ui.go_to("Portfolio Analysis")
-        elif _active() is not None:
-            st.rerun()
+        if _compute_active(label, model_key, upload_text):
+            # Point Portfolio Analysis at the just-loaded portfolio so it shows
+            # immediately, rather than staying on a stale selection.
+            st.session_state["pa_subject"] = "active"
+            if navigate:
+                ui.go_to("Portfolio Analysis")
+            else:
+                st.rerun()
 
 
 # ==========================================================================
@@ -531,14 +535,20 @@ def portfolio_analysis() -> None:
     keys.append("load")
     labels["load"] = "➕ Load a new portfolio…"
 
-    # Default selection: a survey we were sent to review, else first option.
-    default_idx = 0
+    # If we were sent here to review a specific survey, target it.
     review_id = st.session_state.pop("review_survey_id", None)
     if review_id is not None and f"survey:{review_id}" in keys:
-        default_idx = keys.index(f"survey:{review_id}")
+        st.session_state["pa_subject"] = f"survey:{review_id}"
 
+    # The selector is index-driven from pa_subject (no persistent widget key),
+    # so it always reflects the intended subject on the first render — no need
+    # to navigate away and back for it to settle.
+    current = st.session_state.get("pa_subject")
+    if current not in keys:
+        current = keys[0]
     kind = st.selectbox("Select a portfolio or survey", keys,
-                        format_func=lambda k: labels[k], index=default_idx, key="subject_sel")
+                        format_func=lambda k: labels[k], index=keys.index(current))
+    st.session_state["pa_subject"] = kind
     st.divider()
     if kind == "load":
         _portfolio_picker("inline", navigate=False)
