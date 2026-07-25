@@ -179,11 +179,16 @@ def home() -> None:
     st.markdown(
         f"""
         <div class="aw-hero">
-          <div class="eyebrow">{ui.FIRM_NAME}</div>
-          <h1>Thoughtful planning for your whole family's future.</h1>
-          <p>From a first conversation to a complete portfolio review — clear,
-             personal guidance backed by real analysis, so every decision fits
-             your family's goals.</p>
+          <div class="aw-hero-grid">
+            <div class="aw-hero-text">
+              <div class="eyebrow">{ui.FIRM_NAME} &middot; Florida</div>
+              <h1>Thoughtful planning for your whole family's future.</h1>
+              <p>From a first conversation to a complete portfolio review — clear,
+                 personal guidance backed by real analysis, so every decision fits
+                 your family's goals.</p>
+            </div>
+            <div class="aw-hero-media">{ui.hero_media_html()}</div>
+          </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -327,29 +332,60 @@ def _payoff_df(curve, product_label: str) -> pd.DataFrame:
 
 
 def _render_structured_gallery() -> None:
-    """Three illustrative structured-product payoff shapes, side by side."""
+    """Three illustrative structured-product payoff shapes with detail on each."""
     g1, g2, g3 = st.columns(3)
+
     with g1:
         t = INCOME_NOTE_TERMS
-        st.markdown("**Income / autocallable note**")
-        st.caption(f"{t['contingent_coupon']:.0%} coupon above a "
-                   f"{t['coupon_barrier']:.0%} barrier; principal at risk below "
-                   f"{t['principal_barrier']:.0%}.")
-        st.line_chart(_payoff_df(_payoff_curve(_income_note_payoff, t), "Note return %"),
-                      height=200)
+        with st.container(border=True):
+            st.markdown("**Income / autocallable note**")
+            st.line_chart(_payoff_df(_payoff_curve(_income_note_payoff, t), "Note return %"),
+                          height=190)
+            st.markdown(
+                f"**How it works.** Pays a **{t['contingent_coupon']:.0%} annual coupon** as "
+                f"long as the underlying index stays above **{t['coupon_barrier']:.0%}** of its "
+                f"start. It may 'autocall' (redeem early) if the index is up. At maturity, "
+                f"principal is returned in full *unless* the index has fallen below "
+                f"**{t['principal_barrier']:.0%}** — below that barrier you take the full loss.")
+            st.markdown(
+                "**When to use it.** A client who wants **supplemental income** and can accept "
+                "that the coupon is *contingent*, not guaranteed, and that principal is at risk "
+                "in a severe decline. **Not a bond substitute.** Flat payoff means you give up "
+                "market upside in exchange for the coupon.")
+
     with g2:
         t = PRINCIPAL_PROTECTED_TERMS
-        st.markdown("**Principal-protected note**")
-        st.caption(f"Principal returned at maturity; {t['participation']:.0%} of upside "
-                   f"capped near {t['cap']:.0%}.")
-        st.line_chart(_payoff_df(_payoff_curve(_principal_protected_payoff, t), "PPN return %"),
-                      height=200)
+        with st.container(border=True):
+            st.markdown("**Principal-protected note**")
+            st.line_chart(_payoff_df(_payoff_curve(_principal_protected_payoff, t), "PPN return %"),
+                          height=190)
+            st.markdown(
+                f"**How it works.** Returns your **principal at maturity** regardless of the "
+                f"market, plus **{t['participation']:.0%} of the index's gain** up to a cap near "
+                f"**{t['cap']:.0%}** over {t['term_years']} years. The flat floor at 0% is the "
+                f"protection; the ceiling is the trade-off.")
+            st.markdown(
+                "**When to use it.** A **very loss-averse** client who still wants some market "
+                "upside and can lock money up for years. **Weigh the cost:** opportunity cost "
+                "(capped upside), a long lockup, inflation eroding a flat return, and the "
+                "**issuer's credit risk** — protection only holds if the issuer stays solvent.")
+
     with g3:
         t = BUFFERED_ETF_TERMS
-        st.markdown("**Buffer with a cap**")
-        st.caption(f"{t['buffer']:.0%} downside buffer; upside capped near {t['cap']:.0%}.")
-        st.line_chart(_payoff_df(_payoff_curve(_buffered_payoff, t), "Buffered return %"),
-                      height=200)
+        with st.container(border=True):
+            st.markdown("**Buffer with a cap**")
+            st.line_chart(_payoff_df(_payoff_curve(_buffered_payoff, t), "Buffered return %"),
+                          height=190)
+            st.markdown(
+                f"**How it works.** Absorbs the **first {t['buffer']:.0%} of losses** — you lose "
+                f"nothing until the market falls past that — while your upside is **capped near "
+                f"{t['cap']:.0%}** over the {t['term_years']}-year outcome period. Beyond the "
+                f"buffer, losses pass through.")
+            st.markdown(
+                "**When to use it.** A client who **wants growth but can't stomach a large "
+                "drawdown.** The **defined-outcome ETF** version is usually preferred — it's "
+                "exchange-traded, liquid, and carries **no single-issuer credit risk**, unlike "
+                "a buffered *note*.")
 
 
 def _render_recommendation(rec) -> None:
@@ -452,7 +488,7 @@ def _render_recommendation(rec) -> None:
     # --- Monte Carlo top routes ------------------------------------------
     mc = rec.monte_carlo
     st.divider()
-    st.markdown("#### Monte Carlo — top routes to the goal")
+    st.markdown("#### 🎲 Monte Carlo simulation — top routes to the goal")
     if not mc.applicable:
         st.info(mc.note, icon="🎲")
     else:
@@ -618,6 +654,11 @@ def _render_portfolio_subject(result: AnalysisResult) -> None:
                "terms at maturity, not a quote for any real product.")
     _render_structured_gallery()
 
+    st.info("Goal-based analysis — the recommended allocation, suitability-gated structured "
+            "products, the **Monte Carlo simulation**, and the IPS — appears when you review a "
+            "**client survey** (Dashboard → Review), which supplies the client's goals.",
+            icon="🎲")
+
 
 def portfolio_analysis() -> None:
     ui.page_title("Portfolio Analysis",
@@ -689,7 +730,9 @@ def client_survey() -> None:
             "doesn't apply to you (N/A).", icon="📝")
 
     # ===== 1) Your Goals — the risk triangle (live) ======================
-    st.markdown("### 🧭 Your Goals")
+    st.markdown('<div class="aw-survey-section">🧭 &nbsp;Your Goals '
+                '<span>— your comfort with risk and what you\'re investing for</span></div>',
+                unsafe_allow_html=True)
     st.markdown("**Where does your family sit between growth, income, and safety?**")
     st.caption("Adjust the sliders — the marker moves inside the triangle to show your balance.")
     tri_col, ctrl_col = st.columns([1, 1])
@@ -726,8 +769,9 @@ def client_survey() -> None:
         goal_inputs[g] = (float(amt), int(yrs), pri)
 
     # ===== 2) Family Balance Sheet =======================================
-    st.divider()
-    st.markdown("### 🏠 Family Balance Sheet")
+    st.write("")
+    st.markdown('<div class="aw-survey-section">🏠 &nbsp;Family Balance Sheet '
+                '<span>— what you own and what you owe</span></div>', unsafe_allow_html=True)
     st.caption("Approximate values are fine. Enter 0 for anything you don't have (N/A).")
     ac, lc = st.columns(2)
     assets: dict[str, float] = {}
@@ -749,8 +793,10 @@ def client_survey() -> None:
     s3.metric("Net worth", f"${ta - tl:,.0f}")
 
     # ===== 3) About You ==================================================
-    st.divider()
-    st.markdown("### 👤 About You")
+    st.write("")
+    st.markdown('<div class="aw-survey-section">👤 &nbsp;About You '
+                '<span>— a few details to complete your profile</span></div>',
+                unsafe_allow_html=True)
     a1, a2, a3 = st.columns(3)
     name = a1.text_input("Your name", "", key="sv_name")
     age = a2.number_input("Age", 18, 100, 45, key="sv_age")
