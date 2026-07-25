@@ -34,10 +34,22 @@ from pra.suitability import (
     ClientProfile,
     Employment,
     Experience,
+    FinancialGoal,
+    GoalType,
     Objective,
     RiskTolerance,
     build_recommendation,
     render_ips_html,
+)
+from pra.suitability.profile import GOAL_LABELS
+from pra.suitability.structured import (
+    BUFFERED_ETF_TERMS,
+    INCOME_NOTE_TERMS,
+    PRINCIPAL_PROTECTED_TERMS,
+    _buffered_payoff,
+    _income_note_payoff,
+    _payoff_curve,
+    _principal_protected_payoff,
 )
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -305,6 +317,41 @@ def dashboard() -> None:
 # ==========================================================================
 # Portfolio Analysis — portfolio OR client-survey analysis
 # ==========================================================================
+def _payoff_df(curve, product_label: str) -> pd.DataFrame:
+    df = pd.DataFrame(
+        {product_label: [r * 100 for _, r in curve],
+         "Underlying (1:1) %": [u * 100 for u, _ in curve]},
+        index=[round(u * 100, 1) for u, _ in curve])
+    df.index.name = "Underlying return %"
+    return df
+
+
+def _render_structured_gallery() -> None:
+    """Three illustrative structured-product payoff shapes, side by side."""
+    g1, g2, g3 = st.columns(3)
+    with g1:
+        t = INCOME_NOTE_TERMS
+        st.markdown("**Income / autocallable note**")
+        st.caption(f"{t['contingent_coupon']:.0%} coupon above a "
+                   f"{t['coupon_barrier']:.0%} barrier; principal at risk below "
+                   f"{t['principal_barrier']:.0%}.")
+        st.line_chart(_payoff_df(_payoff_curve(_income_note_payoff, t), "Note return %"),
+                      height=200)
+    with g2:
+        t = PRINCIPAL_PROTECTED_TERMS
+        st.markdown("**Principal-protected note**")
+        st.caption(f"Principal returned at maturity; {t['participation']:.0%} of upside "
+                   f"capped near {t['cap']:.0%}.")
+        st.line_chart(_payoff_df(_payoff_curve(_principal_protected_payoff, t), "PPN return %"),
+                      height=200)
+    with g3:
+        t = BUFFERED_ETF_TERMS
+        st.markdown("**Buffer with a cap**")
+        st.caption(f"{t['buffer']:.0%} downside buffer; upside capped near {t['cap']:.0%}.")
+        st.line_chart(_payoff_df(_payoff_curve(_buffered_payoff, t), "Buffered return %"),
+                      height=200)
+
+
 def _render_recommendation(rec) -> None:
     """Advisor-facing suitability detail for a submitted survey."""
     a, readiness = rec.assessment, rec.readiness
@@ -377,6 +424,57 @@ def _render_recommendation(rec) -> None:
     st.caption("Payoff diagrams use illustrative, clearly-stated assumed terms at maturity — "
                "not a quote for any real issued product. Structured products carry issuer "
                "credit risk, limited liquidity, and defined terms.")
+
+    # --- Financial goals --------------------------------------------------
+    if rec.profile.goals:
+        st.divider()
+        st.markdown("#### Financial goals")
+        gdf = pd.DataFrame([{
+            "Goal": g.label, "Target": g.target_amount, "Timeframe": f"{g.years} yrs",
+            "Priority": g.priority.title(),
+        } for g in rec.profile.goals])
+        st.dataframe(gdf, hide_index=True, width="stretch",
+                     column_config={"Target": st.column_config.NumberColumn(format="$%,.0f")})
+
+    # --- Implementation strategy -----------------------------------------
+    sa = rec.strategies
+    st.divider()
+    st.markdown("#### Implementation strategy")
+    st.caption("How to get to the target allocation — matched to this client.")
+    st.success(sa.headline, icon="🧩")
+    for f in sa.fits:
+        if f.recommended:
+            st.markdown(f"**✅ {f.name}** — {f.rationale}")
+        else:
+            st.markdown(f"<span style='color:#6b7280'>◦ {f.name} — {f.rationale}</span>",
+                        unsafe_allow_html=True)
+
+    # --- Monte Carlo top routes ------------------------------------------
+    mc = rec.monte_carlo
+    st.divider()
+    st.markdown("#### Monte Carlo — top routes to the goal")
+    if not mc.applicable:
+        st.info(mc.note, icon="🎲")
+    else:
+        st.caption(mc.note)
+        chart_df = pd.DataFrame(
+            {"Success rate %": [r.success_rate * 100 for r in mc.top_routes]},
+            index=[r.name for r in mc.top_routes])
+        st.bar_chart(chart_df, height=240, horizontal=True)
+        for i, r in enumerate(mc.top_routes, 1):
+            with st.container(border=True):
+                c1, c2, c3 = st.columns(3)
+                c1.metric(f"{i}. Success rate", f"{r.success_rate:.0%}")
+                c2.metric("Typical outcome", f"${r.median_end:,.0f}")
+                c3.metric("Poor-market outcome", f"${r.downside_end:,.0f}")
+                st.caption(r.reason)
+
+    # --- Structured-product possibilities (illustrative gallery) ---------
+    st.divider()
+    st.markdown("#### Structured-product possibilities")
+    st.caption("Illustrative payoff shapes an advisor can walk a client through — "
+               "assumed terms at maturity, not a quote for any real product.")
+    _render_structured_gallery()
 
     # --- Investment Policy Statement -------------------------------------
     st.divider()
@@ -515,6 +613,11 @@ def _render_portfolio_subject(result: AnalysisResult) -> None:
     with st.expander("Preview report"):
         st.components.v1.html(html, height=760, scrolling=True)
 
+    st.markdown("#### Structured-product possibilities")
+    st.caption("Illustrative payoff shapes to discuss alongside this portfolio — assumed "
+               "terms at maturity, not a quote for any real product.")
+    _render_structured_gallery()
+
 
 def portfolio_analysis() -> None:
     ui.page_title("Portfolio Analysis",
@@ -604,6 +707,24 @@ def client_survey() -> None:
         obj = _triangle_to_objective(wg, wi, ws)
         st.caption(f"Your balance reads as a **{obj.value.title()}** orientation.")
 
+    st.markdown("**What are you investing for?** Select every goal that applies.")
+    goal_choices = st.multiselect(
+        "Financial goals", list(GoalType), default=[GoalType.RETIREMENT],
+        format_func=lambda g: GOAL_LABELS[g], key="sv_goals")
+    goal_defaults = {GoalType.RETIREMENT: (2_000_000, 25), GoalType.COLLEGE: (250_000, 12),
+                     GoalType.MORTGAGE: (300_000, 10), GoalType.WEALTH: (1_000_000, 20)}
+    goal_inputs: dict = {}
+    for g in goal_choices:
+        amt_d, yr_d = goal_defaults[g]
+        gc1, gc2, gc3 = st.columns(3)
+        amt = gc1.number_input(f"{GOAL_LABELS[g]} — target $", 0, value=amt_d, step=10_000,
+                               key=f"goal_amt_{g.value}")
+        yrs = gc2.number_input(f"{GOAL_LABELS[g]} — in how many years", 1, 50, yr_d,
+                               key=f"goal_yrs_{g.value}")
+        pri = gc3.selectbox(f"{GOAL_LABELS[g]} — priority", ["high", "medium", "low"],
+                            key=f"goal_pri_{g.value}")
+        goal_inputs[g] = (float(amt), int(yrs), pri)
+
     # ===== 2) Family Balance Sheet =======================================
     st.divider()
     st.markdown("### 🏠 Family Balance Sheet")
@@ -670,6 +791,8 @@ def client_survey() -> None:
         investable = assets["Taxable investments"] + assets["Retirement accounts"]
         liquid = assets["Cash & savings"]
         net_worth = sum(assets.values()) - sum(liabs.values())
+        goals = [FinancialGoal(g, amt, yrs, pri)
+                 for g, (amt, yrs, pri) in goal_inputs.items() if amt > 0]
         profile = ClientProfile(
             client_name=name.strip(), age=int(age), dependents=int(dependents),
             time_horizon_years=int(horizon), employment=employment, annual_income=float(income),
@@ -679,7 +802,8 @@ def client_survey() -> None:
             risk_tolerance=_triangle_to_risk_tolerance(wg, ws, wg + wi + ws),
             drawdown_tolerance=float(drawdown), experience=experience,
             investable_assets=float(investable), annual_spending=float(spending),
-            social_security_income=float(ss_income), pension_income=float(pension))
+            social_security_income=float(ss_income), pension_income=float(pension),
+            goals=goals)
 
         st.session_state.setdefault("surveys", [])
         st.session_state.setdefault("survey_seq", 0)

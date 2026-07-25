@@ -22,6 +22,8 @@ from .capacity import CapacityCeiling, equity_ceiling
 from .profile import ClientProfile
 from .retirement import RetirementReadiness, assess_retirement_readiness
 from .scoring import RiskAssessment, score_profile
+from .montecarlo import MonteCarloResult, run_monte_carlo
+from .strategy import StrategyAssessment, recommend_strategies
 from .stress import StressTest, run_stress_test
 from .structured import StructuredAssessment, evaluate_structured_products
 
@@ -51,6 +53,8 @@ class Recommendation:
     capacity: CapacityCeiling
     stress: StressTest
     structured: StructuredAssessment
+    strategies: StrategyAssessment
+    monte_carlo: MonteCarloResult
 
     desired_model: str          # what the risk score alone supports
     recommended_model: str      # after capacity reconciliation
@@ -96,6 +100,8 @@ def build_recommendation(profile: ClientProfile) -> Recommendation:
     )
 
     structured = evaluate_structured_products(profile)
+    strategies = recommend_strategies(profile)
+    monte_carlo = run_monte_carlo(profile)
 
     rationale: list[str] = list(assessment.rationale)
     if capped:
@@ -120,6 +126,8 @@ def build_recommendation(profile: ClientProfile) -> Recommendation:
         capacity=capacity,
         stress=stress,
         structured=structured,
+        strategies=strategies,
+        monte_carlo=monte_carlo,
         desired_model=desired,
         recommended_model=recommended,
         capped=capped,

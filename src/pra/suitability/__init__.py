@@ -4,13 +4,17 @@ Only the intake data model exists so far. The risk-scoring engine, allocation
 recommender, and structured-product logic land here next, per docs/05-phase2-spec.md.
 """
 
+from .montecarlo import MonteCarloResult, Route, run_monte_carlo
 from .profile import (
     ClientProfile,
     Employment,
     Experience,
+    FinancialGoal,
+    GoalType,
     Objective,
     RiskTolerance,
 )
+from .strategy import StrategyAssessment, recommend_strategies
 from .capacity import CapacityCeiling, Constraint, equity_ceiling
 from .recommend import Recommendation, build_recommendation
 from .retirement import RetirementReadiness, assess_retirement_readiness
@@ -48,4 +52,11 @@ __all__ = [
     "IPSDocument",
     "build_ips",
     "render_ips_html",
+    "FinancialGoal",
+    "GoalType",
+    "StrategyAssessment",
+    "recommend_strategies",
+    "MonteCarloResult",
+    "Route",
+    "run_monte_carlo",
 ]

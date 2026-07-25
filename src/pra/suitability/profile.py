@@ -50,6 +50,35 @@ class Experience(str, Enum):
     EXTENSIVE = "extensive"
 
 
+class GoalType(str, Enum):
+    RETIREMENT = "retirement"
+    COLLEGE = "college"
+    MORTGAGE = "mortgage_payoff"
+    WEALTH = "general_wealth"
+
+
+GOAL_LABELS = {
+    GoalType.RETIREMENT: "Fund retirement",
+    GoalType.COLLEGE: "College for a child",
+    GoalType.MORTGAGE: "Mortgage payoff / major purchase",
+    GoalType.WEALTH: "Build wealth / legacy",
+}
+
+
+@dataclass
+class FinancialGoal:
+    """A concrete goal the plan is measured against."""
+
+    goal_type: "GoalType"
+    target_amount: float          # dollars needed
+    years: int                    # years from now the money is needed
+    priority: str = "high"        # high | medium | low
+
+    @property
+    def label(self) -> str:
+        return GOAL_LABELS[self.goal_type]
+
+
 # Experience levels the tool treats as sophisticated enough for structured
 # products. One of the four conjunctive income-note gates in the Phase 2 spec.
 SOPHISTICATED_EXPERIENCE = (Experience.GOOD, Experience.EXTENSIVE)
@@ -103,6 +132,9 @@ class ClientProfile:
     # positive decimal (0.20 = a 20% drawdown). Capacity, not just attitude.
     drawdown_tolerance: float = 0.20
     experience: Experience = Experience.LIMITED
+
+    # --- Goals -----------------------------------------------------------
+    goals: list[FinancialGoal] = field(default_factory=list)
 
     # --- Context ---------------------------------------------------------
     # Free-text: existing concentrations to unwind, restrictions, ESG wishes, etc.
@@ -158,6 +190,14 @@ class ClientProfile:
     def short_horizon(self) -> bool:
         """A horizon short enough to cap equity regardless of stated tolerance."""
         return self.time_horizon_years <= 5
+
+    @property
+    def primary_goal(self) -> "FinancialGoal | None":
+        """The goal the Monte Carlo simulates toward — highest priority, then soonest."""
+        if not self.goals:
+            return None
+        rank = {"high": 0, "medium": 1, "low": 2}
+        return sorted(self.goals, key=lambda g: (rank.get(g.priority, 3), g.years))[0]
 
     def summary_line(self) -> str:
         return (
