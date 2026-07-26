@@ -9,6 +9,10 @@ properly-licensed stock photo. Landscape orientation, roughly 3:2, looks best.
 Recommended: 1200×800 px or similar. Keep the file under a few hundred KB so the
 page loads fast (the image is embedded inline).
 
+The included `hero.jpg` is an aerial of Miami Beach by **emma**, sourced from
+[Pexels](https://www.pexels.com/photo/aerial-view-of-miami-beach-and-atlantic-ocean-coastline-29360684/)
+under the Pexels license (free for commercial use, no attribution required).
+
 # Advisor headshot
 
 Drop a headshot named **`advisor.jpg`** (or `.png` / `.webp`) and it will appear
