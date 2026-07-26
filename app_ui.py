@@ -331,10 +331,27 @@ def inject_theme() -> None:
           [data-testid="stMetricLabel"] {{ color: var(--muted); }}
 
           /* --- Buttons --- */
-          .stButton button {{ border-radius: 10px; font-weight: 600; transition: all .15s ease; }}
-          .stButton button[kind="primary"] {{ background: {NAVY}; border-color: {NAVY}; }}
-          .stButton button[kind="primary"]:hover {{ background: {NAVY_DARK};
-            border-color: {NAVY_DARK}; transform: translateY(-1px); box-shadow: var(--shadow-md); }}
+          .stButton button, .stFormSubmitButton button {{
+            border-radius: 10px; font-weight: 600; transition: all .15s ease;
+          }}
+          /* Primary: white label on navy, for every nested text node Streamlit renders. */
+          .stButton button[kind="primary"], .stButton button[kind="primaryFormSubmit"],
+          .stFormSubmitButton button[kind="primaryFormSubmit"] {{
+            background: {NAVY}; border-color: {NAVY}; color: #ffffff;
+          }}
+          .stButton button[kind="primary"] *, .stButton button[kind="primaryFormSubmit"] *,
+          .stFormSubmitButton button[kind="primaryFormSubmit"] * {{ color: #ffffff !important; }}
+          .stButton button[kind="primary"]:hover, .stButton button[kind="primaryFormSubmit"]:hover,
+          .stFormSubmitButton button[kind="primaryFormSubmit"]:hover {{
+            background: {NAVY_DARK}; border-color: {NAVY_DARK}; color: #ffffff;
+            transform: translateY(-1px); box-shadow: var(--shadow-md);
+          }}
+          /* Secondary: navy label on white, teal edge on hover. */
+          .stButton button[kind="secondary"] {{ color: {NAVY_DARK}; border-color: var(--border); }}
+          .stButton button[kind="secondary"]:hover {{
+            color: {NAVY_DARK}; border-color: {TEAL};
+            background: var(--bg-soft); transform: translateY(-1px);
+          }}
           hr {{ opacity: .5; }}
           [data-testid="stExpander"] {{ border-radius: 12px; border-color: var(--border); }}
 
