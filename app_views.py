@@ -119,7 +119,7 @@ def _portfolio_picker(context: str, navigate: bool = False) -> None:
 
 
 def _ensure_demo_survey() -> None:
-    """Seed one realistic demo client so the Monte Carlo and IPS can be shown
+    """Seed one realistic demo client so the full analysis and IPS can be shown
     without filling out the survey first."""
     if st.session_state.get("demo_seeded"):
         return
@@ -877,26 +877,13 @@ def _render_recommendation(rec) -> None:
             st.markdown(f"<span style='color:#6b7280'>◦ {f.name} — {f.rationale}</span>",
                         unsafe_allow_html=True)
 
-    # --- Monte Carlo top routes ------------------------------------------
-    mc = rec.monte_carlo
+    # --- Structured note analysis ----------------------------------------
     st.divider()
-    st.markdown("#### 🎲 Monte Carlo simulation — top routes to the goal")
-    if not mc.applicable:
-        st.info(mc.note, icon="🎲")
-    else:
-        st.caption(mc.note + "  The two strongest routes are shown.")
-        top2 = mc.top_routes[:2]
-        chart_df = pd.DataFrame(
-            {"Success rate %": [r.success_rate * 100 for r in top2]},
-            index=[r.name for r in top2])
-        st.bar_chart(chart_df, height=170, horizontal=True)
-        for i, r in enumerate(top2, 1):
-            with st.container(border=True):
-                c1, c2, c3 = st.columns(3)
-                c1.metric(f"{i}. Success rate", f"{r.success_rate:.0%}")
-                c2.metric("Typical outcome", f"${r.median_end:,.0f}")
-                c3.metric("Poor-market outcome", f"${r.downside_end:,.0f}")
-                st.caption(r.reason)
+    st.markdown("#### Structured note analysis — fitting each note to the portfolio")
+    st.caption("How each structured note can work inside this client's plan — the portfolio "
+               "role it plays and the account it's best held in. Illustrative assumed terms at "
+               "maturity, not a quote for any real issued product.")
+    _render_structured_gallery()
 
     # --- Investment Policy Statement -------------------------------------
     st.divider()
@@ -955,7 +942,7 @@ def _render_survey_subject(rec_wrap: dict) -> None:
 def _render_sample_client(rec_wrap: dict) -> None:
     """A complete client view: intake, current portfolio holdings analysis
     (equity, concentration, risk indicators, rebalancing), then the suitability
-    plan (capacity, stress test, strategy, Monte Carlo, structured, IPS)."""
+    plan (capacity, stress test, strategy, structured note analysis, IPS)."""
     _render_client_header(rec_wrap)
     analysis = rec_wrap.get("analysis")
     if analysis is not None:
@@ -1059,10 +1046,10 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
                    "terms at maturity, not a quote for any real product.")
         _render_structured_gallery()
 
-        st.info("Goal-based analysis — the recommended allocation, suitability-gated structured "
-                "products, the **Monte Carlo simulation**, and the IPS — appears when you review a "
-                "**client survey** (Dashboard → Review), which supplies the client's goals.",
-                icon="🎲")
+        st.info("Goal-based analysis — the recommended allocation, suitability-gated **structured "
+                "note analysis**, and the IPS — appears when you review a **client survey** "
+                "(Dashboard → Review), which supplies the client's goals.",
+                icon="📄")
 
 
 def portfolio_analysis() -> None:
@@ -1130,7 +1117,7 @@ def portfolio_analysis() -> None:
             if g:
                 st.caption(f"Primary goal: {g.label} — ${g.target_amount:,.0f} in {g.years} years.")
             if st.button("Generate analysis", type="primary", key="gen_sample"):
-                with st.spinner("Running the analysis and Monte Carlo simulation…"):
+                with st.spinner("Running the portfolio and suitability analysis…"):
                     rec = build_recommendation(p)
                     analysis = None
                     csv = s.get("portfolio")

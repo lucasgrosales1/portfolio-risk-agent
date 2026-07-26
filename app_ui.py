@@ -42,34 +42,69 @@ NEG = "#ef4444"
 
 
 def coastal_svg() -> str:
-    """A clean Florida-coastal hero graphic — the fallback when no photo is set."""
+    """An aerial South-Beach hero graphic — the fallback when no photo is set.
+
+    Turquoise-to-deep ocean, a diagonal white-sand beach dotted with colorful
+    umbrellas, and a row of coastal condos — evoking Miami Beach from above.
+    """
+    import random
+    rng = random.Random(7)
+    # Rows of beach umbrellas scattered across the sand (lower-left of the shore).
+    palette = ["#e8785a", "#1c9bb3", "#d9a441", "#ffffff", "#e05b7a", "#2f8f5b"]
+    umbrellas = []
+    for row in range(5):
+        y = 150 + row * 26
+        for i in range(7):
+            x = 20 + i * 30 + rng.randint(-6, 6) - row * 6
+            if x < 8 or x > 300:
+                continue
+            c = palette[rng.randrange(len(palette))]
+            umbrellas.append(
+                f'<ellipse cx="{x}" cy="{y+5}" rx="8" ry="3" fill="#c9b483" opacity="0.5"/>'
+                f'<circle cx="{x}" cy="{y}" r="6" fill="{c}"/>'
+                f'<circle cx="{x}" cy="{y}" r="6" fill="#000" opacity="0.06"/>')
+    umb = "".join(umbrellas)
+    # A few condo towers along the far shoreline (upper-left).
+    towers = ""
+    for bx, bw, bh in [(14, 16, 46), (34, 12, 62), (50, 15, 40), (70, 11, 54), (86, 14, 34)]:
+        towers += (f'<rect x="{bx}" y="{70-bh}" width="{bw}" height="{bh}" rx="2" '
+                   f'fill="#eef3f2" stroke="#cdd8d6" stroke-width="0.6"/>')
+        # window rows
+        for wy in range(70 - bh + 6, 70, 8):
+            towers += (f'<rect x="{bx+3}" y="{wy}" width="{bw-6}" height="3" rx="1" '
+                       f'fill="#9fc2c9" opacity="0.7"/>')
     return f"""
     <svg viewBox="0 0 460 300" width="100%" xmlns="http://www.w3.org/2000/svg"
          style="border-radius:14px;display:block">
       <defs>
-        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ffe1b0"/><stop offset="45%" stop-color="#f6b57e"/>
-          <stop offset="100%" stop-color="#ef9a7a"/>
+        <linearGradient id="ocean" x1="0.1" y1="1" x2="0.9" y2="0">
+          <stop offset="0%" stop-color="#4fded0"/><stop offset="35%" stop-color="#1fb7c9"/>
+          <stop offset="70%" stop-color="#1187b0"/><stop offset="100%" stop-color="#0c5f8f"/>
         </linearGradient>
-        <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#1c9bb3"/><stop offset="100%" stop-color="#12556e"/>
+        <linearGradient id="sand" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0%" stop-color="#f6ecd2"/><stop offset="100%" stop-color="#e7d3a2"/>
+        </linearGradient>
+        <linearGradient id="shallow" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#8ff0e4"/><stop offset="100%" stop-color="#4fded0"/>
         </linearGradient>
       </defs>
-      <rect width="460" height="300" fill="url(#sky)"/>
-      <circle cx="330" cy="95" r="46" fill="#fff2d6" opacity="0.95"/>
-      <circle cx="330" cy="95" r="46" fill="#ffd98a" opacity="0.55"/>
-      <rect y="188" width="460" height="112" fill="url(#sea)"/>
-      <path d="M0,196 q40,-12 80,0 t80,0 t80,0 t80,0 t80,0 t80,0 v6 H0 Z" fill="#2bb0c6" opacity="0.6"/>
-      <path d="M0,210 q46,-10 92,0 t92,0 t92,0 t92,0 t92,0 v90 H0 Z" fill="#15768f" opacity="0.5"/>
-      <!-- palm -->
-      <path d="M90,300 C96,250 96,210 92,182" stroke="#5a3d24" stroke-width="7" fill="none" stroke-linecap="round"/>
-      <g fill="#2f8f5b">
-        <path d="M92,182 C60,168 40,172 24,186 C48,176 70,178 92,190 Z"/>
-        <path d="M92,182 C124,166 148,168 166,182 C142,172 116,174 92,190 Z"/>
-        <path d="M92,182 C74,150 60,138 44,132 C68,140 84,156 94,186 Z"/>
-        <path d="M92,182 C110,150 126,140 144,136 C120,144 104,158 94,186 Z"/>
-        <path d="M92,182 C92,146 96,128 104,112 C100,140 98,160 96,188 Z"/>
-      </g>
+      <!-- sand base -->
+      <rect width="460" height="300" fill="url(#sand)"/>
+      <!-- ocean (upper-right) with a soft diagonal shoreline -->
+      <path d="M150,0 L460,0 L460,235 C360,175 250,95 150,0 Z" fill="url(#ocean)"/>
+      <!-- shallow turquoise water hugging the shore -->
+      <path d="M150,0 C250,95 360,175 460,235 L460,255 C352,192 236,108 132,6 Z"
+            fill="url(#shallow)" opacity="0.85"/>
+      <!-- foam line -->
+      <path d="M132,6 C236,108 352,192 460,255" stroke="#ffffff" stroke-width="3"
+            fill="none" opacity="0.75" stroke-linecap="round"/>
+      <path d="M120,0 C224,102 340,186 460,250" stroke="#ffffff" stroke-width="1.4"
+            fill="none" opacity="0.5" stroke-dasharray="3 6"/>
+      <!-- gentle wave striations in deep water -->
+      <path d="M300,40 q30,10 60,4 t60,4" stroke="#ffffff" stroke-width="1" fill="none" opacity="0.18"/>
+      <path d="M330,80 q30,10 60,4 t60,4" stroke="#ffffff" stroke-width="1" fill="none" opacity="0.16"/>
+      {towers}
+      {umb}
     </svg>
     """
 
@@ -268,13 +303,14 @@ def inject_theme() -> None:
           /* --- Team / advisor --- */
           .aw-team {{ display: flex; gap: 22px; align-items: center; }}
           .aw-team .photo {{
-            width: 118px; height: 118px; border-radius: 16px; flex: none;
+            width: 150px; height: 150px; border-radius: 16px; flex: none;
             background: linear-gradient(135deg, var(--navy) 0%, var(--teal) 100%);
             display: flex; align-items: center; justify-content: center;
-            color: #fff; font-family: var(--serif); font-size: 38px; font-weight: 600;
-            box-shadow: var(--shadow-md);
+            color: #fff; font-family: var(--serif); font-size: 44px; font-weight: 600;
+            box-shadow: var(--shadow-md); overflow: hidden;
           }}
-          .aw-team .photo img {{ width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }}
+          .aw-team .photo img {{ width: 100%; height: 100%; object-fit: cover;
+            border-radius: 16px; display: block; }}
           .aw-team h3 {{ margin: 0 0 2px; font-size: 20px; font-family: var(--serif); }}
           .aw-team .role {{ color: var(--teal); font-size: 13.5px; font-weight: 600; margin: 0 0 8px; }}
           .aw-team .creds {{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }}
@@ -362,6 +398,45 @@ def inject_theme() -> None:
             color: {NAVY_DARK}; border-color: {TEAL};
             background: var(--bg-soft); transform: translateY(-1px);
           }}
+
+          /* --- Top navigation: a polished segmented nav bar --- */
+          /* The columns row that holds the nav buttons becomes a bordered bar. */
+          div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-nav_"]) {{
+            background: linear-gradient(180deg, #ffffff 0%, #f5fafc 100%);
+            border: 1px solid var(--border); border-radius: 14px;
+            box-shadow: var(--shadow-sm); padding: 7px 9px; gap: 6px;
+          }}
+          [class*="st-key-nav_"] button {{
+            border: none !important; background: transparent !important;
+            color: var(--muted) !important; font-weight: 600 !important;
+            border-radius: 10px !important; letter-spacing: .005em;
+            box-shadow: none !important; transition: all .16s ease !important;
+          }}
+          [class*="st-key-nav_"] button:hover {{
+            background: rgba(28,155,179,.10) !important; color: var(--navy-dark) !important;
+            transform: none !important; box-shadow: none !important;
+          }}
+          [class*="st-key-nav_"] button[kind="primary"] {{
+            background: linear-gradient(135deg, {NAVY} 0%, {TEAL} 100%) !important;
+            color: #ffffff !important; box-shadow: 0 4px 12px rgba(18,85,110,.24) !important;
+          }}
+          [class*="st-key-nav_"] button[kind="primary"] * {{ color: #ffffff !important; }}
+          [class*="st-key-nav_"] button[kind="primary"]:hover {{
+            background: linear-gradient(135deg, {NAVY_DARK} 0%, {TEAL} 100%) !important;
+            transform: translateY(-1px) !important;
+          }}
+          /* Settings gear — a subtle ghost icon button. */
+          [class*="st-key-gearbtn"] button {{
+            border: 1px solid var(--border) !important; background: #fff !important;
+            color: var(--navy) !important; border-radius: 10px !important;
+            box-shadow: var(--shadow-sm) !important;
+          }}
+          [class*="st-key-gearbtn"] button:hover {{
+            border-color: {TEAL} !important; background: var(--bg-soft) !important;
+            transform: translateY(-1px) !important;
+          }}
+          .aw-navsep {{ display: none; }}
+
           hr {{ opacity: .5; }}
           [data-testid="stExpander"] {{ border-radius: 12px; border-color: var(--border); }}
 
@@ -399,12 +474,11 @@ def top_nav() -> str:
             unsafe_allow_html=True,
         )
     with c_adv:
-        st.markdown('<div class="aw-advisor">👤 Advisor</div>', unsafe_allow_html=True)
+        st.markdown('<div class="aw-advisor">👤 Advisor Workspace</div>', unsafe_allow_html=True)
     with c_gear:
-        if st.button("⚙", key="nav_gear", help="Settings"):
+        if st.button("⚙", key="gearbtn", help="Settings"):
             go_to("Settings")
 
-    st.markdown('<div class="aw-nav"></div>', unsafe_allow_html=True)
     cols = st.columns(len(NAV_ITEMS))
     for col, (label, key) in zip(cols, NAV_ITEMS):
         active = st.session_state["page"] == key
@@ -413,7 +487,7 @@ def top_nav() -> str:
             st.session_state["page"] = key
             st.rerun()
 
-    st.markdown('<hr class="aw-navsep">', unsafe_allow_html=True)
+    st.write("")
     return st.session_state["page"]
 
 
