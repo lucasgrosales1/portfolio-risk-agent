@@ -47,18 +47,17 @@ def coastal_svg() -> str:
     Turquoise-to-deep ocean, a diagonal white-sand beach dotted with colorful
     umbrellas, and a row of coastal condos — evoking Miami Beach from above.
     """
-    import random
-    rng = random.Random(7)
-    # Rows of beach umbrellas scattered across the sand (lower-left of the shore).
+    # Neat, aligned rows of beach umbrellas on the sand (lower-left of the shore),
+    # each row nudged to run parallel to the diagonal shoreline.
     palette = ["#e8785a", "#1c9bb3", "#d9a441", "#ffffff", "#e05b7a", "#2f8f5b"]
     umbrellas = []
     for row in range(5):
         y = 150 + row * 26
         for i in range(7):
-            x = 20 + i * 30 + rng.randint(-6, 6) - row * 6
+            x = 24 + i * 30 - row * 6
             if x < 8 or x > 300:
                 continue
-            c = palette[rng.randrange(len(palette))]
+            c = palette[(i + row) % len(palette)]
             umbrellas.append(
                 f'<ellipse cx="{x}" cy="{y+5}" rx="8" ry="3" fill="#c9b483" opacity="0.5"/>'
                 f'<circle cx="{x}" cy="{y}" r="6" fill="{c}"/>'
