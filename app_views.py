@@ -294,6 +294,9 @@ def home() -> None:
         """,
         unsafe_allow_html=True,
     )
+    # --- Trust strip ------------------------------------------------------
+    ui.trust_strip()
+
     st.write("")
     b1, b2, b3, _ = st.columns([1, 1, 1, 2])
     if b1.button("Open Dashboard", type="primary", width="stretch"):
@@ -303,30 +306,187 @@ def home() -> None:
     if b3.button("Take Client Survey", width="stretch"):
         ui.go_to("Client Survey")
 
+    # --- How we help ------------------------------------------------------
     st.write("")
-    st.markdown('<div class="aw-section-label">How we help</div>', unsafe_allow_html=True)
+    ui.section_header("How we help", "Advice built around your family",
+                      "Three ways we turn your goals into a plan you can actually follow.")
     r1 = st.columns(3)
     with r1[0]:
-        ui.card("👪", "Get to know your family",
+        ui.card(ui.icon("family"), "Get to know your family",
                 "A short survey captures your goals, your comfort with risk, and your "
                 "family balance sheet — so your first meeting starts with understanding.")
     with r1[1]:
-        ui.card("🧭", "A plan that fits you",
+        ui.card(ui.icon("compass"), "A plan that fits you",
                 "Capacity-first recommendations, retirement-income readiness, and "
                 "stress testing — reconciled into one suitable allocation.")
     with r1[2]:
-        ui.card("📊", "Clarity on your portfolio",
+        ui.card(ui.icon("chart"), "Clarity on your portfolio",
                 "Live valuation, concentration and risk, tax-aware rebalancing, and a "
                 "report you can keep — every figure computed, never guessed.")
 
-    # --- About us ---------------------------------------------------------
+    # --- Our process ------------------------------------------------------
     st.write("")
-    st.markdown('<div class="aw-section-label">About us</div>', unsafe_allow_html=True)
+    ui.section_header("How it works", "A clear path from first call to ongoing care")
+    steps = [
+        ("1", "Discovery", "We listen first — your goals, timeline, and what financial "
+         "security means to your family."),
+        ("2", "Plan", "We build a written plan: suitable allocation, retirement readiness, "
+         "and the trade-offs behind each choice."),
+        ("3", "Implement", "We put the plan to work — tax-aware, account by account, with "
+         "everything documented in your IPS."),
+        ("4", "Review", "We meet on a set cadence to rebalance, stress-test, and adjust as "
+         "your life changes."),
+    ]
+    st.markdown(
+        '<div class="aw-steps">'
+        + "".join(
+            f'<div class="aw-step"><div class="n">{n}</div>'
+            f'<h4>{t}</h4><p>{d}</p></div>'
+            for n, t, d in steps
+        )
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+    # --- Services & fees --------------------------------------------------
+    st.write("")
+    ui.section_header("Services & fees", "Transparent, fee-only engagements",
+                      "Fee-only means we're paid by you, for advice — never by commissions on "
+                      "products. Choose the level of support that fits your family.")
+    t1, t2, t3 = st.columns(3)
+    with t1:
+        st.markdown(
+            """
+            <div class="aw-tier">
+              <h3>Financial Planning</h3>
+              <div class="price">From $2,500 / plan</div>
+              <ul>
+                <li>Goal &amp; cash-flow analysis</li>
+                <li>Retirement-income readiness</li>
+                <li>Written financial plan</li>
+                <li>Two review meetings</li>
+              </ul>
+            </div>
+            """, unsafe_allow_html=True)
+    with t2:
+        st.markdown(
+            """
+            <div class="aw-tier feat">
+              <div class="badge">Most popular</div>
+              <h3>Investment Management</h3>
+              <div class="price">0.85% of assets / year</div>
+              <ul>
+                <li>Everything in Planning</li>
+                <li>Capacity-first portfolio design</li>
+                <li>Tax-aware rebalancing</li>
+                <li>Investment Policy Statement</li>
+                <li>Quarterly reviews</li>
+              </ul>
+            </div>
+            """, unsafe_allow_html=True)
+    with t3:
+        st.markdown(
+            """
+            <div class="aw-tier">
+              <h3>Comprehensive Wealth</h3>
+              <div class="price">Custom · households $2M+</div>
+              <ul>
+                <li>Everything in Management</li>
+                <li>Estate &amp; legacy coordination</li>
+                <li>Structured-product suitability</li>
+                <li>Concentrated-stock strategies</li>
+                <li>Family-office style service</li>
+              </ul>
+            </div>
+            """, unsafe_allow_html=True)
+    st.caption("Illustrative fee schedule for this demo — not an offer of services.")
+
+    # --- Our team ---------------------------------------------------------
+    st.write("")
+    ui.section_header("Our team", "The advisor behind your plan")
     with st.container(border=True):
         st.markdown(
             f"""
-##### A Florida firm built around families, not products.
+            <div class="aw-team">
+              <div class="photo">{ui.advisor_photo_html('LR')}</div>
+              <div>
+                <h3>Lucas Rosales</h3>
+                <div class="role">Founder &amp; Financial Advisor · {ui.FIRM_NAME}</div>
+                <p>Lucas founded {ui.FIRM_NAME} to bring institutional-grade analysis to
+                   everyday Florida families — honest numbers, visible reasoning, and a plan
+                   you keep. He works with a limited number of households so every relationship
+                   gets real attention.</p>
+                <div class="creds">
+                  <span>Series 66</span><span>Fiduciary</span>
+                  <span>Fee-Only</span><span>Retirement Income</span>
+                  <span>Florida-based</span>
+                </div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
+    # --- Testimonials -----------------------------------------------------
+    st.write("")
+    ui.section_header("What clients say", "Trusted by families across Florida")
+    quotes = [
+        ("They showed us the math behind every recommendation. For the first time we "
+         "understood not just what to do, but why.", "The Carter Family", "Tampa, FL", "C"),
+        ("We came in worried about a big tech position. They had a real, tax-aware plan "
+         "for it — not a sales pitch.", "R. Patel", "Miami, FL", "P"),
+        ("Approaching retirement, I wanted to know I'd be okay. The stress testing gave me "
+         "genuine peace of mind.", "M. Ellis", "Naples, FL", "E"),
+    ]
+    qc = st.columns(3)
+    for col, (text, who, city, initial) in zip(qc, quotes):
+        col.markdown(
+            f"""
+            <div class="aw-quote">
+              <span class="mark">&ldquo;</span>
+              <p>{text}</p>
+              <div class="who"><div class="av">{initial}</div>
+                <div><b>{who}</b><span>{city}</span></div></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.caption("Illustrative testimonials for this demo — not statements from real clients.")
+
+    # --- Insights ---------------------------------------------------------
+    st.write("")
+    ui.section_header("Insights", "Perspective, not noise")
+    articles = [
+        ("Planning", "What sequence-of-returns risk means for your retirement",
+         "Two portfolios with identical average returns can end very differently. Here's why "
+         "the order matters most in your first retirement years.", "5 min read"),
+        ("Portfolios", "Why we start with capacity, not your risk quiz",
+         "Your ability to take risk sets the ceiling; your comfort positions you beneath it. "
+         "How we reconcile the two into one allocation.", "4 min read"),
+        ("Taxes", "Rebalancing without a surprise tax bill",
+         "Where a trade happens matters as much as the trade itself. A look at sourcing "
+         "rebalances from the right accounts.", "6 min read"),
+    ]
+    ic = st.columns(3)
+    for col, (tag, title, body, meta) in zip(ic, articles):
+        col.markdown(
+            f"""
+            <div class="aw-insight">
+              <div class="top"><span>{tag}</span></div>
+              <div class="body"><h4>{title}</h4><p>{body}</p>
+                <div class="meta">{meta} →</div></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.caption("Sample article previews for this demo.")
+
+    # --- About us ---------------------------------------------------------
+    st.write("")
+    ui.section_header("About us", "A Florida firm built around families, not products")
+    with st.container(border=True):
+        st.markdown(
+            f"""
 {ui.FIRM_NAME} was founded on a simple idea: good financial advice starts with
 truly understanding a family — their goals, their worries, and what *enough*
 looks like to them. We're an independent, fiduciary practice based on Florida's
@@ -344,15 +504,12 @@ the things that matter most.
             """
         )
 
-    # --- Talk to an advisor ----------------------------------------------
+    # --- Schedule a consultation -----------------------------------------
     st.write("")
-    st.markdown('<div class="aw-section-label">Talk to an advisor</div>', unsafe_allow_html=True)
-    with st.container(border=True):
-        cc1, cc2 = st.columns([3, 1])
-        cc1.markdown(f"**Ready to start?** Complete a short survey and a {ui.FIRM_NAME} "
-                     "advisor will follow up to build your plan.")
-        if cc2.button("Connect now", type="primary", width="stretch", key="connect_rep"):
-            ui.go_to("Client Survey")
+    ui.section_header("Get started", "Schedule a complimentary consultation",
+                      "Tell us a little about you and pick a time that works — your advisor "
+                      "will confirm by email. No cost, no obligation.")
+    _schedule_consultation()
 
     # --- Contact us + FAQ -------------------------------------------------
     st.write("")
@@ -389,7 +546,54 @@ the things that matter most.
                          "goals and balance sheet and prepares a tailored plan before your "
                          "first meeting — so your time together is spent on advice.")
 
-    st.caption("Educational portfolio project — not investment advice. All sample data is synthetic.")
+    # --- Disclosures footer ----------------------------------------------
+    ui.disclosures_footer()
+
+
+def _schedule_consultation() -> None:
+    """A simulated 'book a consultation' form that flows into the CRM view.
+
+    No real message is sent — submissions are stored in session_state and
+    surfaced on the Dashboard, so the demo shows an end-to-end lead flow.
+    """
+    if st.session_state.get("consult_booked"):
+        c = st.session_state["consult_booked"]
+        st.success(
+            f"Thanks, **{c['name']}** — your consultation request for "
+            f"**{c['date']:%A, %b %d}** ({c['slot']}) is in. Your advisor will confirm at "
+            f"**{c['email']}**.", icon="✅")
+        if st.button("Book another time", key="consult_reset"):
+            st.session_state.pop("consult_booked", None)
+            st.rerun()
+        return
+
+    with st.form("consult_form", border=True):
+        f1, f2 = st.columns(2)
+        name = f1.text_input("Full name", placeholder="Jordan Rivera")
+        email = f2.text_input("Email", placeholder="you@email.com")
+        f3, f4 = st.columns(2)
+        phone = f3.text_input("Phone (optional)", placeholder="(941) 555-0123")
+        focus = f4.selectbox("What's on your mind?",
+                             ["Retirement planning", "Investment management",
+                              "A concentrated stock position", "College savings",
+                              "A full financial plan", "Something else"])
+        d1, d2 = st.columns(2)
+        min_day = dt.date.today() + dt.timedelta(days=1)
+        date = d1.date_input("Preferred date", value=min_day, min_value=min_day)
+        slot = d2.selectbox("Preferred time",
+                            ["9:00 AM", "11:00 AM", "1:00 PM", "3:00 PM", "4:30 PM"])
+        submitted = st.form_submit_button("Request consultation", type="primary")
+        if submitted:
+            if not name.strip() or "@" not in email:
+                st.error("Please enter your name and a valid email so we can confirm.")
+            else:
+                st.session_state["consult_booked"] = {
+                    "name": name.strip(), "email": email.strip(), "phone": phone.strip(),
+                    "focus": focus, "date": date, "slot": slot,
+                    "requested_at": dt.datetime.now()}
+                st.session_state.setdefault("consult_leads", []).append(
+                    st.session_state["consult_booked"])
+                st.rerun()
 
 
 # ==========================================================================
@@ -427,11 +631,25 @@ def dashboard() -> None:
     incomplete = [c for c in clients if not c["complete"]]
     week = [c for c in clients if 0 <= (c["meeting"] - today).days <= 7]
 
-    m1, m2, m3, m4 = st.columns(4)
+    leads = st.session_state.get("consult_leads", [])
+    m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("Active clients", len(clients))
     m2.metric("Profiles incomplete", len(incomplete))
     m3.metric("Meetings this week", len(week))
     m4.metric("New surveys to review", len(surveys))
+    m5.metric("New consult requests", len(leads))
+
+    # --- Inbound consultation requests (from the Home page form) ---------
+    if leads:
+        st.write("")
+        st.markdown("**📨 New consultation requests** — submitted from the website")
+        for ld in reversed(leads):
+            with st.container(border=True):
+                st.markdown(
+                    f"🟢 **{ld['name']}** — {ld['focus']}  \n"
+                    f"<span style='color:#6b7280;font-size:13px'>Requested "
+                    f"{ld['date']:%a %b %d} at {ld['slot']} · 📞 {ld['phone'] or '—'} · "
+                    f"✉️ {ld['email']}</span>", unsafe_allow_html=True)
 
     st.write("")
     left, right = st.columns([1, 1])
@@ -679,13 +897,6 @@ def _render_recommendation(rec) -> None:
                 c3.metric("Poor-market outcome", f"${r.downside_end:,.0f}")
                 st.caption(r.reason)
 
-    # --- Structured-product possibilities (illustrative gallery) ---------
-    st.divider()
-    st.markdown("#### Structured-product possibilities")
-    st.caption("Illustrative payoff shapes an advisor can walk a client through — "
-               "assumed terms at maturity, not a quote for any real product.")
-    _render_structured_gallery()
-
     # --- Investment Policy Statement -------------------------------------
     st.divider()
     st.markdown("#### Investment Policy Statement")
@@ -841,15 +1052,16 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
     with st.expander("Preview report"):
         st.components.v1.html(html, height=760, scrolling=True)
 
-    st.markdown("#### Structured-product possibilities")
-    st.caption("Illustrative payoff shapes to discuss alongside this portfolio — assumed "
-               "terms at maturity, not a quote for any real product.")
-    _render_structured_gallery()
+    if show_gallery:
+        st.markdown("#### Structured-product possibilities")
+        st.caption("Illustrative payoff shapes to discuss alongside this portfolio — assumed "
+                   "terms at maturity, not a quote for any real product.")
+        _render_structured_gallery()
 
-    st.info("Goal-based analysis — the recommended allocation, suitability-gated structured "
-            "products, the **Monte Carlo simulation**, and the IPS — appears when you review a "
-            "**client survey** (Dashboard → Review), which supplies the client's goals.",
-            icon="🎲")
+        st.info("Goal-based analysis — the recommended allocation, suitability-gated structured "
+                "products, the **Monte Carlo simulation**, and the IPS — appears when you review a "
+                "**client survey** (Dashboard → Review), which supplies the client's goals.",
+                icon="🎲")
 
 
 def portfolio_analysis() -> None:
