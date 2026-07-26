@@ -26,19 +26,23 @@ NAV_ITEMS = [
     ("Client Survey", "Client Survey"),
 ]
 
-# Palette — Florida coastal: deep ocean navy/teal with warm sand and coral accents.
-NAVY = "#12556e"          # deep ocean teal
-NAVY_DARK = "#0c3a4d"
-TEAL = "#1c9bb3"          # aqua
-TEAL_LIGHT = "#7fd3e0"
-SAND = "#e3c893"          # warm sand
-CORAL = "#e8785a"         # sunset coral accent
-GOLD = "#d9a441"
-BG_SOFT = "#f2f8fa"
-INK = "#1f2937"
-BORDER = "#d3dde2"
-POS = "#10b981"
-NEG = "#ef4444"
+# Palette — "The Ledger": warm printed-paper base, deep marine ink, one gold signal.
+# Precision as personality — every figure is computed, and the design says so.
+PAPER = "#F7F4EF"         # warm paper (page base)
+PAPER2 = "#FCFAF6"        # elevated surface (cards)
+NAVY = "#0E6F73"          # marine (primary) — kept name for existing references
+NAVY_DARK = "#0A5155"     # marine, darker (hover)
+TEAL = "#2A9AA0"          # lighter marine
+TEAL_LIGHT = "#8FCBCE"
+SAND = "#C08A2D"          # gold signal accent
+CORAL = "#B4472E"         # brick (negative / rare signal)
+GOLD = "#C08A2D"          # the single gold signal
+BG_SOFT = "#FBF8F2"       # soft paper wash
+INK = "#14181F"           # near-black ink
+INK_SOFT = "#5A6169"      # muted ink
+BORDER = "#E4DECF"        # warm hairline / ledger rule
+POS = "#2F7D5B"           # restrained green
+NEG = "#B4472E"           # restrained brick-red
 
 
 def coastal_svg() -> str:
@@ -109,26 +113,27 @@ def coastal_svg() -> str:
 
 
 def inject_theme() -> None:
-    """Global CSS — a designed, refined-coastal system.
+    """Global CSS — "The Ledger" design system.
 
-    Font pairing (Fraunces display serif + Inter body), a consistent spacing
-    scale, unified card/section treatments, hover states, and the professional
-    marketing components (trust strip, process timeline, service tiers, team,
-    testimonials, insights, disclosures footer).
+    Precision as personality: warm printed-paper base, deep marine ink, a single
+    gold signal. Bricolage Grotesque display + Inter body, with IBM Plex Mono as
+    the signature voice for every number, label, and eyebrow — the design saying,
+    plainly, that each figure here was computed, not guessed.
     """
     st.markdown(
         f"""
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
 
           :root {{
-            --navy: {NAVY}; --navy-dark: {NAVY_DARK}; --teal: {TEAL};
-            --teal-light: {TEAL_LIGHT}; --sand: {SAND}; --coral: {CORAL}; --gold: {GOLD};
-            --ink: {INK}; --border: {BORDER}; --bg-soft: {BG_SOFT};
-            --muted: #5b6b73; --serif: 'Fraunces', Georgia, serif;
-            --shadow-sm: 0 1px 2px rgba(16,24,40,.05);
-            --shadow-md: 0 6px 20px rgba(12,58,77,.10);
-            --shadow-lg: 0 14px 40px rgba(12,58,77,.16);
+            --paper: {PAPER}; --paper2: {PAPER2}; --ink: {INK}; --ink-soft: {INK_SOFT};
+            --marine: {NAVY}; --marine-dark: {NAVY_DARK}; --teal: {TEAL};
+            --gold: {GOLD}; --line: {BORDER}; --pos: {POS}; --neg: {NEG}; --soft: {BG_SOFT};
+            --display: 'Bricolage Grotesque', -apple-system, system-ui, sans-serif;
+            --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+            --sans: 'Inter', -apple-system, system-ui, sans-serif;
+            --shadow-sm: 0 1px 0 rgba(20,24,31,.04);
+            --shadow-md: 0 8px 24px rgba(20,24,31,.08);
           }}
 
           #MainMenu {{ visibility: hidden; }}
@@ -136,313 +141,320 @@ def inject_theme() -> None:
           [data-testid="stToolbar"] {{ visibility: hidden; }}
           header[data-testid="stHeader"] {{ background: transparent; }}
 
-          /* Warm coastal background — soft sand-to-seafoam wash, subtle texture. */
+          /* Warm ledger paper — faint horizontal rules like an accountant's pad. */
           [data-testid="stAppViewContainer"] {{
             background:
-              radial-gradient(circle at 1px 1px, rgba(18,85,110,.035) 1px, transparent 0)
-                0 0 / 26px 26px,
-              linear-gradient(180deg, #ffffff 0%, #f4fafb 55%, #eaf4f2 100%);
+              repeating-linear-gradient(180deg, transparent 0 31px,
+                rgba(14,111,115,.045) 31px 32px),
+              {PAPER};
           }}
 
           .block-container {{ padding-top: 1.1rem; padding-bottom: 3rem; max-width: 1180px; }}
           html, body, [class*="css"], .stMarkdown, p, li {{
-            color: var(--ink); font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            color: var(--ink); font-family: var(--sans);
           }}
           h1, h2, h3, h4, h5 {{
-            font-family: var(--serif); letter-spacing: -0.012em; color: var(--navy-dark);
+            font-family: var(--display); letter-spacing: -0.02em; color: var(--ink);
             font-weight: 600;
           }}
+
+          :focus-visible {{ outline: 2px solid var(--gold); outline-offset: 2px; }}
 
           /* --- Top bar --- */
           .aw-brand {{ display: flex; align-items: center; gap: 12px; padding: 2px 2px 8px; }}
           .aw-brand .mark {{
-            width: 42px; height: 42px; border-radius: 11px;
-            background: linear-gradient(135deg, {NAVY} 0%, {TEAL} 100%);
+            width: 42px; height: 42px; border-radius: 9px;
+            background: var(--marine); border: 1px solid var(--marine-dark);
             display: flex; align-items: center; justify-content: center;
-            color: #fff; font-weight: 700; font-size: 17px; font-family: var(--serif);
-            box-shadow: var(--shadow-sm);
+            color: var(--paper); font-weight: 600; font-size: 15px; font-family: var(--mono);
           }}
-          .aw-brand .name {{ font-size: 20px; font-weight: 600; color: {NAVY_DARK};
-            font-family: var(--serif); }}
-          .aw-brand .tag  {{ font-size: 12px; color: var(--muted); margin-top: -1px; }}
-          .aw-advisor {{ text-align: right; color: var(--muted); font-size: 13px; padding-top: 8px; }}
+          .aw-brand .name {{ font-size: 20px; font-weight: 600; color: var(--ink);
+            font-family: var(--display); letter-spacing: -.02em; }}
+          .aw-brand .tag  {{ font-size: 11.5px; color: var(--ink-soft); margin-top: -1px;
+            font-family: var(--mono); }}
+          .aw-advisor {{ text-align: right; color: var(--ink-soft); font-size: 12px;
+            padding-top: 8px; font-family: var(--mono); }}
+          .aw-navsep {{ display: none; }}
 
-          .aw-navsep {{ border: none; border-top: 1px solid #e5edf0; margin: 8px 0 18px; opacity: 1; }}
-
-          /* --- Hero (coastal, two-column) --- */
+          /* --- Hero: a printed research sheet --- */
           .aw-hero {{
-            background:
-              radial-gradient(900px 300px at 90% -10%, rgba(227,200,147,.30), transparent),
-              radial-gradient(700px 320px at 8% 120%, rgba(28,155,179,.35), transparent),
-              linear-gradient(135deg, {NAVY_DARK} 0%, {NAVY} 55%, #1a6f88 100%);
-            color: #fff; border-radius: 20px; padding: 46px 46px;
-            box-shadow: var(--shadow-lg);
+            background: var(--paper2); border: 1px solid var(--line);
+            border-top: 3px solid var(--gold); border-radius: 4px;
+            padding: 42px 44px; box-shadow: var(--shadow-sm);
           }}
-          .aw-hero-grid {{ display: flex; gap: 34px; align-items: center; }}
+          .aw-hero-grid {{ display: flex; gap: 36px; align-items: center; }}
           .aw-hero-text {{ flex: 1.5; min-width: 0; }}
           .aw-hero-media {{ flex: 1; min-width: 0; }}
           .aw-hero-media img, .aw-hero-media svg {{
-            width: 100%; border-radius: 15px; object-fit: cover; max-height: 310px;
-            box-shadow: 0 10px 26px rgba(0,0,0,.24);
+            width: 100%; border-radius: 3px; object-fit: cover; max-height: 320px;
+            border: 1px solid var(--ink); box-shadow: var(--shadow-md);
           }}
-          .aw-hero h1 {{ color: #fff; font-size: 40px; margin: 0 0 14px; max-width: 20ch;
-            line-height: 1.1; font-weight: 600; }}
-          .aw-hero p  {{ color: #eaf3f6; font-size: 16px; line-height: 1.65; margin: 0; max-width: 46ch; }}
+          .aw-hero h1 {{ color: var(--ink); font-size: 42px; margin: 0 0 16px; max-width: 18ch;
+            line-height: 1.04; font-weight: 700; letter-spacing: -.03em; }}
+          .aw-hero p  {{ color: var(--ink-soft); font-size: 16px; line-height: 1.68; margin: 0;
+            max-width: 46ch; }}
           .aw-hero .eyebrow {{
-            text-transform: uppercase; letter-spacing: .14em; font-size: 11.5px;
-            color: {SAND}; font-weight: 700; margin-bottom: 14px; font-family: 'Inter';
+            text-transform: uppercase; letter-spacing: .18em; font-size: 11px;
+            color: var(--marine); font-weight: 500; margin-bottom: 16px; font-family: var(--mono);
           }}
+          .aw-hero .eyebrow::before {{ content: "// "; color: var(--gold); }}
+
+          /* --- Ledger signature: a strip of computed mini-stats --- */
+          .aw-ledger {{ display: flex; gap: 0; margin: 22px 0 2px; border-top: 1px solid var(--line); }}
+          .aw-ledger .cell {{ flex: 1; padding: 12px 16px 2px 0; border-right: 1px solid var(--line); }}
+          .aw-ledger .cell:last-child {{ border-right: none; }}
+          .aw-ledger .v {{ font-family: var(--mono); font-size: 22px; font-weight: 600;
+            color: var(--ink); line-height: 1; }}
+          .aw-ledger .k {{ font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft);
+            text-transform: uppercase; letter-spacing: .1em; margin-top: 6px; display: block; }}
 
           /* --- Trust strip --- */
-          .aw-trust {{
-            display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 4px;
-          }}
+          .aw-trust {{ display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 4px; }}
           .aw-trust .item {{
             flex: 1 1 0; min-width: 150px; display: flex; align-items: center; gap: 11px;
-            background: #fff; border: 1px solid var(--border); border-radius: 13px;
-            padding: 13px 16px; box-shadow: var(--shadow-sm);
+            background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
+            padding: 13px 16px;
           }}
-          .aw-trust .item svg {{ flex: none; }}
-          .aw-trust .item b {{ display: block; font-size: 13.5px; color: var(--navy-dark);
-            font-weight: 600; font-family: var(--serif); }}
-          .aw-trust .item span {{ font-size: 11.5px; color: var(--muted); }}
+          .aw-trust .item svg {{ flex: none; color: var(--marine); }}
+          .aw-trust .item b {{ display: block; font-size: 13px; color: var(--ink);
+            font-weight: 600; font-family: var(--display); }}
+          .aw-trust .item span {{ font-size: 11px; color: var(--ink-soft); font-family: var(--mono); }}
 
           /* --- Section label + heading --- */
           .aw-section-label {{
-            text-transform: uppercase; letter-spacing: .12em; font-size: 11.5px;
-            color: var(--teal); font-weight: 700; margin: 4px 0 2px; font-family: 'Inter';
+            text-transform: uppercase; letter-spacing: .16em; font-size: 11px;
+            color: var(--marine); font-weight: 500; margin: 4px 0 3px; font-family: var(--mono);
           }}
-          .aw-section-head {{ font-family: var(--serif); font-size: 25px; color: var(--navy-dark);
-            font-weight: 600; margin: 2px 0 4px; letter-spacing: -.01em; }}
-          .aw-section-sub {{ color: var(--muted); font-size: 14.5px; margin: 0 0 8px; max-width: 62ch; }}
+          .aw-section-label::before {{ content: "// "; color: var(--gold); }}
+          .aw-section-head {{ font-family: var(--display); font-size: 26px; color: var(--ink);
+            font-weight: 600; margin: 2px 0 4px; letter-spacing: -.025em; }}
+          .aw-section-sub {{ color: var(--ink-soft); font-size: 14.5px; margin: 0 0 8px; max-width: 62ch; }}
 
-          /* --- Sub-section header (within a page) --- */
-          .aw-subhead {{ display: flex; align-items: baseline; gap: 9px; margin: 6px 0 10px; }}
-          .aw-subhead b {{ font-family: var(--serif); font-size: 18px; font-weight: 600;
-            color: var(--navy-dark); letter-spacing: -.01em; }}
-          .aw-subhead span {{ font-size: 13px; color: var(--muted); }}
+          /* --- Sub-section header (ledger tick) --- */
+          .aw-subhead {{ display: flex; align-items: baseline; gap: 10px; margin: 8px 0 10px;
+            border-left: 3px solid var(--gold); padding-left: 11px; }}
+          .aw-subhead b {{ font-family: var(--display); font-size: 18px; font-weight: 600;
+            color: var(--ink); letter-spacing: -.02em; }}
+          .aw-subhead span {{ font-size: 12px; color: var(--ink-soft); font-family: var(--mono); }}
 
-          /* --- Bordered containers (client rows, forms) --- */
-          [data-testid="stVerticalBlockBorderWrapper"] > div > [data-testid="stVerticalBlock"] {{ }}
-          div[data-testid="stExpander"] details {{ background: #fff; }}
+          div[data-testid="stExpander"] details {{ background: var(--paper2); }}
 
           /* --- Survey section banners --- */
           .aw-survey-section {{
-            background: linear-gradient(90deg, {NAVY} 0%, {TEAL} 100%);
-            color: #fff; border-radius: 12px; padding: 13px 20px; margin: 26px 0 4px;
-            font-weight: 600; font-size: 17px; font-family: var(--serif);
-            box-shadow: 0 3px 10px rgba(12,58,77,.14);
+            background: var(--marine); color: var(--paper); border-radius: 3px;
+            padding: 12px 18px; margin: 26px 0 4px; font-weight: 600; font-size: 16px;
+            font-family: var(--display); letter-spacing: -.01em;
           }}
-          .aw-survey-section span {{ opacity: .9; font-weight: 500; font-size: 13.5px;
-            font-family: 'Inter'; }}
+          .aw-survey-section span {{ opacity: .85; font-weight: 400; font-size: 12px;
+            font-family: var(--mono); }}
           .aw-survey-body {{
-            border: 1px solid {BORDER}; border-top: none;
-            border-radius: 0 0 12px 12px; padding: 18px 20px 8px; margin-bottom: 8px;
-            background: #ffffff;
+            border: 1px solid var(--line); border-top: none;
+            border-radius: 0 0 3px 3px; padding: 18px 20px 8px; margin-bottom: 8px;
+            background: var(--paper2);
           }}
 
           /* --- Cards --- */
           .aw-card {{
-            background: #fff; border: 1px solid {BORDER}; border-radius: 16px;
-            padding: 24px; height: 100%; box-shadow: var(--shadow-sm);
-            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+            background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
+            padding: 24px; height: 100%;
+            transition: transform .18s ease, border-color .18s ease;
           }}
-          .aw-card:hover {{ transform: translateY(-3px); box-shadow: var(--shadow-md);
-            border-color: #c6dbe1; }}
-          .aw-card h3 {{ margin: 12px 0 7px; font-size: 18px; font-family: var(--serif);
-            font-weight: 600; }}
-          .aw-card p  {{ color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }}
+          .aw-card:hover {{ transform: translateY(-2px); border-color: var(--marine); }}
+          .aw-card h3 {{ margin: 14px 0 7px; font-size: 18px; font-family: var(--display);
+            font-weight: 600; letter-spacing: -.02em; }}
+          .aw-card p  {{ color: var(--ink-soft); font-size: 14px; line-height: 1.62; margin: 0; }}
           .aw-card .ico {{
-            width: 46px; height: 46px; border-radius: 13px;
-            background: linear-gradient(135deg, rgba(28,155,179,.12), rgba(18,85,110,.10));
+            width: 44px; height: 44px; border-radius: 3px; background: var(--soft);
             display: flex; align-items: center; justify-content: center;
-            border: 1px solid #d7e7ec; color: var(--navy);
+            border: 1px solid var(--line); color: var(--marine);
           }}
 
-          /* --- Process timeline --- */
-          .aw-steps {{ display: flex; gap: 0; margin: 8px 0 4px; counter-reset: step; }}
+          /* --- Process timeline (a real sequence → numbered ledger entries) --- */
+          .aw-steps {{ display: flex; gap: 0; margin: 8px 0 4px; }}
           .aw-step {{ flex: 1; position: relative; padding: 4px 18px 4px 0; }}
           .aw-step .n {{
-            width: 40px; height: 40px; border-radius: 50%; font-family: var(--serif);
-            background: #fff; border: 2px solid var(--teal); color: var(--navy-dark);
+            width: 40px; height: 40px; border-radius: 3px; font-family: var(--mono);
+            background: var(--paper2); border: 1px solid var(--marine); color: var(--marine);
             display: flex; align-items: center; justify-content: center; font-weight: 600;
-            font-size: 17px; position: relative; z-index: 2; box-shadow: var(--shadow-sm);
+            font-size: 15px; position: relative; z-index: 2;
           }}
           .aw-step:not(:last-child)::after {{
-            content: ""; position: absolute; top: 20px; left: 34px; right: 6px; height: 2px;
-            background: linear-gradient(90deg, var(--teal), #cfe6ec); z-index: 1;
+            content: ""; position: absolute; top: 20px; left: 34px; right: 6px; height: 1px;
+            background: var(--line); z-index: 1;
           }}
-          .aw-step h4 {{ font-size: 16px; margin: 12px 0 5px; font-family: var(--serif);
-            font-weight: 600; }}
-          .aw-step p {{ font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0;
+          .aw-step h4 {{ font-size: 16px; margin: 12px 0 5px; font-family: var(--display);
+            font-weight: 600; letter-spacing: -.02em; }}
+          .aw-step p {{ font-size: 13px; color: var(--ink-soft); line-height: 1.55; margin: 0;
             padding-right: 12px; }}
 
           /* --- Service / fee tiers --- */
           .aw-tier {{
-            background: #fff; border: 1px solid var(--border); border-radius: 16px;
-            padding: 26px 24px; height: 100%; box-shadow: var(--shadow-sm);
-            transition: transform .18s ease, box-shadow .18s ease;
+            background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
+            padding: 26px 24px; height: 100%;
+            transition: transform .18s ease, border-color .18s ease;
             display: flex; flex-direction: column;
           }}
-          .aw-tier:hover {{ transform: translateY(-3px); box-shadow: var(--shadow-md); }}
-          .aw-tier.feat {{ border: 1.5px solid var(--teal);
-            box-shadow: 0 10px 30px rgba(28,155,179,.16); }}
-          .aw-tier .badge {{ align-self: flex-start; background: var(--teal); color: #fff;
-            font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-            padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }}
-          .aw-tier h3 {{ font-family: var(--serif); font-size: 20px; margin: 0 0 2px;
-            font-weight: 600; color: var(--navy-dark); }}
-          .aw-tier .price {{ font-size: 15px; color: var(--teal); font-weight: 600; margin: 0 0 12px; }}
+          .aw-tier:hover {{ transform: translateY(-2px); border-color: var(--marine); }}
+          .aw-tier.feat {{ border: 1px solid var(--marine); border-top: 3px solid var(--gold); }}
+          .aw-tier .badge {{ align-self: flex-start; background: var(--marine); color: var(--paper);
+            font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+            padding: 4px 10px; border-radius: 2px; margin-bottom: 10px; font-family: var(--mono); }}
+          .aw-tier h3 {{ font-family: var(--display); font-size: 20px; margin: 0 0 3px;
+            font-weight: 600; color: var(--ink); letter-spacing: -.02em; }}
+          .aw-tier .price {{ font-size: 15px; color: var(--marine); font-weight: 600; margin: 0 0 12px;
+            font-family: var(--mono); }}
           .aw-tier ul {{ list-style: none; padding: 0; margin: 0; }}
-          .aw-tier li {{ font-size: 13.5px; color: var(--muted); padding: 6px 0 6px 24px;
+          .aw-tier li {{ font-size: 13.5px; color: var(--ink-soft); padding: 6px 0 6px 22px;
             position: relative; line-height: 1.45; }}
-          .aw-tier li::before {{ content: "✓"; position: absolute; left: 0; top: 6px;
-            color: var(--teal); font-weight: 700; }}
+          .aw-tier li::before {{ content: "+"; position: absolute; left: 0; top: 6px;
+            color: var(--gold); font-weight: 700; font-family: var(--mono); }}
 
           /* --- Team / advisor --- */
           .aw-team {{ display: flex; gap: 22px; align-items: center; }}
           .aw-team .photo {{
-            width: 150px; height: 150px; border-radius: 16px; flex: none;
-            background: linear-gradient(135deg, var(--navy) 0%, var(--teal) 100%);
+            width: 150px; height: 150px; border-radius: 3px; flex: none;
+            background: var(--marine); border: 1px solid var(--ink);
             display: flex; align-items: center; justify-content: center;
-            color: #fff; font-family: var(--serif); font-size: 44px; font-weight: 600;
-            box-shadow: var(--shadow-md); overflow: hidden;
+            color: var(--paper); font-family: var(--display); font-size: 44px; font-weight: 600;
+            overflow: hidden;
           }}
-          .aw-team .photo img {{ width: 100%; height: 100%; object-fit: cover;
-            border-radius: 16px; display: block; }}
-          .aw-team h3 {{ margin: 0 0 2px; font-size: 20px; font-family: var(--serif); }}
-          .aw-team .role {{ color: var(--teal); font-size: 13.5px; font-weight: 600; margin: 0 0 8px; }}
+          .aw-team .photo img {{ width: 100%; height: 100%; object-fit: cover; display: block; }}
+          .aw-team h3 {{ margin: 0 0 2px; font-size: 21px; font-family: var(--display);
+            letter-spacing: -.02em; }}
+          .aw-team .role {{ color: var(--marine); font-size: 12.5px; font-weight: 500; margin: 0 0 8px;
+            font-family: var(--mono); }}
           .aw-team .creds {{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }}
-          .aw-team .creds span {{ font-size: 11.5px; background: var(--bg-soft);
-            border: 1px solid var(--border); color: var(--navy-dark); padding: 3px 10px;
-            border-radius: 999px; font-weight: 500; }}
-          .aw-team p {{ font-size: 14px; color: var(--muted); line-height: 1.6; margin: 4px 0 0; }}
+          .aw-team .creds span {{ font-size: 11px; background: var(--soft);
+            border: 1px solid var(--line); color: var(--ink); padding: 3px 9px;
+            border-radius: 2px; font-weight: 500; font-family: var(--mono); }}
+          .aw-team p {{ font-size: 14px; color: var(--ink-soft); line-height: 1.62; margin: 4px 0 0; }}
 
           /* --- Testimonials --- */
           .aw-quote {{
-            background: #fff; border: 1px solid var(--border); border-radius: 16px;
-            padding: 24px; height: 100%; box-shadow: var(--shadow-sm); position: relative;
+            background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
+            padding: 24px; height: 100%; position: relative;
           }}
-          .aw-quote .mark {{ font-family: var(--serif); font-size: 46px; color: var(--sand);
+          .aw-quote .mark {{ font-family: var(--display); font-size: 46px; color: var(--gold);
             line-height: .5; display: block; height: 22px; }}
-          .aw-quote p {{ font-size: 14.5px; color: var(--ink); line-height: 1.6; margin: 6px 0 14px;
-            font-style: italic; }}
+          .aw-quote p {{ font-size: 14.5px; color: var(--ink); line-height: 1.6; margin: 6px 0 14px; }}
           .aw-quote .who {{ display: flex; align-items: center; gap: 10px; }}
-          .aw-quote .av {{ width: 34px; height: 34px; border-radius: 50%; flex: none;
-            background: linear-gradient(135deg, var(--teal), var(--navy)); color: #fff;
+          .aw-quote .av {{ width: 34px; height: 34px; border-radius: 2px; flex: none;
+            background: var(--marine); color: var(--paper);
             display: flex; align-items: center; justify-content: center; font-size: 13px;
-            font-weight: 600; font-family: var(--serif); }}
-          .aw-quote .who b {{ font-size: 13px; color: var(--navy-dark); display: block;
-            font-family: var(--serif); font-weight: 600; }}
-          .aw-quote .who span {{ font-size: 11.5px; color: var(--muted); }}
+            font-weight: 600; font-family: var(--mono); }}
+          .aw-quote .who b {{ font-size: 13px; color: var(--ink); display: block;
+            font-family: var(--display); font-weight: 600; }}
+          .aw-quote .who span {{ font-size: 11px; color: var(--ink-soft); font-family: var(--mono); }}
 
           /* --- Insights --- */
           .aw-insight {{
-            background: #fff; border: 1px solid var(--border); border-radius: 16px;
-            overflow: hidden; height: 100%; box-shadow: var(--shadow-sm);
-            transition: transform .18s ease, box-shadow .18s ease;
+            background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
+            overflow: hidden; height: 100%;
+            transition: transform .18s ease, border-color .18s ease;
           }}
-          .aw-insight:hover {{ transform: translateY(-3px); box-shadow: var(--shadow-md); }}
-          .aw-insight .top {{ height: 80px;
-            background: linear-gradient(135deg, var(--navy) 0%, var(--teal) 100%);
+          .aw-insight:hover {{ transform: translateY(-2px); border-color: var(--marine); }}
+          .aw-insight .top {{ height: 64px; background: var(--marine);
             display: flex; align-items: center; justify-content: flex-start; padding: 0 20px; }}
-          .aw-insight .top span {{ color: rgba(255,255,255,.92); font-size: 11px;
-            text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }}
+          .aw-insight .top span {{ color: var(--paper); font-size: 10.5px;
+            text-transform: uppercase; letter-spacing: .14em; font-weight: 500; font-family: var(--mono); }}
+          .aw-insight .top span::before {{ content: "// "; color: var(--gold); }}
           .aw-insight .body {{ padding: 16px 20px 20px; }}
-          .aw-insight h4 {{ font-size: 16px; margin: 0 0 6px; font-family: var(--serif);
-            font-weight: 600; line-height: 1.3; }}
-          .aw-insight p {{ font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0; }}
-          .aw-insight .meta {{ font-size: 11.5px; color: var(--teal); font-weight: 600; margin-top: 10px; }}
+          .aw-insight h4 {{ font-size: 16px; margin: 0 0 6px; font-family: var(--display);
+            font-weight: 600; line-height: 1.28; letter-spacing: -.02em; }}
+          .aw-insight p {{ font-size: 13px; color: var(--ink-soft); line-height: 1.55; margin: 0; }}
+          .aw-insight .meta {{ font-size: 11px; color: var(--marine); font-weight: 500; margin-top: 10px;
+            font-family: var(--mono); }}
 
           /* --- Disclosures footer --- */
           .aw-foot {{
-            margin-top: 30px; border-top: 1px solid var(--border); padding-top: 22px;
-            color: var(--muted); font-size: 12px; line-height: 1.65;
+            margin-top: 30px; border-top: 1px solid var(--line); padding-top: 22px;
+            color: var(--ink-soft); font-size: 12px; line-height: 1.65;
           }}
           .aw-foot .cols {{ display: flex; gap: 40px; flex-wrap: wrap; margin-bottom: 16px; }}
-          .aw-foot .cols b {{ color: var(--navy-dark); font-family: var(--serif);
-            font-size: 13.5px; display: block; margin-bottom: 6px; font-weight: 600; }}
-          .aw-foot .cols div {{ font-size: 12.5px; }}
-          .aw-foot .fine {{ font-size: 11px; color: #8a97a0; border-top: 1px dashed var(--border);
+          .aw-foot .cols b {{ color: var(--ink); font-family: var(--display);
+            font-size: 13px; display: block; margin-bottom: 6px; font-weight: 600; }}
+          .aw-foot .cols div {{ font-size: 12px; font-family: var(--mono); line-height: 1.7; }}
+          .aw-foot .fine {{ font-size: 11px; color: var(--ink-soft); border-top: 1px dashed var(--line);
             padding-top: 12px; }}
 
-          /* --- Metrics --- */
+          /* --- Metrics: the signature — mono values on a ledger underline --- */
           [data-testid="stMetric"] {{
-            background: #fff; border: 1px solid {BORDER}; border-radius: 13px;
-            padding: 15px 18px; box-shadow: var(--shadow-sm);
+            background: var(--paper2); border: 1px solid var(--line);
+            border-bottom: 2px solid var(--marine); border-radius: 3px; padding: 14px 18px;
           }}
-          [data-testid="stMetricValue"] {{ font-size: 23px; color: {NAVY_DARK};
-            font-family: var(--serif); font-weight: 600; }}
-          [data-testid="stMetricLabel"] {{ color: var(--muted); }}
+          [data-testid="stMetricValue"] {{ font-size: 24px; color: var(--ink);
+            font-family: var(--mono); font-weight: 600; letter-spacing: -.02em; }}
+          [data-testid="stMetricLabel"] {{ color: var(--ink-soft); font-family: var(--mono);
+            letter-spacing: 0; font-size: 11px; }}
+          [data-testid="stMetricLabel"] * {{ white-space: normal; overflow: visible;
+            text-overflow: clip; }}
+          [data-testid="stMetricDelta"] {{ font-family: var(--mono); font-size: 12px; }}
 
           /* --- Buttons --- */
           .stButton button, .stFormSubmitButton button {{
-            border-radius: 10px; font-weight: 600; transition: all .15s ease;
+            border-radius: 3px; font-weight: 600; font-family: var(--sans);
+            transition: transform .15s ease, background .15s ease, border-color .15s ease;
           }}
-          /* Primary: white label on navy, for every nested text node Streamlit renders. */
           .stButton button[kind="primary"], .stButton button[kind="primaryFormSubmit"],
           .stFormSubmitButton button[kind="primaryFormSubmit"] {{
-            background: {NAVY}; border-color: {NAVY}; color: #ffffff;
+            background: var(--marine); border-color: var(--marine); color: #ffffff;
           }}
           .stButton button[kind="primary"] *, .stButton button[kind="primaryFormSubmit"] *,
           .stFormSubmitButton button[kind="primaryFormSubmit"] * {{ color: #ffffff !important; }}
           .stButton button[kind="primary"]:hover, .stButton button[kind="primaryFormSubmit"]:hover,
           .stFormSubmitButton button[kind="primaryFormSubmit"]:hover {{
-            background: {NAVY_DARK}; border-color: {NAVY_DARK}; color: #ffffff;
-            transform: translateY(-1px); box-shadow: var(--shadow-md);
+            background: var(--marine-dark); border-color: var(--marine-dark); color: #ffffff;
+            transform: translateY(-1px);
           }}
-          /* Secondary: navy label on white, teal edge on hover. */
-          .stButton button[kind="secondary"] {{ color: {NAVY_DARK}; border-color: var(--border); }}
+          .stButton button[kind="secondary"] {{ color: var(--ink); border-color: var(--line);
+            background: var(--paper2); }}
           .stButton button[kind="secondary"]:hover {{
-            color: {NAVY_DARK}; border-color: {TEAL};
-            background: var(--bg-soft); transform: translateY(-1px);
+            color: var(--ink); border-color: var(--marine);
+            background: var(--soft); transform: translateY(-1px);
           }}
 
-          /* --- Top navigation: a polished segmented nav bar --- */
-          /* The columns row that holds the nav buttons becomes a bordered bar. */
+          /* --- Top navigation: mono ledger tabs in a bordered bar --- */
           div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-nav_"]) {{
-            background: linear-gradient(180deg, #ffffff 0%, #f5fafc 100%);
-            border: 1px solid var(--border); border-radius: 14px;
-            box-shadow: var(--shadow-sm); padding: 7px 9px; gap: 6px;
+            background: var(--paper2); border: 1px solid var(--line);
+            border-radius: 3px; padding: 7px 9px; gap: 6px;
           }}
           [class*="st-key-nav_"] button {{
             border: none !important; background: transparent !important;
-            color: var(--muted) !important; font-weight: 600 !important;
-            border-radius: 10px !important; letter-spacing: .005em;
-            box-shadow: none !important; transition: all .16s ease !important;
+            color: var(--ink-soft) !important; font-weight: 500 !important;
+            border-radius: 2px !important; font-family: var(--mono) !important;
+            font-size: 12.5px !important; letter-spacing: .02em;
+            box-shadow: none !important; transition: background .16s ease, color .16s ease !important;
           }}
           [class*="st-key-nav_"] button:hover {{
-            background: rgba(28,155,179,.10) !important; color: var(--navy-dark) !important;
+            background: var(--soft) !important; color: var(--ink) !important;
             transform: none !important; box-shadow: none !important;
           }}
           [class*="st-key-nav_"] button[kind="primary"] {{
-            background: linear-gradient(135deg, {NAVY} 0%, {TEAL} 100%) !important;
-            color: #ffffff !important; box-shadow: 0 4px 12px rgba(18,85,110,.24) !important;
+            background: var(--marine) !important; color: #ffffff !important; box-shadow: none !important;
           }}
           [class*="st-key-nav_"] button[kind="primary"] * {{ color: #ffffff !important; }}
           [class*="st-key-nav_"] button[kind="primary"]:hover {{
-            background: linear-gradient(135deg, {NAVY_DARK} 0%, {TEAL} 100%) !important;
-            transform: translateY(-1px) !important;
+            background: var(--marine-dark) !important; transform: none !important;
           }}
-          /* Settings gear — a subtle ghost icon button. */
           [class*="st-key-gearbtn"] button {{
-            border: 1px solid var(--border) !important; background: #fff !important;
-            color: var(--navy) !important; border-radius: 10px !important;
-            box-shadow: var(--shadow-sm) !important;
+            border: 1px solid var(--line) !important; background: var(--paper2) !important;
+            color: var(--marine) !important; border-radius: 2px !important; box-shadow: none !important;
           }}
           [class*="st-key-gearbtn"] button:hover {{
-            border-color: {TEAL} !important; background: var(--bg-soft) !important;
-            transform: translateY(-1px) !important;
+            border-color: var(--marine) !important; background: var(--soft) !important;
           }}
-          .aw-navsep {{ display: none; }}
 
-          hr {{ opacity: .5; }}
-          [data-testid="stExpander"] {{ border-radius: 12px; border-color: var(--border); }}
+          hr {{ opacity: .4; border-color: var(--line); }}
+          [data-testid="stExpander"] {{ border-radius: 3px; border-color: var(--line); }}
 
+          @media (prefers-reduced-motion: reduce) {{
+            * {{ transition: none !important; animation: none !important; }}
+          }}
           @media (max-width: 820px) {{
-            .aw-hero {{ padding: 32px 26px; }}
-            .aw-hero h1 {{ font-size: 30px; }}
+            .aw-hero {{ padding: 30px 24px; }}
+            .aw-hero h1 {{ font-size: 31px; }}
             .aw-hero-grid {{ flex-direction: column; }}
+            .aw-ledger {{ flex-wrap: wrap; }}
             .aw-steps {{ flex-direction: column; gap: 16px; }}
             .aw-step:not(:last-child)::after {{ display: none; }}
             .aw-team {{ flex-direction: column; text-align: center; align-items: center; }}

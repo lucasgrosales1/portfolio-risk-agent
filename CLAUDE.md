@@ -18,24 +18,28 @@ match how design actually works here.
   `.venv/Scripts/streamlit run streamlit_app.py`
 
 ## Always do first
-- The template's `frontend-design` skill is **not installed in this environment**,
-  so it cannot be invoked. Instead, before writing UI code, **read
+- The `frontend-design` skill is installed in this environment and should be
+  invoked for aesthetic/layout decisions. Before writing UI code, also **read
   `app_ui.py inject_theme()`** and reuse the existing CSS variables and component
-  classes rather than inventing new ones.
+  classes rather than inventing new ones — the skill's general guidance defers
+  to this project's established design system below.
 
-## Design system — already established, match it
-- **Typography:** Fraunces (display serif) for headings, Inter for body. Never the
-  same font for both. Tight tracking (`-0.01em`) on large headings; body
-  `line-height` 1.6–1.7.
-- **Palette (Florida coastal, defined in `app_ui.py`):** navy `#12556e`,
-  navy-dark `#0c3a4d`, teal `#1c9bb3`, sand `#e3c893`, coral `#e8785a`,
-  gold `#d9a441`. Derive new colors from these — never default Tailwind/generic hues.
-- **Shadows:** layered, low-opacity, navy-tinted (`--shadow-sm/md/lg`). No flat gray
-  `box-shadow`.
-- **Spacing:** reuse the existing scale/variables; intentional and consistent, not
-  random values.
-- **Depth:** surfaces layer (page bg → card → floating). Cards sit at `--shadow-sm`
-  and lift to `--shadow-md` on hover.
+## Design system — "The Ledger", already established, match it
+- **Thesis:** precision as personality — every figure is computed, not guessed, and
+  the design says so. Mono numerics are the signature voice.
+- **Typography:** Bricolage Grotesque (display) for headings, Inter for body, and
+  **IBM Plex Mono** for every number, label, eyebrow, price, and tag. Never one font
+  for all. Tight tracking (`-0.02em`) on headings.
+- **Palette (defined in `app_ui.py`):** paper `#F7F4EF`, paper2 `#FCFAF6`,
+  ink `#14181F`, ink-soft `#5A6169`, marine `#0E6F73` (primary — the `NAVY` constant),
+  marine-dark `#0A5155`, gold `#C08A2D` (the single signal accent), line `#E4DECF`
+  (warm hairline). Derive new colors from these — never default Tailwind/generic hues.
+- **Signatures:** mono metric values on a marine ledger underline; `// ` gold-slash
+  mono eyebrows (`.aw-section-label`, `.eyebrow`); the hero ledger stat strip
+  (`.aw-ledger`); gold left-tick subheads; numbered ledger steps.
+- **Surfaces:** flat printed look — paper2 cards with 1px warm borders and small
+  `border-radius: 3px`, minimal shadow. Hover lifts `translateY(-2px)` + marine border.
+- **Spacing:** reuse the existing tokens; intentional and consistent, not random.
 
 ## Interactive states
 - Every clickable element needs **hover, focus-visible, and active** states.
@@ -72,13 +76,12 @@ match how design actually works here.
   whatever is present.
 
 ## Anti-generic guardrails
-- **Colors:** custom coastal palette only — never default Tailwind indigo/blue.
-- **Shadows:** layered, color-tinted, low opacity — never flat `shadow-md`.
-- **Typography:** serif display + clean sans, tight heading tracking, roomy body.
-- **Animations:** `transform`/`opacity` only, spring-style easing.
-- **Interactive states:** hover + focus-visible + active on every clickable element.
+- **Colors:** the Ledger palette only (paper/ink/marine/gold) — never default Tailwind.
+- **Typography:** Bricolage display + Inter body + IBM Plex Mono for all data/labels.
+- **Signature first:** spend boldness on the mono/ledger signature; keep the rest quiet.
+- **Animations:** `transform`/`opacity` only. Never `transition-all`.
+- **Interactive states:** hover + focus-visible (gold ring) + active on every clickable.
 - **Spacing:** intentional, consistent tokens.
-- **Depth:** a real layering system (base → elevated → floating), not one z-plane.
 
 ## Hard rules
 - Do not add sections, features, or content not requested or in the reference.

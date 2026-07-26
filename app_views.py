@@ -282,11 +282,19 @@ def home() -> None:
         <div class="aw-hero">
           <div class="aw-hero-grid">
             <div class="aw-hero-text">
-              <div class="eyebrow">{ui.FIRM_NAME} &middot; Florida</div>
+              <div class="eyebrow">Florida &middot; fee-only fiduciary</div>
               <h1>Thoughtful planning for your whole family's future.</h1>
               <p>From a first conversation to a complete portfolio review — clear,
                  personal guidance backed by real analysis, so every decision fits
                  your family's goals.</p>
+              <div class="aw-ledger">
+                <div class="cell"><div class="v">100%</div>
+                  <span class="k">figures computed</span></div>
+                <div class="cell"><div class="v">0</div>
+                  <span class="k">numbers guessed</span></div>
+                <div class="cell"><div class="v">3-yr</div>
+                  <span class="k">risk &amp; return window</span></div>
+              </div>
             </div>
             <div class="aw-hero-media">{ui.hero_media_html()}</div>
           </div>
