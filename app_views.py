@@ -159,6 +159,7 @@ def _sample_clients() -> dict:
     return {
         "Devon & Ana Carter — 34, young family building wealth": dict(
             phone="(813) 555-0121", email="carter.family@example.com", net_worth=420_000,
+            portfolio="client_carter.csv",
             profile=ClientProfile(
                 client_name="Devon & Ana Carter", age=34, dependents=2, time_horizon_years=28,
                 employment=Employment.EMPLOYED, annual_income=185_000, net_worth=420_000,
@@ -173,6 +174,7 @@ def _sample_clients() -> dict:
 
         "The Okafor Family — 47, college and retirement": dict(
             phone="(305) 555-0164", email="okafor.household@example.com", net_worth=980_000,
+            portfolio="client_okafor.csv",
             profile=ClientProfile(
                 client_name="The Okafor Family", age=47, dependents=3, time_horizon_years=18,
                 employment=Employment.EMPLOYED, annual_income=240_000, net_worth=980_000,
@@ -187,6 +189,7 @@ def _sample_clients() -> dict:
 
         "Margaret Ellis — 68, retiree, income focus": dict(
             phone="(727) 555-0139", email="m.ellis@example.com", net_worth=1_150_000,
+            portfolio="client_ellis.csv",
             profile=ClientProfile(
                 client_name="Margaret Ellis", age=68, dependents=0, time_horizon_years=8,
                 employment=Employment.RETIRED, annual_income=0, net_worth=1_150_000,
@@ -201,6 +204,7 @@ def _sample_clients() -> dict:
 
         "Raj Patel — 45, concentrated tech position": dict(
             phone="(408) 555-0175", email="raj.patel@example.com", net_worth=2_100_000,
+            portfolio="sample_concentrated.csv",
             profile=ClientProfile(
                 client_name="Raj Patel", age=45, dependents=1, time_horizon_years=20,
                 employment=Employment.EMPLOYED, annual_income=310_000, net_worth=2_100_000,
@@ -696,9 +700,9 @@ def _render_recommendation(rec) -> None:
         st.components.v1.html(ips_html, height=760, scrolling=True)
 
 
-def _render_survey_subject(rec_wrap: dict) -> None:
+def _render_client_header(rec_wrap: dict) -> None:
     rec = rec_wrap["rec"]
-    st.success(f"Reviewing survey — **{rec_wrap['name']}**, submitted "
+    st.success(f"**{rec_wrap['name']}** — submitted "
                f"{rec_wrap['submitted_at']:%b %d, %Y %I:%M %p}", icon="📝")
     st.caption(f"📞 {rec_wrap.get('phone', '—')}  ·  ✉️ {rec_wrap.get('email', '—')}")
 
@@ -710,7 +714,6 @@ def _render_survey_subject(rec_wrap: dict) -> None:
     q3.metric("Primary goal", p.objective.value.title())
     q4.metric("Risk tolerance", p.risk_tolerance.value.replace("_", " ").title())
 
-    # Family balance sheet summary.
     assets, liabs = rec_wrap["assets"], rec_wrap["liabilities"]
     ta, tl = sum(assets.values()), sum(liabs.values())
     st.markdown("#### Family balance sheet")
@@ -730,11 +733,29 @@ def _render_survey_subject(rec_wrap: dict) -> None:
                      hide_index=True, width="stretch",
                      column_config={"Balance": st.column_config.NumberColumn(format="$%,.0f")})
 
+
+def _render_survey_subject(rec_wrap: dict) -> None:
+    _render_client_header(rec_wrap)
     st.divider()
-    _render_recommendation(rec)
+    _render_recommendation(rec_wrap["rec"])
 
 
-def _render_portfolio_subject(result: AnalysisResult) -> None:
+def _render_sample_client(rec_wrap: dict) -> None:
+    """A complete client view: intake, current portfolio holdings analysis
+    (equity, concentration, risk indicators, rebalancing), then the suitability
+    plan (capacity, stress test, strategy, Monte Carlo, structured, IPS)."""
+    _render_client_header(rec_wrap)
+    analysis = rec_wrap.get("analysis")
+    if analysis is not None:
+        st.divider()
+        st.markdown("### Current portfolio holdings")
+        _render_portfolio_subject(analysis, show_gallery=False)
+    st.divider()
+    st.markdown("### Suitability & planning")
+    _render_recommendation(rec_wrap["rec"])
+
+
+def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True) -> None:
     a, r, plan = result.allocation, result.risk, result.plan
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Portfolio value", f"${a.total_value:,.0f}", f"{len(a.positions)} positions")
@@ -883,7 +904,7 @@ def portfolio_analysis() -> None:
     elif kind.startswith("sample:"):
         nm = kind.split("sample:", 1)[1]
         if nm in generated:
-            _render_survey_subject(generated[nm])
+            _render_sample_client(generated[nm])
             if st.button("Regenerate analysis", key="regen"):
                 generated.pop(nm, None)
                 st.rerun()
@@ -897,10 +918,19 @@ def portfolio_analysis() -> None:
             if st.button("Generate analysis", type="primary", key="gen_sample"):
                 with st.spinner("Running the analysis and Monte Carlo simulation…"):
                     rec = build_recommendation(p)
+                    analysis = None
+                    csv = s.get("portfolio")
+                    if csv:
+                        try:
+                            portfolio = load_portfolio(DATA_DIR / csv)
+                            analysis = run_analysis(portfolio, rec.recommended_model)
+                        except (PortfolioError, FileNotFoundError, ValueError, KeyError):
+                            analysis = None
                 generated[nm] = {
                     "id": f"sample_{nm}", "name": p.client_name,
                     "phone": s["phone"], "email": s["email"],
                     "submitted_at": dt.datetime.now(), "rec": rec,
+                    "analysis": analysis,
                     "assets": s["assets"], "liabilities": s["liabilities"],
                     "net_worth": s["net_worth"]}
                 st.rerun()

@@ -1,0 +1,10 @@
+# client_name: Devon & Ana Carter
+# SYNTHETIC DATA - not a real client.
+ticker,shares,cost_basis_per_share,acquisition_date,account_type,is_employer_stock
+VTI,340,232.00,2020-06-15,taxable,false
+VOO,110,415.00,2021-08-10,taxable,false
+QQQ,80,430.00,2020-11-05,roth,false
+VUG,300,55.00,2021-02-20,traditional,false
+VEA,450,58.00,2022-03-14,taxable,false
+BND,150,70.00,2022-09-01,traditional,false
+CASH,14000,1.00,2024-05-01,taxable,false
