@@ -622,8 +622,9 @@ def _sim_clients() -> list[dict]:
 
 
 def dashboard() -> None:
-    ui.page_title("Advisor Dashboard",
-                  "Your client pipeline for the week. (Simulated workflow data.)")
+    ui.section_header("Advisor workspace", "Advisor Dashboard",
+                      "Your client pipeline for the week. (Simulated workflow data.)")
+    st.write("")
     _ensure_demo_survey()
     clients = _sim_clients()
     surveys = st.session_state.get("surveys", [])
@@ -642,7 +643,7 @@ def dashboard() -> None:
     # --- Inbound consultation requests (from the Home page form) ---------
     if leads:
         st.write("")
-        st.markdown("**📨 New consultation requests** — submitted from the website")
+        ui.subhead("📨 New consultation requests", "submitted from the website")
         for ld in reversed(leads):
             with st.container(border=True):
                 st.markdown(
@@ -654,7 +655,7 @@ def dashboard() -> None:
     st.write("")
     left, right = st.columns([1, 1])
     with left:
-        st.markdown("**⏱️ Priority clients** — by next meeting")
+        ui.subhead("⏱️ Priority clients", "by next meeting")
         for c in sorted(clients, key=lambda c: c["meeting"])[:4]:
             days = (c["meeting"] - today).days
             when = "Today" if days == 0 else ("Tomorrow" if days == 1 else f"in {days} days")
@@ -664,7 +665,7 @@ def dashboard() -> None:
                             f"<span style='color:#6b7280;font-size:13px'>{c['reason']} · "
                             f"${c['aum']:,.0f}</span>", unsafe_allow_html=True)
     with right:
-        st.markdown("**📋 Profiles awaiting completion**")
+        ui.subhead("📋 Profiles awaiting completion")
         if not incomplete:
             st.success("All client profiles are complete.", icon="✅")
         for c in incomplete:
@@ -674,7 +675,7 @@ def dashboard() -> None:
                             unsafe_allow_html=True)
 
     st.write("")
-    st.markdown("**📅 Upcoming meetings**")
+    ui.subhead("📅 Upcoming meetings")
     rows = [{"Client": c["name"], "Date": c["meeting"].strftime("%a %b %d"), "Time": c["time"],
              "Phone": c["phone"], "Email": c["email"],
              "Profile": "Complete" if c["complete"] else "Incomplete", "Purpose": c["reason"]}
@@ -683,7 +684,7 @@ def dashboard() -> None:
 
     # --- Review client surveys (real submissions) ------------------------
     st.write("")
-    st.markdown("**📝 Review client surveys** — new intake from prospective clients")
+    ui.subhead("📝 Review client surveys", "new intake from prospective clients")
     if not surveys:
         st.info("No surveys submitted yet. Completed client surveys appear here for review.",
                 icon="🗂️")
@@ -1065,8 +1066,9 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
 
 
 def portfolio_analysis() -> None:
-    ui.page_title("Portfolio Analysis",
-                  "Choose a sample client, review a filed survey, or load a portfolio.")
+    ui.section_header("Analysis & planning", "Portfolio Analysis",
+                      "Choose a sample client, review a filed survey, or load a portfolio.")
+    st.write("")
     surveys = st.session_state.get("surveys", [])
     active = _active()
     samples = _sample_clients()
@@ -1359,11 +1361,12 @@ def _survey_thank_you() -> None:
 # Settings
 # ==========================================================================
 def settings() -> None:
-    ui.page_title("Settings", "Portfolio selection and configuration.")
-    st.markdown("**Active portfolio**")
+    ui.section_header("Preferences", "Settings", "Portfolio selection and configuration.")
+    st.write("")
+    ui.subhead("Active portfolio")
     _portfolio_picker("settings", navigate=True)
     st.write("")
-    st.markdown("**Configuration**")
+    ui.subhead("Configuration")
     st.write(f"- Commentary engine: "
              f"{'AI (Anthropic key detected)' if has_api_key() else 'Rule-based (no API key)'}")
     st.write(f"- Benchmark: {BENCHMARK_NAME}")

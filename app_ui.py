@@ -182,6 +182,16 @@ def inject_theme() -> None:
             font-weight: 600; margin: 2px 0 4px; letter-spacing: -.01em; }}
           .aw-section-sub {{ color: var(--muted); font-size: 14.5px; margin: 0 0 8px; max-width: 62ch; }}
 
+          /* --- Sub-section header (within a page) --- */
+          .aw-subhead {{ display: flex; align-items: baseline; gap: 9px; margin: 6px 0 10px; }}
+          .aw-subhead b {{ font-family: var(--serif); font-size: 18px; font-weight: 600;
+            color: var(--navy-dark); letter-spacing: -.01em; }}
+          .aw-subhead span {{ font-size: 13px; color: var(--muted); }}
+
+          /* --- Bordered containers (client rows, forms) --- */
+          [data-testid="stVerticalBlockBorderWrapper"] > div > [data-testid="stVerticalBlock"] {{ }}
+          div[data-testid="stExpander"] details {{ background: #fff; }}
+
           /* --- Survey section banners --- */
           .aw-survey-section {{
             background: linear-gradient(90deg, {NAVY} 0%, {TEAL} 100%);
@@ -507,6 +517,12 @@ def section_header(label: str, title: str, subtitle: str = "") -> None:
         f'<div class="aw-section-head">{title}</div>{sub}',
         unsafe_allow_html=True,
     )
+
+
+def subhead(title: str, note: str = "") -> None:
+    """A lighter serif sub-section header for use within a page."""
+    n = f"<span>{note}</span>" if note else ""
+    st.markdown(f'<div class="aw-subhead"><b>{title}</b>{n}</div>', unsafe_allow_html=True)
 
 
 def trust_strip() -> None:
