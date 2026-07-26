@@ -149,6 +149,72 @@ def _ensure_demo_survey() -> None:
     })
 
 
+def _sample_clients() -> dict:
+    """Pre-built simulated client profiles for the choose-and-generate flow.
+
+    Cheap to construct (no recommendation is run until the advisor clicks
+    Generate). Each entry carries a full profile plus a family balance sheet
+    and contact details, so the generated analysis renders like a real survey.
+    """
+    return {
+        "Devon & Ana Carter — 34, young family building wealth": dict(
+            phone="(813) 555-0121", email="carter.family@example.com", net_worth=420_000,
+            profile=ClientProfile(
+                client_name="Devon & Ana Carter", age=34, dependents=2, time_horizon_years=28,
+                employment=Employment.EMPLOYED, annual_income=185_000, net_worth=420_000,
+                liquid_net_worth=140_000, marginal_tax_bracket=0.24, has_emergency_reserve=True,
+                objective=Objective.GROWTH, risk_tolerance=RiskTolerance.AGGRESSIVE,
+                drawdown_tolerance=0.40, experience=Experience.GOOD, investable_assets=260_000,
+                goals=[FinancialGoal(GoalType.WEALTH, 2_000_000, 25, "high"),
+                       FinancialGoal(GoalType.COLLEGE, 250_000, 14, "medium")]),
+            assets={"Cash & savings": 40_000, "Brokerage & investment accounts": 120_000,
+                    "Retirement accounts (401k, IRA)": 140_000, "Home value": 380_000, "Other assets": 0},
+            liabilities={"Mortgage": 300_000, "Auto & student loans": 40_000, "Credit cards": 0, "Other debt": 0}),
+
+        "The Okafor Family — 47, college and retirement": dict(
+            phone="(305) 555-0164", email="okafor.household@example.com", net_worth=980_000,
+            profile=ClientProfile(
+                client_name="The Okafor Family", age=47, dependents=3, time_horizon_years=18,
+                employment=Employment.EMPLOYED, annual_income=240_000, net_worth=980_000,
+                liquid_net_worth=280_000, marginal_tax_bracket=0.32, has_emergency_reserve=True,
+                objective=Objective.BALANCED, risk_tolerance=RiskTolerance.MODERATE,
+                drawdown_tolerance=0.22, experience=Experience.LIMITED, investable_assets=620_000,
+                goals=[FinancialGoal(GoalType.COLLEGE, 300_000, 8, "high"),
+                       FinancialGoal(GoalType.RETIREMENT, 2_500_000, 18, "medium")]),
+            assets={"Cash & savings": 55_000, "Brokerage & investment accounts": 320_000,
+                    "Retirement accounts (401k, IRA)": 300_000, "Home value": 560_000, "Other assets": 0},
+            liabilities={"Mortgage": 255_000, "Auto & student loans": 0, "Credit cards": 0, "Other debt": 0}),
+
+        "Margaret Ellis — 68, retiree, income focus": dict(
+            phone="(727) 555-0139", email="m.ellis@example.com", net_worth=1_150_000,
+            profile=ClientProfile(
+                client_name="Margaret Ellis", age=68, dependents=0, time_horizon_years=8,
+                employment=Employment.RETIRED, annual_income=0, net_worth=1_150_000,
+                liquid_net_worth=340_000, marginal_tax_bracket=0.22, has_emergency_reserve=True,
+                objective=Objective.INCOME, risk_tolerance=RiskTolerance.MODERATE_CONSERVATIVE,
+                drawdown_tolerance=0.15, experience=Experience.GOOD, investable_assets=980_000,
+                annual_spending=72_000, social_security_income=34_000,
+                goals=[FinancialGoal(GoalType.WEALTH, 700_000, 20, "medium")]),
+            assets={"Cash & savings": 90_000, "Brokerage & investment accounts": 520_000,
+                    "Retirement accounts (401k, IRA)": 370_000, "Home value": 480_000, "Other assets": 0},
+            liabilities={"Mortgage": 0, "Auto & student loans": 0, "Credit cards": 0, "Other debt": 0}),
+
+        "Raj Patel — 45, concentrated tech position": dict(
+            phone="(408) 555-0175", email="raj.patel@example.com", net_worth=2_100_000,
+            profile=ClientProfile(
+                client_name="Raj Patel", age=45, dependents=1, time_horizon_years=20,
+                employment=Employment.EMPLOYED, annual_income=310_000, net_worth=2_100_000,
+                liquid_net_worth=520_000, marginal_tax_bracket=0.35, has_emergency_reserve=True,
+                objective=Objective.GROWTH, risk_tolerance=RiskTolerance.MODERATE_AGGRESSIVE,
+                drawdown_tolerance=0.30, experience=Experience.EXTENSIVE, investable_assets=1_500_000,
+                goals=[FinancialGoal(GoalType.WEALTH, 3_000_000, 15, "high"),
+                       FinancialGoal(GoalType.MORTGAGE, 400_000, 10, "low")]),
+            assets={"Cash & savings": 120_000, "Brokerage & investment accounts": 980_000,
+                    "Retirement accounts (401k, IRA)": 520_000, "Home value": 900_000, "Other assets": 0},
+            liabilities={"Mortgage": 420_000, "Auto & student loans": 0, "Credit cards": 0, "Other debt": 0}),
+    }
+
+
 # ==========================================================================
 # Risk triangle (Growth / Income / Safety)
 # ==========================================================================
@@ -595,12 +661,13 @@ def _render_recommendation(rec) -> None:
     if not mc.applicable:
         st.info(mc.note, icon="🎲")
     else:
-        st.caption(mc.note)
+        st.caption(mc.note + "  The two strongest routes are shown.")
+        top2 = mc.top_routes[:2]
         chart_df = pd.DataFrame(
-            {"Success rate %": [r.success_rate * 100 for r in mc.top_routes]},
-            index=[r.name for r in mc.top_routes])
-        st.bar_chart(chart_df, height=240, horizontal=True)
-        for i, r in enumerate(mc.top_routes, 1):
+            {"Success rate %": [r.success_rate * 100 for r in top2]},
+            index=[r.name for r in top2])
+        st.bar_chart(chart_df, height=170, horizontal=True)
+        for i, r in enumerate(top2, 1):
             with st.container(border=True):
                 c1, c2, c3 = st.columns(3)
                 c1.metric(f"{i}. Success rate", f"{r.success_rate:.0%}")
@@ -766,18 +833,23 @@ def _render_portfolio_subject(result: AnalysisResult) -> None:
 
 def portfolio_analysis() -> None:
     ui.page_title("Portfolio Analysis",
-                  "Analyze a holdings portfolio, or review a recently filed client survey.")
-    _ensure_demo_survey()
+                  "Choose a sample client, review a filed survey, or load a portfolio.")
     surveys = st.session_state.get("surveys", [])
     active = _active()
+    samples = _sample_clients()
+    generated = st.session_state.setdefault("generated", {})
 
     # Build the subject options (plain string keys + a label lookup).
     keys: list[str] = []
     labels: dict[str, str] = {}
+    for nm in samples:
+        k = f"sample:{nm}"
+        keys.append(k)
+        labels[k] = f"🧑‍🤝‍🧑 Sample client — {nm}"
     for w in reversed(surveys):
         k = f"survey:{w['id']}"
         keys.append(k)
-        labels[k] = f"📝 Survey — {w['name']} ({w['submitted_at']:%b %d})"
+        labels[k] = f"📝 Filed survey — {w['name']} ({w['submitted_at']:%b %d})"
     if active is not None:
         keys.append("active")
         labels["active"] = f"📊 Portfolio — {active.portfolio.client_name}"
@@ -789,16 +861,16 @@ def portfolio_analysis() -> None:
     if review_id is not None and f"survey:{review_id}" in keys:
         st.session_state["pa_subject"] = f"survey:{review_id}"
 
-    # The selector is index-driven from pa_subject (no persistent widget key),
-    # so it always reflects the intended subject on the first render — no need
-    # to navigate away and back for it to settle.
+    # Index-driven from pa_subject (no persistent widget key) so it reflects the
+    # intended subject on the first render.
     current = st.session_state.get("pa_subject")
     if current not in keys:
         current = keys[0]
-    kind = st.selectbox("Select a portfolio or survey", keys,
+    kind = st.selectbox("Choose who to analyze", keys,
                         format_func=lambda k: labels[k], index=keys.index(current))
     st.session_state["pa_subject"] = kind
     st.divider()
+
     if kind == "load":
         _portfolio_picker("inline", navigate=False)
     elif kind == "active" and active is not None:
@@ -808,6 +880,30 @@ def portfolio_analysis() -> None:
         wrap = next((w for w in surveys if w["id"] == sid), None)
         if wrap:
             _render_survey_subject(wrap)
+    elif kind.startswith("sample:"):
+        nm = kind.split("sample:", 1)[1]
+        if nm in generated:
+            _render_survey_subject(generated[nm])
+            if st.button("Regenerate analysis", key="regen"):
+                generated.pop(nm, None)
+                st.rerun()
+        else:
+            s = samples[nm]
+            p = s["profile"]
+            g = p.primary_goal
+            st.markdown(f"**{p.client_name}** — {p.summary_line()}")
+            if g:
+                st.caption(f"Primary goal: {g.label} — ${g.target_amount:,.0f} in {g.years} years.")
+            if st.button("Generate analysis", type="primary", key="gen_sample"):
+                with st.spinner("Running the analysis and Monte Carlo simulation…"):
+                    rec = build_recommendation(p)
+                generated[nm] = {
+                    "id": f"sample_{nm}", "name": p.client_name,
+                    "phone": s["phone"], "email": s["email"],
+                    "submitted_at": dt.datetime.now(), "rec": rec,
+                    "assets": s["assets"], "liabilities": s["liabilities"],
+                    "net_worth": s["net_worth"]}
+                st.rerun()
 
 
 # ==========================================================================
