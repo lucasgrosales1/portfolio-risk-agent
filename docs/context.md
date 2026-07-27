@@ -40,7 +40,10 @@ hero "100% computed / 0 guessed" strip. Full rules in `CLAUDE.md`.
 ## State: done vs. not
 **Done:** all 5 pages build and render; The Ledger redesign applied app-wide;
 licensed hero + real headshot; sample clients produce holdings analysis + suitability;
-structured-note analysis replaces Monte Carlo in the recommendation view.
+structured-note analysis replaces Monte Carlo in the recommendation view; an 80-test
+`pytest` suite (`tests/`) with known-value coverage of `analytics/*` and
+`suitability/*` plus AppTest smoke checks for all 5 pages — fully offline/deterministic,
+see `tests/conftest.py`.
 
 **Not done / unverified — read the critical backlog below before trusting anything.**
 
@@ -49,13 +52,11 @@ structured-note analysis replaces Monte Carlo in the recommendation view.
 ## Critical backlog (honest, prioritized)
 
 ### P0 — blocking a credible "finished" claim
-1. **Zero automated tests.** `pytest` isn't even installed; there is no `tests/`
-   directory and no `test_*.py` anywhere. The entire pitch is "the math is real and
-   computed" — yet nothing verifies Sharpe, beta, concentration, capacity
-   reconciliation, Monte Carlo, or the structured payoffs. A subtle error could ship
-   silently. **This is the single biggest hole.** Action: add a `pytest` suite with
-   known-value assertions for `analytics/*` and `suitability/*` (fixed inputs →
-   expected outputs), plus a smoke test that every page renders (AppTest).
+1. ~~**Zero automated tests.**~~ **Done.** `tests/` now has known-value assertions for
+   Sharpe, beta, volatility, max drawdown, allocation, concentration, rebalance,
+   scoring, capacity reconciliation, retirement, stress (early-vs-late bear),
+   structured-product gating, and the seeded Monte Carlo, plus an AppTest smoke check
+   per page. Run with `.venv/Scripts/python.exe -m pytest` (needs `requirements-dev.txt`).
 2. **Not pushed, not deployed.** 11 commits sit local-only; the app isn't live.
    A portfolio piece nobody can open is half-built. Action: push via GitHub Desktop,
    then deploy on share.streamlit.io (`streamlit_app.py`, branch `main`).
