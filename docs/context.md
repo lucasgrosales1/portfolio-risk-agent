@@ -1,6 +1,7 @@
 # Project context — where WealthSync stands
 
-A one-read catch-up for a fresh session (or a returning human). Written 2026-07-26.
+A one-read catch-up for a fresh session (or a returning human). Written 2026-07-26,
+last updated 2026-07-27. **Live:** [wealthsync-advisors.streamlit.app](https://wealthsync-advisors.streamlit.app/).
 For design rules see [`CLAUDE.md`](../CLAUDE.md); for deploy steps see
 [`06-deploy.md`](06-deploy.md).
 
@@ -28,8 +29,11 @@ figure is computed in Python; AI only narrates.** Two chained capabilities:
     structured, strategy, montecarlo, ips),
   - `prices.py` (yfinance + on-disk pickle cache), `pipeline.py`, `report/render.py`,
     `agents/narrative.py`.
-- `assets/` — `hero.jpg` (Miami Beach, Pexels/emma, licensed), `advisor.jpg`.
+- `assets/` — `hero.jpg` (Miami Beach, Pexels/emma, licensed), `advisor.jpg`,
+  `logo-mark.svg`/`logo-mark-favicon.svg`/`logo-wordmark.svg`/`favicon.png` (brand mark).
 - `data/` — synthetic sample portfolios (client_*.csv, sample_concentrated.csv).
+- `brandfolder/brand-guidelines.html` — full brand guideline (logo usage, color,
+  type, voice); source for the published Artifact.
 
 ## Current visual identity — "The Ledger"
 Warm printed-paper (`#F7F4EF`) + marine ink (`#0E6F73`) + one gold signal (`#C08A2D`).
@@ -43,7 +47,8 @@ licensed hero + real headshot; sample clients produce holdings analysis + suitab
 structured-note analysis replaces Monte Carlo in the recommendation view; an 80-test
 `pytest` suite (`tests/`) with known-value coverage of `analytics/*` and
 `suitability/*` plus AppTest smoke checks for all 5 pages — fully offline/deterministic,
-see `tests/conftest.py`.
+see `tests/conftest.py`; a refined logo mark + brand guideline (see `brandfolder/`);
+pushed and **deployed live**.
 
 **Not done / unverified — read the critical backlog below before trusting anything.**
 
@@ -57,15 +62,18 @@ see `tests/conftest.py`.
    scoring, capacity reconciliation, retirement, stress (early-vs-late bear),
    structured-product gating, and the seeded Monte Carlo, plus an AppTest smoke check
    per page. Run with `.venv/Scripts/python.exe -m pytest` (needs `requirements-dev.txt`).
-2. **Not pushed, not deployed.** 11 commits sit local-only; the app isn't live.
-   A portfolio piece nobody can open is half-built. Action: push via GitHub Desktop,
-   then deploy on share.streamlit.io (`streamlit_app.py`, branch `main`).
+2. ~~**Not pushed, not deployed.**~~ **Done.** Live at
+   [wealthsync-advisors.streamlit.app](https://wealthsync-advisors.streamlit.app/),
+   deployed from `main` on Streamlit Community Cloud. Every push to `main` auto-redeploys.
 3. **yfinance is a live dependency with no guardrail on cold Cloud loads.** The cache
    is a local pickle in `.cache/` — ephemeral on Streamlit Cloud, so first load after
    any restart fetches live prices. There's fallback for a *corrupt* cache but no
-   timeout/retry on the fetch itself. An employer's first click could hang or error.
-   Action: add a fetch timeout + graceful degradation, and/or ship a static price
-   snapshot for the demo so it never depends on a live call.
+   timeout/retry on the fetch itself. An employer's first click could hang or error —
+   and cold-start latency was directly observed while verifying the live deploy
+   (automated browser checks against the fresh deploy repeatedly timed out waiting
+   for the app to become interactive). **Now the most urgent open item.** Action: add
+   a fetch timeout + graceful degradation, and/or ship a static price snapshot for the
+   demo so it never depends on a live call.
 
 ### P1 — quality gaps that undercut the redesign
 4. **Two of five pages were never eyeballed after the redesign.** Portfolio Analysis
@@ -97,7 +105,8 @@ see `tests/conftest.py`.
 - Run: `.venv/Scripts/streamlit run streamlit_app.py` → http://localhost:8501
 - Restart after editing `app_ui.py`/`app_views.py` (imported modules don't hot-reload).
 - Deploy: see `06-deploy.md`. Repo is public at
-  `github.com/lucasgrosales1/portfolio-risk-agent`.
+  `github.com/lucasgrosales1/portfolio-risk-agent`, live at
+  `wealthsync-advisors.streamlit.app`. Every push to `main` auto-redeploys.
 
 ## Conventions
 - Keep the "LLM never produces a number" rule: numbers come from `src/pra`, prose from

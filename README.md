@@ -1,5 +1,9 @@
 # portfolio-risk-agent
 
+**Live demo:** [wealthsync-advisors.streamlit.app](https://wealthsync-advisors.streamlit.app/)
+— the full advisor workbench (portfolio analysis, suitability engine, IPS). The
+CLI documented below is the underlying analytics core the web app is built on.
+
 Generates a client-ready portfolio risk report from a holdings file: allocation
 against a target model, concentration analysis with fund look-through,
 volatility, maximum drawdown, Sharpe ratio, beta, and a **tax-aware** rebalancing
