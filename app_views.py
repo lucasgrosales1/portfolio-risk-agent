@@ -1039,6 +1039,29 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
     else:
         st.success("Within tolerance of target. No trades indicated.", icon="✅")
 
+    st.markdown("#### Advisor commentary")
+    narrative = result.narrative
+    if narrative.source == "ai":
+        badges = (
+            f'<span class="aw-badge ai">AI-written &middot; {narrative.model_used}</span>'
+            '<span class="aw-badge">Compliance-reviewed</span>'
+        )
+    else:
+        badges = '<span class="aw-badge">Rule-based</span>'
+    if narrative.compliance_flags:
+        badges += '<span class="aw-badge flag">Flagged</span>'
+    st.markdown(badges, unsafe_allow_html=True)
+
+    if narrative.compliance_flags:
+        st.warning(
+            "Compliance review flagged this commentary — shown unedited so the issue is "
+            "visible rather than silently suppressed.\n\n"
+            + "\n".join(f"- {flag}" for flag in narrative.compliance_flags)
+        )
+
+    for paragraph in narrative.paragraphs:
+        st.markdown(paragraph)
+
     st.markdown("#### Client report")
     html = render_html(result.portfolio, a, r, result.concentration, plan,
                        result.model, result.narrative, result.market)

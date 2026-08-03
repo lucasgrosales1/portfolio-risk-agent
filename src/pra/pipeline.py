@@ -53,10 +53,8 @@ def _make_narrative(
             from .agents.ai import ai_narrative
 
             return ai_narrative(portfolio, allocation, risk, concentration, plan, model)
-        except ImportError:
-            pass  # AI agent not built yet — rule-based is the intended fallback
         except Exception:
-            pass  # a runtime AI failure must never break a report
+            pass  # a narrative-agent or compliance-agent failure must never break a report
     return rule_based_narrative(portfolio, allocation, risk, concentration, plan, model)
 
 

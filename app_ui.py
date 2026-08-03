@@ -234,6 +234,16 @@ def inject_theme() -> None:
 
           div[data-testid="stExpander"] details {{ background: var(--paper2); }}
 
+          /* --- Provenance badges (AI / rule-based / compliance-flagged) --- */
+          .aw-badge {{
+            display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono);
+            font-size: 10.5px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
+            padding: 3px 9px; border-radius: 2px; border: 1px solid var(--line);
+            background: var(--paper2); color: var(--ink-soft); margin: 0 6px 6px 0;
+          }}
+          .aw-badge.ai {{ background: var(--marine); color: var(--paper); border-color: var(--marine-dark); }}
+          .aw-badge.flag {{ background: rgba(180,71,46,.1); color: var(--neg); border-color: rgba(180,71,46,.35); }}
+
           /* --- Survey section banners --- */
           .aw-survey-section {{
             background: var(--marine); color: var(--paper); border-radius: 3px;
