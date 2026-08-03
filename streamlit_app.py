@@ -25,7 +25,12 @@ import streamlit as st  # noqa: E402
 import app_ui as ui  # noqa: E402
 from app_views import PAGES  # noqa: E402
 
-st.set_page_config(page_title="WealthSync Advisors", page_icon="📊", layout="wide")
+_FAVICON = Path(__file__).parent / "assets" / "favicon.png"
+st.set_page_config(
+    page_title="WealthSync Advisors",
+    page_icon=str(_FAVICON) if _FAVICON.exists() else "📊",
+    layout="wide",
+)
 
 ui.inject_theme()
 active_page = ui.top_nav()

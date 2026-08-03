@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 150" role="img" aria-label="WealthSync Advisors — Florida, fee-only fiduciary">
+  <rect x="1" y="1" width="128" height="128" rx="24" fill="#0E6F73" stroke="#0A5155" stroke-width="2"/>
+  <text x="65" y="80" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="700"
+        font-size="62" fill="#F7F4EF" letter-spacing="-7">WS</text>
+  <rect x="30" y="92" width="70" height="4" rx="1" fill="#C08A2D"/>
+  <text x="150" y="66" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="34"
+        fill="#14181F" letter-spacing="-0.7">WealthSync Advisors</text>
+  <text x="150" y="94" font-family="IBM Plex Mono, monospace" font-weight="500" font-size="13.5"
+        letter-spacing="2"><tspan fill="#C08A2D">// </tspan><tspan fill="#5A6169">FLORIDA &#183; FEE-ONLY FIDUCIARY</tspan></text>
+</svg>

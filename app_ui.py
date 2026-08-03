@@ -162,12 +162,7 @@ def inject_theme() -> None:
 
           /* --- Top bar --- */
           .aw-brand {{ display: flex; align-items: center; gap: 12px; padding: 2px 2px 8px; }}
-          .aw-brand .mark {{
-            width: 42px; height: 42px; border-radius: 9px;
-            background: var(--marine); border: 1px solid var(--marine-dark);
-            display: flex; align-items: center; justify-content: center;
-            color: var(--paper); font-weight: 600; font-size: 15px; font-family: var(--mono);
-          }}
+          .aw-brand .mark {{ width: 42px; height: 42px; flex: none; line-height: 0; }}
           .aw-brand .name {{ font-size: 20px; font-weight: 600; color: var(--ink);
             font-family: var(--display); letter-spacing: -.02em; }}
           .aw-brand .tag  {{ font-size: 11.5px; color: var(--ink-soft); margin-top: -1px;
@@ -475,7 +470,7 @@ def top_nav() -> str:
         st.markdown(
             f"""
             <div class="aw-brand">
-              <div class="mark">WS</div>
+              <div class="mark">{brand_mark_html(42)}</div>
               <div>
                 <div class="name">{FIRM_NAME}</div>
                 <div class="tag">{FIRM_TAGLINE}</div>
@@ -500,6 +495,17 @@ def top_nav() -> str:
 
     st.write("")
     return st.session_state["page"]
+
+
+def brand_mark_html(size: int = 42) -> str:
+    """The logo mark: reads assets/logo-mark.svg, the single source of truth.
+
+    Same asset backs the nav badge, the brand guideline page, and (via a
+    rasterized favicon-only variant) the browser tab icon — see
+    assets/logo-mark-favicon.svg and assets/README.md.
+    """
+    svg = (Path(__file__).parent / "assets" / "logo-mark.svg").read_text(encoding="utf-8")
+    return svg.replace("<svg ", f'<svg width="{size}" height="{size}" ', 1)
 
 
 def hero_media_html() -> str:
