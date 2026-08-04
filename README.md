@@ -1,49 +1,93 @@
-# portfolio-risk-agent
+# WealthSync Advisors — portfolio-risk-agent
 
-**Live demo:** [wealthsync-advisors.streamlit.app](https://wealthsync-advisors.streamlit.app/)
-— the full advisor workbench (portfolio analysis, suitability engine, IPS). The
-CLI documented below is the underlying analytics core the web app is built on.
+**Live app:** [wealthsync-advisors.streamlit.app](https://wealthsync-advisors.streamlit.app/)
 
-Generates a client-ready portfolio risk report from a holdings file: allocation
-against a target model, concentration analysis with fund look-through,
-volatility, maximum drawdown, Sharpe ratio, beta, and a **tax-aware** rebalancing
-plan that accounts for lot-level holding periods and account registration.
+A portfolio analysis and suitability engine for a fee-only fiduciary advisor,
+built around one rule: **the language model never produces a number.** Every
+figure — allocation, volatility, Sharpe ratio, tax cost, risk capacity — is
+computed in Python from real price data. Two Claude agents sit downstream of
+that math: one writes the client-facing narrative, a second, independent one
+reviews it and flags any claim that doesn't trace back to a computed figure.
+Full architecture below.
+
+![Home](docs/screenshots/home.png)
+
+---
+
+## What this is
+
+Two chained capabilities, both driven by the same holdings/profile data:
+
+1. **Portfolio analysis** — a holdings file → valuation, concentration
+   (including fund look-through), volatility, Sharpe ratio, beta, max
+   drawdown, and a tax-aware rebalancing plan, plus a downloadable
+   client-ready HTML report.
+2. **Suitability & planning** — a client intake survey → a **capacity-first**
+   risk recommendation, retirement-income readiness, a sequence-of-returns
+   stress test, structured-product suitability gating, and a downloadable
+   Investment Policy Statement.
+
+The CLI (below) runs capability 1 standalone against a CSV. The live web app
+runs both, chained: a client's survey answers become the target model an
+uploaded portfolio is measured against.
 
 ```bash
 pra --portfolio data/sample_concentrated.csv --model balanced_growth --open
 ```
 
-Output is a single self-contained HTML file, print-styled so `Ctrl+P → Save as PDF`
-produces a document you could hand to a client.
+That produces a single self-contained HTML file, print-styled so
+`Ctrl+P → Save as PDF` produces a document you could hand to a client.
 
 ---
 
-## The design decision this project is built around
-
-**The language model never produces a number.**
-
-Every figure in the report is computed in Python from real price data. The
-narrative agent receives those computed figures as fact and its only job is to
-explain them. It cannot invent a Sharpe ratio, round a drawdown in a flattering
-direction, or reference a holding that isn't there. A second agent then reviews
-the narrative against the same figures and flags any claim that doesn't trace
-back to one.
-
-This is not a stylistic preference. A tool that generates client-facing
-investment commentary is a tool where a hallucinated number is a serious
-problem, and "the model is usually accurate" is not an acceptable control. The
-architecture removes the failure mode rather than mitigating it.
+## The AI architecture
 
 ```
   price data ──▶ analytics/ ──▶ computed metrics ─┬──▶ narrative agent ──▶ compliance agent ──▶ report
-                (pure Python)                     │       (explains)          (verifies)
+                (pure Python)                     │     (Claude Sonnet)    (Claude Haiku)
                                                   └──────────────────────────────────────────▶ report
-                                                       numbers pass through untouched
+                                                       every number passes through untouched
 ```
+
+The narrative agent gets a **fact sheet** — every figure it's allowed to
+mention, already computed and labeled — and a system prompt that forbids
+inventing, estimating, or re-rounding anything not on that sheet. The
+compliance agent gets the same fact sheet plus the draft, and checks it
+independently: is every number traceable, is anything phrased as a
+performance guarantee, does anything read as a specific buy/sell
+recommendation. If it finds a problem, the report ships with the AI badge
+**and the flag**, visible rather than silently corrected — the point is to
+surface a failure, not paper over it.
+
+![Advisor commentary](docs/screenshots/advisor-commentary.png)
+
+No `ANTHROPIC_API_KEY` configured (or any failure in either agent) falls back
+to a deterministic, rule-based narrative — same computed inputs, same
+sentence structure, no model call at all. The badge tells you which path ran;
+nothing about the report's numbers changes either way.
 
 ---
 
-## What it actually catches
+## Capacity-first suitability
+
+The suitability engine's central design choice: a risk **score** captures
+what a client *wants* (stated tolerance, objective, drawdown appetite); a
+separate **capacity** ceiling — drawdown tolerance, time horizon, withdrawal
+rate, emergency reserve, age — caps what they can actually *bear*. Capacity
+can only cap the score's recommendation downward, never raise it, and the
+report always names the binding constraint.
+
+![Suitability recommendation](docs/screenshots/suitability.png)
+
+Here the client's stated answers score as Aggressive, but a 40% drawdown
+tolerance implies an 80% equity ceiling — not a further constraint in this
+case, but for a client with a thin cash reserve or a five-year horizon, the
+same mechanism caps the recommendation well below what their stated appetite
+alone would produce.
+
+---
+
+## What the analytics actually catch
 
 Two synthetic portfolios ship with the repo. Run both and the contrast is the point:
 
@@ -60,11 +104,13 @@ as much, because 84% of hers can be sourced from a traditional IRA where a sale
 triggers no tax. That distinction is invisible to any tool that models a
 portfolio as tickers and weights.
 
+![Portfolio analysis](docs/screenshots/portfolio-analysis.png)
+
 Other things the analytics surface that a spreadsheet typically misses:
 
 - **Look-through concentration.** A client holding NVDA directly *and* holding
-  VOO, VTI, and QQQ has ~50.0% true exposure, not the 47.0% their statement
-  shows. Exposure is accumulated across every fund before being flagged.
+  VOO, VTI, and QQQ has more true exposure than the position line shows.
+  Exposure is accumulated across every fund before being flagged.
 - **Effective number of holdings.** The inverse Herfindahl index — a portfolio
   of 8 positions with one at 47% carries the diversification of about 3.3
   equally-weighted positions.
@@ -90,11 +136,19 @@ pra --portfolio data/sample_concentrated.csv --model balanced_growth --open
 command. If you'd rather not install anything, `PYTHONPATH=src python -m pra.cli ...`
 does the same thing.
 
-**No API key required.** Without one the report renders with rule-based
-commentary and every number is identical — the key only changes who writes the
-prose. To enable the AI narrative, copy `.env.example` to `.env` and add a key
-from [console.anthropic.com](https://console.anthropic.com). Cost is roughly two
-cents per report.
+To run the full web app locally instead of the CLI:
+
+```bash
+pip install -r requirements.txt
+streamlit run streamlit_app.py
+```
+
+**No API key required.** Without one, both the CLI report and the web app's
+"Advisor commentary" render with rule-based prose and every number is
+identical — the key only changes who writes the sentences around them. To
+enable the AI agent pair, copy `.env.example` to `.env` and add a key from
+[console.anthropic.com](https://console.anthropic.com). Cost is roughly two
+cents per report (one Sonnet call, one Haiku call).
 
 ### Portfolio file format
 
@@ -122,7 +176,8 @@ sale is taxable at all.
 `conservative` · `moderate` · `balanced_growth` · `aggressive`
 
 Illustrative teaching defaults with documented equity/fixed-income/cash splits,
-not a house view. Phase 2 selects among them from a suitability questionnaire.
+not a house view. The web app's suitability engine selects among them from a
+client's survey answers.
 
 ---
 
@@ -139,12 +194,34 @@ explain the arithmetic is part of the point.
 | Beta | Covariance with the S&P 500 ÷ variance of the S&P 500 |
 | Effective holdings | 1 ÷ Σ(wᵢ²) — the inverse Herfindahl index |
 | Tax cost | Per-lot: long-term at 15%, short-term at 32%, zero in sheltered accounts |
+| Equity capacity ceiling | min of per-factor ceilings (drawdown tolerance, horizon, withdrawal rate, reserve, age) — whichever binds is named in the recommendation |
 
 **Return series assumption:** risk statistics apply the portfolio's *current*
 weights across the full lookback window, rebalanced daily. This describes how
 the present allocation would have behaved — not the account's realized
 performance, which would require transaction history the tool doesn't have. The
 report states this in its methodology footnote.
+
+For the reasoning behind the harder design calls — why capacity can only cap
+a recommendation and never raise it, why the narrative/compliance split is two
+separate model calls instead of one, how the sequence-of-returns stress test
+demonstrates its point with the same returns run in two orders — see
+[`docs/case-study.md`](docs/case-study.md).
+
+---
+
+## Automated tests
+
+An 80+ test `pytest` suite covers the analytics and suitability engines with
+known-value assertions (fixed synthetic inputs → hand-verified expected
+outputs), the AI agent pair with a mocked Anthropic client, and an
+`AppTest` smoke check for all 5 pages. Fully offline — nothing hits yfinance
+or the Anthropic API.
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
 
 ---
 
@@ -159,9 +236,11 @@ doesn't have many.
 - **Tax figures are planning estimates.** Assumed federal rates only — no state
   tax, no net investment income tax, no bracket detail, no wash-sale tracking.
 - **Not a performance report.** See the return-series assumption above.
-- **Free market data.** Yahoo Finance via yfinance is reliable for prices;
-  metadata coverage is uneven. Missing fields are omitted from the report rather
-  than guessed at.
+- **Free market data, live on every cold load.** Yahoo Finance via yfinance is
+  reliable for prices, but the web app's cache is ephemeral on Streamlit Cloud —
+  a fetch timeout/retry guardrail is the top known gap; see the roadmap.
+- **Structured-product terms are illustrative.** Payoff diagrams use assumed,
+  clearly-labeled terms — never a quote for a real issued product.
 - **Analysis only.** The tool never places a trade, connects to a brokerage, or
   moves money.
 
@@ -169,13 +248,18 @@ doesn't have many.
 
 ## Roadmap
 
-- [x] Deterministic analytics core
+- [x] Deterministic analytics core (allocation, concentration, risk, tax-aware rebalancing)
 - [x] HTML report with print styling
 - [x] Rule-based narrative (no-API-key path)
-- [ ] Narrative agent + compliance-review agent
-- [ ] Phase 2 — Investment Policy Statement / suitability questionnaire, feeding
-      its recommended allocation back in as this tool's target model, closing the
-      loop: **suitability → allocation → analysis → client document**
+- [x] Narrative agent + compliance-review agent, wired end to end
+- [x] Suitability engine — capacity-first recommendation, retirement readiness,
+      sequence-of-returns stress test, structured-product gating, IPS
+- [x] Automated test suite (analytics, suitability, agents, page smoke tests)
+- [x] Deployed live on Streamlit Community Cloud
+- [ ] yfinance fetch timeout + graceful degradation on a cold Cloud load
+- [ ] Theme the remaining Streamlit-default charts/tables and the downloadable
+      report/IPS to match the app's own design system
+- [ ] Pin `requirements.txt` to known-good versions
 
 ---
 

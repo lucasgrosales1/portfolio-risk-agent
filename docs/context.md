@@ -1,7 +1,7 @@
 # Project context — where WealthSync stands
 
 A one-read catch-up for a fresh session (or a returning human). Written 2026-07-26,
-last updated 2026-07-27. **Live:** [wealthsync-advisors.streamlit.app](https://wealthsync-advisors.streamlit.app/).
+last updated 2026-08-04. **Live:** [wealthsync-advisors.streamlit.app](https://wealthsync-advisors.streamlit.app/).
 For design rules see [`CLAUDE.md`](../CLAUDE.md); for deploy steps see
 [`06-deploy.md`](06-deploy.md).
 
@@ -28,7 +28,8 @@ figure is computed in Python; AI only narrates.** Two chained capabilities:
   - `suitability/` (profile, scoring, capacity, recommend, retirement, stress,
     structured, strategy, montecarlo, ips),
   - `prices.py` (yfinance + on-disk pickle cache), `pipeline.py`, `report/render.py`,
-    `agents/narrative.py`.
+    `agents/narrative.py` (rule-based path), `agents/ai.py` + `agents/compliance.py`
+    (the real Sonnet-writes/Haiku-reviews pair — see `docs/case-study.md`).
 - `assets/` — `hero.jpg` (Miami Beach, Pexels/emma, licensed), `advisor.jpg`,
   `logo-mark.svg`/`logo-mark-favicon.svg`/`logo-wordmark.svg`/`favicon.png` (brand mark).
 - `data/` — synthetic sample portfolios (client_*.csv, sample_concentrated.csv).
@@ -44,11 +45,16 @@ hero "100% computed / 0 guessed" strip. Full rules in `CLAUDE.md`.
 ## State: done vs. not
 **Done:** all 5 pages build and render; The Ledger redesign applied app-wide;
 licensed hero + real headshot; sample clients produce holdings analysis + suitability;
-structured-note analysis replaces Monte Carlo in the recommendation view; an 80-test
+structured-note analysis replaces Monte Carlo in the recommendation view; a 89-test
 `pytest` suite (`tests/`) with known-value coverage of `analytics/*` and
-`suitability/*` plus AppTest smoke checks for all 5 pages — fully offline/deterministic,
-see `tests/conftest.py`; a refined logo mark + brand guideline (see `brandfolder/`);
-pushed and **deployed live**.
+`suitability/*`, a mocked-Anthropic-client coverage of the AI agent pair, plus
+AppTest smoke checks for all 5 pages — fully offline/deterministic, see
+`tests/conftest.py`; a refined logo mark + brand guideline (see `brandfolder/`);
+the narrative + compliance-review agent pair actually built and wired (previously
+spec'd only — see `docs/case-study.md`), surfaced natively on Portfolio Analysis
+with a source/compliance badge, not just inside the downloadable report iframe;
+README rewritten to lead with the thesis, cover both capabilities, and embed
+screenshots (`docs/screenshots/`); pushed and **deployed live**.
 
 **Not done / unverified — read the critical backlog below before trusting anything.**
 
@@ -98,8 +104,22 @@ pushed and **deployed live**.
    splitting per page.
 10. **Emoji in dashboard subheads** (⏱️ 📋 📅) are the one off-note vs. the mono/ledger
     aesthetic; swap for the line-icon set or drop them.
-11. **README for employers.** A `README.md` exists but should lead with the thesis and
-    embed 2–3 screenshots — it's the first thing a reviewer opens.
+11. ~~**README for employers.**~~ **Done.** Rewritten to lead with the thesis, cover
+    both capabilities, embed 4 screenshots, and link `docs/case-study.md`.
+
+### Fixed along the way (not previously tracked here)
+- **Percentages displayed ~100x too small** in the Holdings table, the Rebalancing
+  table, and the Client Survey drawdown-tolerance slider — `st.column_config.NumberColumn`
+  / `st.slider` use printf-style `%` formatting, which doesn't auto-scale a 0–1
+  fraction the way Python's `f"{x:.1%}"` does. Found while capturing README
+  screenshots; the underlying computed numbers were always correct, this was
+  display-only. Fixed in `app_views.py`.
+- **Dollar amounts rendering as mangled inline LaTeX** in the native "Advisor
+  commentary" section — `st.markdown` treats a pair of bare `$` as a math span,
+  and narrative paragraphs routinely contain two dollar figures. A regression from
+  wiring the narrative into the page natively this session (never surfaced when the
+  only rendering path was the HTML report's iframe). Fixed by escaping `$` before
+  `st.markdown()`.
 
 ## How to run / preview / deploy
 - Run: `.venv/Scripts/streamlit run streamlit_app.py` → http://localhost:8501
