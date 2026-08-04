@@ -976,8 +976,8 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
     st.markdown("#### Holdings")
     df = pd.DataFrame([{
         "Ticker": p.ticker, "Name": p.name, "Class": p.asset_class,
-        "Value": p.market_value, "Weight": p.market_value / a.total_value,
-        "Cost basis": p.cost_basis, "Unrealized": p.unrealized_gain, "Return": p.gain_pct,
+        "Value": p.market_value, "Weight": p.market_value / a.total_value * 100,
+        "Cost basis": p.cost_basis, "Unrealized": p.unrealized_gain, "Return": p.gain_pct * 100,
     } for p in a.positions])
     st.dataframe(df, hide_index=True, width="stretch", column_config={
         "Value": st.column_config.NumberColumn(format="$%,.0f"),
@@ -1010,9 +1010,9 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
     st.markdown("#### Rebalancing")
     st.dataframe(pd.DataFrame({
         "Asset class": [d.asset_class for d in plan.drifts],
-        "Current": [d.current_weight for d in plan.drifts],
-        "Target": [d.target_weight for d in plan.drifts],
-        "Drift": [d.drift for d in plan.drifts],
+        "Current": [d.current_weight * 100 for d in plan.drifts],
+        "Target": [d.target_weight * 100 for d in plan.drifts],
+        "Drift": [d.drift * 100 for d in plan.drifts],
         "Dollar gap": [d.dollar_gap for d in plan.drifts]}),
         hide_index=True, width="stretch", column_config={
             "Current": st.column_config.NumberColumn(format="%.1f%%"),
@@ -1204,8 +1204,9 @@ def client_survey() -> None:
         wi = st.slider("Income — steady cash flow", 0, 100, 25, key="tri_i")
         ws = st.slider("Safety — protect what I have", 0, 100, 25, key="tri_s")
         horizon = st.number_input("Years until you need this money", 1, 50, 15, key="sv_h")
-        drawdown = st.slider("Largest drop you could sit through", 0.0, 0.6, 0.20, 0.05,
-                             format="%.0f%%", key="sv_dd")
+        drawdown_pct = st.slider("Largest drop you could sit through", 0, 60, 20, 5,
+                                 format="%d%%", key="sv_dd")
+        drawdown = drawdown_pct / 100
         experience = st.selectbox("Investing experience", list(Experience), index=1,
                                   format_func=lambda e: e.value.title(), key="sv_exp")
     with tri_col:
