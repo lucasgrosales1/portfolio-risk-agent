@@ -1060,7 +1060,9 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
         )
 
     for paragraph in narrative.paragraphs:
-        st.markdown(paragraph)
+        # Escape bare "$" so Streamlit's markdown renderer doesn't treat a pair
+        # of dollar amounts (e.g. "$113,662 ... $6,561") as a LaTeX math span.
+        st.markdown(paragraph.replace("$", "\\$"))
 
     st.markdown("#### Client report")
     html = render_html(result.portfolio, a, r, result.concentration, plan,
