@@ -326,26 +326,40 @@ def home() -> None:
     st.write("")
     ui.trust_strip()
 
-    # --- How we help --------------------------------------------------------
+    # --- How we help (sticky-pinned heading + scrolling card column —
+    # the reference's signature scroll mechanic, pure CSS position:sticky) ----
     st.write("")
     st.write("")
-    ui.section_header("Features", "Real numbers, not a black box.",
-                      "Three ways we turn your goals into a plan you can actually follow.",
-                      centered=True)
-    st.write("")
-    r1 = st.columns(3)
-    with r1[0]:
-        ui.card(ui.icon("family"), "Get to know your family",
-                "A short survey captures your goals, your comfort with risk, and your "
-                "family balance sheet — so your first meeting starts with understanding.")
-    with r1[1]:
-        ui.card(ui.icon("compass"), "A plan that fits you",
-                "Capacity-first recommendations, retirement-income readiness, and "
-                "stress testing — reconciled into one suitable allocation.")
-    with r1[2]:
-        ui.card(ui.icon("chart"), "Clarity on your portfolio",
-                "Live valuation, concentration and risk, tax-aware rebalancing, and a "
-                "report you can keep — every figure computed, never guessed.")
+    help_cards = [
+        (ui.icon("family"), "Get to know your family",
+         "A short survey captures your goals, your comfort with risk, and your "
+         "family balance sheet — so your first meeting starts with understanding."),
+        (ui.icon("compass"), "A plan that fits you",
+         "Capacity-first recommendations, retirement-income readiness, and "
+         "stress testing — reconciled into one suitable allocation."),
+        (ui.icon("chart"), "Clarity on your portfolio",
+         "Live valuation, concentration and risk, tax-aware rebalancing, and a "
+         "report you can keep — every figure computed, never guessed."),
+    ]
+    cards_html = "".join(
+        f'<div class="pw-scroll-card"><div class="aw-card">'
+        f'<div class="ico">{icon}</div><h3>{title}</h3><p>{body}</p></div></div>'
+        for icon, title, body in help_cards
+    )
+    st.markdown(
+        f"""
+        <div class="pw-sticky-row">
+          <div class="pw-sticky-col">
+            <div class="aw-section-label">Features</div>
+            <div class="aw-section-head">Real numbers, not a black box.</div>
+            <div class="aw-section-sub">Three ways we turn your goals into a plan you
+              can actually follow.</div>
+          </div>
+          <div class="pw-scroll-col">{cards_html}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # --- Our process (numbered spotlight) ------------------------------------
     st.write("")

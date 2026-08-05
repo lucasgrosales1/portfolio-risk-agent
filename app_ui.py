@@ -318,6 +318,21 @@ def inject_theme() -> None:
           }}
           .pw-shot img {{ width: 100%; display: block; }}
 
+          /* --- Sticky-pinned text + scrolling content column: the
+             reference's signature scroll mechanic (pure CSS position:sticky,
+             no JS/scroll-jacking needed — the right column is simply taller
+             than the left, so it scrolls past while the left stays put). --- */
+          .pw-sticky-row {{ display: flex; gap: 60px; align-items: flex-start; }}
+          .pw-sticky-col {{
+            flex: 1; min-width: 0; position: sticky; top: 90px; align-self: flex-start;
+          }}
+          .pw-scroll-col {{
+            flex: 1.15; min-width: 0; display: flex; flex-direction: column;
+            gap: 9vh; padding: 6vh 0;
+          }}
+          .pw-scroll-card {{ min-height: 42vh; display: flex; align-items: center; }}
+          .pw-scroll-card .aw-card {{ width: 100%; }}
+
           /* --- Numbered spotlight (the reference's "Key Features" blocks) --- */
           .pw-spot {{
             display: flex; gap: 44px; align-items: center; margin: 46px 0;
@@ -661,6 +676,10 @@ def inject_theme() -> None:
             .aw-team {{ flex-direction: column; text-align: center; align-items: center; }}
             .aw-team .creds {{ justify-content: center; }}
             .pw-spot, .pw-spot.rev {{ flex-direction: column; gap: 20px; margin: 32px 0; }}
+            .pw-sticky-row {{ flex-direction: column; }}
+            .pw-sticky-col {{ position: static; }}
+            .pw-scroll-card {{ min-height: 0; }}
+            .pw-scroll-col {{ gap: 20px; padding: 12px 0; }}
           }}
         </style>
         """,
