@@ -670,8 +670,24 @@ def _sim_clients() -> list[dict]:
 
 
 def dashboard() -> None:
-    ui.section_header("Advisor workspace", "Advisor Dashboard",
-                      "Your client pipeline for the week. (Simulated workflow data.)")
+    head_l, head_r = st.columns([3, 1])
+    with head_l:
+        ui.section_header("Advisor workspace", "Advisor Dashboard",
+                          "Your client pipeline for the week. (Simulated workflow data.)")
+    with head_r:
+        st.write("")
+        st.write("")
+        with st.popover("👤 Lucas Rosales", key="avatarbtn", width="stretch"):
+            st.markdown(
+                '<div class="pw-dropdown-item"><b>Lucas Rosales</b>'
+                '<span>Founder &amp; Financial Advisor</span></div>'
+                '<div class="pw-dropdown-item">View profile</div>'
+                '<div class="pw-dropdown-item">Preferences</div>'
+                '<div class="pw-dropdown-item">Sign out</div>',
+                unsafe_allow_html=True,
+            )
+            st.caption("Demo menu — not wired to real account actions.")
+
     st.write("")
     _ensure_demo_survey()
     clients = _sim_clients()
@@ -688,9 +704,23 @@ def dashboard() -> None:
     m4.metric("New surveys to review", len(surveys))
     m5.metric("New consult requests", len(leads))
 
+    # --- Assets under management by client (real figures already on this
+    # page, charted — no charting library needed for a handful of bars) ------
+    st.divider()
+    ui.subhead("Assets under management", "by priority client this week")
+    max_aum = max(c["aum"] for c in clients)
+    bar_rows = "".join(
+        f'<div class="pw-bar-row"><div class="name">{c["name"]}</div>'
+        f'<div class="pw-bar-track"><div class="pw-bar-fill" '
+        f'style="width:{c["aum"] / max_aum * 100:.0f}%"></div></div>'
+        f'<div class="val">${c["aum"]:,.0f}</div></div>'
+        for c in sorted(clients, key=lambda c: -c["aum"])
+    )
+    st.markdown(f'<div class="pw-bar-chart">{bar_rows}</div>', unsafe_allow_html=True)
+
     # --- Inbound consultation requests (from the Home page form) ---------
     if leads:
-        st.write("")
+        st.divider()
         ui.subhead("📨 New consultation requests", "submitted from the website")
         for ld in reversed(leads):
             with st.container(border=True):
@@ -700,7 +730,7 @@ def dashboard() -> None:
                     f"{ld['date']:%a %b %d} at {ld['slot']} · 📞 {ld['phone'] or '—'} · "
                     f"✉️ {ld['email']}</span>", unsafe_allow_html=True)
 
-    st.write("")
+    st.divider()
     left, right = st.columns([1, 1])
     with left:
         ui.subhead("⏱️ Priority clients", "by next meeting")
@@ -722,34 +752,35 @@ def dashboard() -> None:
                             f"<span style='color:#6b7280;font-size:13px'>{c['reason']}</span>",
                             unsafe_allow_html=True)
 
-    st.write("")
-    ui.subhead("📅 Upcoming meetings")
-    rows = [{"Client": c["name"], "Date": c["meeting"].strftime("%a %b %d"), "Time": c["time"],
-             "Phone": c["phone"], "Email": c["email"],
-             "Profile": "Complete" if c["complete"] else "Incomplete", "Purpose": c["reason"]}
-            for c in sorted(clients, key=lambda c: c["meeting"])]
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    st.divider()
+    with st.expander("📅 Upcoming meetings", expanded=True):
+        rows = [{"Client": c["name"], "Date": c["meeting"].strftime("%a %b %d"), "Time": c["time"],
+                 "Phone": c["phone"], "Email": c["email"],
+                 "Profile": "Complete" if c["complete"] else "Incomplete", "Purpose": c["reason"]}
+                for c in sorted(clients, key=lambda c: c["meeting"])]
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     # --- Review client surveys (real submissions) ------------------------
-    st.write("")
-    ui.subhead("📝 Review client surveys", "new intake from prospective clients")
-    if not surveys:
-        st.info("No surveys submitted yet. Completed client surveys appear here for review.",
-                icon="🗂️")
-    for rec_wrap in reversed(surveys):
-        rec = rec_wrap["rec"]
-        with st.container(border=True):
-            a, b = st.columns([3, 1])
-            a.markdown(
-                f"**{rec_wrap['name']}** · submitted {rec_wrap['submitted_at']:%b %d, %I:%M %p}  \n"
-                f"<span style='color:#6b7280;font-size:13px'>"
-                f"📞 {rec_wrap.get('phone', '—')} · ✉️ {rec_wrap.get('email', '—')} · "
-                f"Recommended: {rec.recommended_label} · "
-                f"Net worth ${rec_wrap['net_worth']:,.0f}</span>",
-                unsafe_allow_html=True)
-            if b.button("Review", key=f"review_{rec_wrap['id']}", type="primary", width="stretch"):
-                st.session_state["review_survey_id"] = rec_wrap["id"]
-                ui.go_to("Portfolio Analysis")
+    st.divider()
+    with st.expander("📝 Review client surveys — new intake from prospective clients",
+                      expanded=bool(surveys)):
+        if not surveys:
+            st.info("No surveys submitted yet. Completed client surveys appear here for review.",
+                    icon="🗂️")
+        for rec_wrap in reversed(surveys):
+            rec = rec_wrap["rec"]
+            with st.container(border=True):
+                a, b = st.columns([3, 1])
+                a.markdown(
+                    f"**{rec_wrap['name']}** · submitted {rec_wrap['submitted_at']:%b %d, %I:%M %p}  \n"
+                    f"<span style='color:#6b7280;font-size:13px'>"
+                    f"📞 {rec_wrap.get('phone', '—')} · ✉️ {rec_wrap.get('email', '—')} · "
+                    f"Recommended: {rec.recommended_label} · "
+                    f"Net worth ${rec_wrap['net_worth']:,.0f}</span>",
+                    unsafe_allow_html=True)
+                if b.button("Review", key=f"review_{rec_wrap['id']}", type="primary", width="stretch"):
+                    st.session_state["review_survey_id"] = rec_wrap["id"]
+                    ui.go_to("Portfolio Analysis")
 
     st.caption("Priority pipeline and meetings are a demo. Submitted surveys above are real "
                "engine analyses of what clients entered.")

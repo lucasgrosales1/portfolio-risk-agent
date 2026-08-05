@@ -658,11 +658,66 @@ def inject_theme() -> None:
 
           hr {{ opacity: .4; border-color: var(--line); }}
           [data-testid="stExpander"] {{ border-radius: 14px; border-color: var(--line); }}
+          [data-testid="stExpander"] summary {{
+            background: var(--paper2) !important; color: var(--ink) !important;
+            border-radius: 14px !important;
+          }}
+          [data-testid="stExpander"] summary:hover {{ background: var(--soft) !important; }}
+          [data-testid="stExpander"] summary [data-testid="stIconMaterial"] {{
+            color: var(--ink-soft) !important;
+          }}
+          [data-testid="stExpander"] details[open] summary {{
+            border-radius: 14px 14px 0 0 !important;
+          }}
+          [data-testid="stExpanderDetails"] {{ background: var(--paper2) !important; }}
 
           /* --- Loading state: on-brand spinner instead of Streamlit's default --- */
           [data-testid="stSpinner"] {{ color: var(--marine); font-family: var(--sans); font-size: 13px; }}
           [data-testid="stSpinner"] > div {{ color: var(--marine); }}
           [data-testid="stSpinner"] svg {{ color: var(--marine) !important; }}
+
+          /* --- Dashboard header: title block + avatar/dropdown control --- */
+          .pw-dash-head {{ display: flex; align-items: flex-start; justify-content: space-between;
+            gap: 16px; flex-wrap: wrap; }}
+          [class*="st-key-avatarbtn"] button {{
+            background: var(--paper2) !important; border: 1px solid var(--line) !important;
+            border-radius: 999px !important; color: var(--ink) !important; box-shadow: none !important;
+            font-family: var(--sans) !important; font-weight: 500 !important; padding: 6px 14px !important;
+          }}
+          [class*="st-key-avatarbtn"] button:hover {{
+            border-color: var(--marine) !important; background: var(--soft) !important;
+          }}
+          [class*="st-key-avatarbtn"] button::after {{ display: none; }}
+          [class*="st-key-avatarbtn"] [data-testid="stIconMaterial"] {{ color: var(--ink-soft) !important; }}
+          [data-testid="stPopoverBody"] {{
+            background: var(--paper2) !important; border: 1px solid var(--line) !important;
+            border-radius: 14px !important; box-shadow: var(--shadow-md) !important;
+          }}
+          .pw-avatar-chip {{ display: flex; align-items: center; gap: 9px; }}
+          .pw-avatar-chip .dot {{
+            width: 26px; height: 26px; border-radius: 50%; background: var(--marine);
+            color: #0B0C1F; display: flex; align-items: center; justify-content: center;
+            font-family: var(--display); font-weight: 700; font-size: 11px; flex: none;
+          }}
+          .pw-dropdown-item {{ padding: 7px 4px; font-size: 13.5px; color: var(--ink);
+            border-bottom: 1px solid var(--line); }}
+          .pw-dropdown-item:last-child {{ border-bottom: none; }}
+          .pw-dropdown-item span {{ color: var(--ink-soft); font-size: 12px; display: block; }}
+
+          /* --- Bar chart (real AUM figures, no charting library needed) --- */
+          .pw-bar-chart {{ display: flex; flex-direction: column; gap: 12px; }}
+          .pw-bar-row {{ display: grid; grid-template-columns: 160px 1fr 90px; gap: 14px;
+            align-items: center; }}
+          .pw-bar-row .name {{ font-size: 13px; color: var(--ink); font-weight: 500;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+          .pw-bar-track {{ background: var(--soft); border-radius: 999px; height: 10px;
+            overflow: hidden; }}
+          .pw-bar-fill {{ height: 100%; border-radius: 999px;
+            background: linear-gradient(90deg, var(--marine-dark), var(--marine));
+            animation: pw-bar-grow .8s var(--ease-settle) both; transform-origin: left; }}
+          @keyframes pw-bar-grow {{ from {{ transform: scaleX(0); }} to {{ transform: scaleX(1); }} }}
+          .pw-bar-row .val {{ font-size: 13px; color: var(--ink-soft); text-align: right;
+            font-family: var(--display); font-weight: 600; }}
 
           @media (prefers-reduced-motion: reduce) {{
             * {{ transition: none !important; animation: none !important; }}
@@ -848,6 +903,9 @@ _ICON_PATHS = {
            '<path d="M9.5 12h5M9.5 15h5"/>',
     "calendar": '<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16"/>'
                 '<path d="M8 3v4M16 3v4"/>',
+    "bell": '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2.5h-15z"/>'
+            '<path d="M10 21a2 2 0 0 0 4 0"/>',
+    "chevron-down": '<path d="M5 9l7 7 7-7"/>',
 }
 
 
