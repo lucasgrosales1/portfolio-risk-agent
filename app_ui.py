@@ -26,23 +26,28 @@ NAV_ITEMS = [
     ("Client Survey", "Client Survey"),
 ]
 
-# Palette — "The Ledger": warm printed-paper base, deep marine ink, one gold signal.
-# Precision as personality — every figure is computed, and the design says so.
-PAPER = "#F7F4EF"         # warm paper (page base)
-PAPER2 = "#FCFAF6"        # elevated surface (cards)
-NAVY = "#0E6F73"          # marine (primary) — kept name for existing references
-NAVY_DARK = "#0A5155"     # marine, darker (hover)
-TEAL = "#2A9AA0"          # lighter marine
-TEAL_LIGHT = "#8FCBCE"
-SAND = "#C08A2D"          # gold signal accent
-CORAL = "#B4472E"         # brick (negative / rare signal)
-GOLD = "#C08A2D"          # the single gold signal
-BG_SOFT = "#FBF8F2"       # soft paper wash
-INK = "#14181F"           # near-black ink
-INK_SOFT = "#5A6169"      # muted ink
-BORDER = "#E4DECF"        # warm hairline / ledger rule
-POS = "#2F7D5B"           # restrained green
-NEG = "#B4472E"           # restrained brick-red
+# Palette — cloned from a dark "AI Finance" reference (client-supplied):
+# near-black navy base, white type, glossy blue/cyan glow accents. Variable
+# names kept from the prior "Ledger" system (NAVY, GOLD, ...) so every
+# existing `var(--marine)` / `{NAVY}` reference below still resolves —
+# only the values changed.
+PAPER = "#05061C"         # near-black navy (page base)
+PAPER2 = "#0B0C2E"        # elevated surface (cards) — one step lighter navy
+NAVY = "#7DB2F5"          # sky-blue interactive accent (nav active, links, focus)
+NAVY_DARK = "#5A93E0"     # accent, darker (hover)
+TEAL = "#4C7FD6"          # deeper blue variant
+TEAL_LIGHT = "#AAD4F6"    # pale blue — glow-orb highlight
+SAND = "#FFE08C"          # warm gold signal accent
+CORAL = "#FF7600"         # orange (rare signal)
+GOLD = "#FFE08C"          # the single gold signal
+BG_SOFT = "#FFFFFF0F"     # subtle white-on-navy wash (hover fills)
+INK = "#FFFFFF"           # primary text — white on navy
+INK_SOFT = "#FFFFFFB3"    # muted text — white at 70% alpha
+BORDER = "#FFFFFF1F"      # hairline — white at ~12% alpha
+POS = "#5FD98C"           # gain green, tuned for dark-navy contrast
+NEG = "#FF7A6E"           # loss coral-red, tuned for dark-navy contrast
+GLOW_BLUE = "#AAD4F6"     # decorative sphere/orb gradient — pale blue
+GLOW_CYAN = "#A5EDEE"     # decorative sphere/orb gradient — cyan
 
 
 def coastal_svg() -> str:
@@ -113,27 +118,31 @@ def coastal_svg() -> str:
 
 
 def inject_theme() -> None:
-    """Global CSS — "The Ledger" design system.
+    """Global CSS — cloned from a client-supplied dark "AI Finance" reference.
 
-    Precision as personality: warm printed-paper base, deep marine ink, a single
-    gold signal. Bricolage Grotesque display + Inter body, with IBM Plex Mono as
-    the signature voice for every number, label, and eyebrow — the design saying,
-    plainly, that each figure here was computed, not guessed.
+    Near-black navy base, white type, glossy blue/cyan glow accents standing
+    in for the reference's 3D-rendered spheres (approximated here with layered
+    radial gradients, since Streamlit can't host the original renders). Plus
+    Jakarta Sans for display type (the reference's rounded, heavy headline
+    voice) + Inter for body — no monospace signature, matching the reference,
+    which doesn't use one.
     """
     st.markdown(
         f"""
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
           :root {{
             --paper: {PAPER}; --paper2: {PAPER2}; --ink: {INK}; --ink-soft: {INK_SOFT};
             --marine: {NAVY}; --marine-dark: {NAVY_DARK}; --teal: {TEAL};
             --gold: {GOLD}; --line: {BORDER}; --pos: {POS}; --neg: {NEG}; --soft: {BG_SOFT};
-            --display: 'Bricolage Grotesque', -apple-system, system-ui, sans-serif;
-            --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+            --glow-blue: {GLOW_BLUE}; --glow-cyan: {GLOW_CYAN};
+            --display: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif;
+            --mono: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif;
             --sans: 'Inter', -apple-system, system-ui, sans-serif;
-            --shadow-sm: 0 1px 0 rgba(20,24,31,.04);
-            --shadow-md: 0 8px 24px rgba(20,24,31,.08);
+            --shadow-sm: 0 1px 0 rgba(255,255,255,.04);
+            --shadow-md: 0 30px 70px rgba(0,0,0,.55);
+            --glow-ring: 0 0 0 1px rgba(125,178,245,.22), 0 20px 50px rgba(0,0,0,.45);
             --ease-settle: cubic-bezier(.16,1,.3,1);
           }}
 
@@ -147,11 +156,13 @@ def inject_theme() -> None:
           [data-testid="stToolbar"] {{ visibility: hidden; }}
           header[data-testid="stHeader"] {{ background: transparent; }}
 
-          /* Warm ledger paper — faint horizontal rules like an accountant's pad. */
+          /* Near-black navy base with soft glow blooms standing in for the
+             reference's glossy 3D spheres. */
           [data-testid="stAppViewContainer"] {{
             background:
-              repeating-linear-gradient(180deg, transparent 0 31px,
-                rgba(14,111,115,.045) 31px 32px),
+              radial-gradient(1100px 620px at 18% -8%, rgba(125,178,245,.20), transparent 60%),
+              radial-gradient(900px 520px at 92% 4%, rgba(165,237,238,.13), transparent 55%),
+              radial-gradient(700px 420px at 50% 30%, rgba(90,60,190,.10), transparent 60%),
               {PAPER};
           }}
 
@@ -160,8 +171,8 @@ def inject_theme() -> None:
             color: var(--ink); font-family: var(--sans);
           }}
           h1, h2, h3, h4, h5 {{
-            font-family: var(--display); letter-spacing: -0.02em; color: var(--ink);
-            font-weight: 600;
+            font-family: var(--display); letter-spacing: -0.01em; color: var(--ink);
+            font-weight: 700;
           }}
 
           :focus-visible {{ outline: 2px solid var(--gold); outline-offset: 2px; }}
@@ -169,78 +180,91 @@ def inject_theme() -> None:
           /* --- Top bar --- */
           .aw-brand {{ display: flex; align-items: center; gap: 12px; padding: 2px 2px 8px; }}
           .aw-brand .mark {{ width: 42px; height: 42px; flex: none; line-height: 0; }}
-          .aw-brand .name {{ font-size: 20px; font-weight: 600; color: var(--ink);
+          .aw-brand .name {{ font-size: 20px; font-weight: 700; color: var(--ink);
             font-family: var(--display); letter-spacing: -.02em; }}
           .aw-brand .tag  {{ font-size: 11.5px; color: var(--ink-soft); margin-top: -1px;
-            font-family: var(--mono); }}
+            font-family: var(--sans); }}
           .aw-advisor {{ text-align: right; color: var(--ink-soft); font-size: 12px;
-            padding-top: 8px; font-family: var(--mono); }}
+            padding-top: 8px; font-family: var(--sans); }}
           .aw-navsep {{ display: none; }}
 
-          /* --- Hero: a printed research sheet --- */
+          /* --- Hero: full-bleed dark panel, glow orbs, no card frame --- */
           .aw-hero {{
-            background: var(--paper2); border: 1px solid var(--line);
-            border-top: 3px solid var(--gold); border-radius: 4px;
-            padding: 42px 44px; box-shadow: var(--shadow-sm);
+            background: transparent; border: none; position: relative;
+            padding: 56px 6px 40px; overflow: hidden;
             animation: aw-rise .55s var(--ease-settle) both;
           }}
-          .aw-hero-grid {{ display: flex; gap: 36px; align-items: center; }}
-          .aw-hero-text {{ flex: 1.5; min-width: 0; }}
-          .aw-hero-media {{ flex: 1; min-width: 0; }}
-          .aw-hero-media img, .aw-hero-media svg {{
-            width: 100%; border-radius: 3px; object-fit: cover; max-height: 320px;
-            border: 1px solid var(--ink); box-shadow: var(--shadow-md);
+          .aw-hero::before {{
+            content: ""; position: absolute; top: -220px; right: -160px;
+            width: 520px; height: 520px; border-radius: 50%; z-index: 0;
+            background: radial-gradient(circle at 35% 30%,
+              rgba(255,255,255,.55), var(--glow-blue) 32%, var(--teal) 62%, transparent 75%);
+            filter: blur(2px); opacity: .55;
           }}
-          .aw-hero h1 {{ color: var(--ink); font-size: 42px; margin: 0 0 16px; max-width: 18ch;
-            line-height: 1.04; font-weight: 700; letter-spacing: -.03em; }}
-          .aw-hero p  {{ color: var(--ink-soft); font-size: 16px; line-height: 1.68; margin: 0;
+          .aw-hero::after {{
+            content: ""; position: absolute; bottom: -60px; right: 18%;
+            width: 150px; height: 150px; border-radius: 50%; z-index: 0;
+            background: radial-gradient(circle at 40% 30%,
+              rgba(255,255,255,.5), var(--glow-cyan) 40%, transparent 78%);
+            opacity: .4;
+          }}
+          .aw-hero > * {{ position: relative; z-index: 1; }}
+          /* Single-column hero — the reference has no side image; the product
+             screenshot appears in its own floating section further down. */
+          .aw-hero-grid {{ display: block; max-width: 640px; }}
+          .aw-hero-text {{ min-width: 0; }}
+          .aw-hero-media {{ display: none; }}
+          .aw-hero h1 {{ color: var(--ink); font-size: 60px; margin: 0 0 18px; max-width: 14ch;
+            line-height: 1.02; font-weight: 800; letter-spacing: -.03em; }}
+          .aw-hero p  {{ color: var(--ink-soft); font-size: 17px; line-height: 1.68; margin: 0;
             max-width: 46ch; }}
           .aw-hero .eyebrow {{
-            text-transform: uppercase; letter-spacing: .18em; font-size: 11px;
-            color: var(--marine); font-weight: 500; margin-bottom: 16px; font-family: var(--mono);
+            text-transform: uppercase; letter-spacing: .14em; font-size: 12px;
+            color: var(--marine); font-weight: 600; margin-bottom: 18px; font-family: var(--sans);
           }}
-          .aw-hero .eyebrow::before {{ content: "// "; color: var(--gold); }}
 
           /* --- Ledger signature: a strip of computed mini-stats --- */
-          .aw-ledger {{ display: flex; gap: 0; margin: 22px 0 2px; border-top: 1px solid var(--line); }}
-          .aw-ledger .cell {{ flex: 1; padding: 12px 16px 2px 0; border-right: 1px solid var(--line); }}
+          .aw-ledger {{ display: flex; gap: 0; margin: 26px 0 2px; border-top: 1px solid var(--line); }}
+          .aw-ledger .cell {{ flex: 1; padding: 14px 16px 2px 0; border-right: 1px solid var(--line); }}
           .aw-ledger .cell:last-child {{ border-right: none; }}
-          .aw-ledger .v {{ font-family: var(--mono); font-size: 22px; font-weight: 600;
+          .aw-ledger .v {{ font-family: var(--display); font-size: 24px; font-weight: 800;
             color: var(--ink); line-height: 1; }}
-          .aw-ledger .k {{ font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft);
-            text-transform: uppercase; letter-spacing: .1em; margin-top: 6px; display: block; }}
+          .aw-ledger .k {{ font-family: var(--sans); font-size: 11px; color: var(--ink-soft);
+            text-transform: uppercase; letter-spacing: .08em; margin-top: 6px; display: block; }}
 
-          /* --- Trust strip --- */
-          .aw-trust {{ display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 4px; }}
+          /* --- Trust strip: minimal inline row (the reference's faded logo strip) --- */
+          .aw-trust {{
+            display: flex; flex-wrap: wrap; gap: 30px; margin: 8px 0 4px;
+            align-items: center; justify-content: center;
+          }}
           .aw-trust .item {{
-            flex: 1 1 0; min-width: 150px; display: flex; align-items: center; gap: 11px;
-            background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
-            padding: 13px 16px;
+            flex: 0 0 auto; display: flex; align-items: center; gap: 9px;
+            background: transparent; border: none; padding: 4px 0; opacity: .78;
             animation: aw-rise .5s var(--ease-settle) both;
-            transition: transform .2s var(--ease-settle), border-color .2s var(--ease-settle),
-                        box-shadow .2s var(--ease-settle);
+            transition: opacity .2s var(--ease-settle), transform .2s var(--ease-settle);
           }}
           .aw-trust .item:nth-child(1) {{ animation-delay: .08s; }}
           .aw-trust .item:nth-child(2) {{ animation-delay: .15s; }}
           .aw-trust .item:nth-child(3) {{ animation-delay: .22s; }}
           .aw-trust .item:nth-child(4) {{ animation-delay: .29s; }}
-          .aw-trust .item:hover {{
-            transform: translateY(-3px); border-color: var(--marine); box-shadow: var(--shadow-md);
-          }}
-          .aw-trust .item svg {{ flex: none; color: var(--marine); }}
-          .aw-trust .item b {{ display: block; font-size: 13px; color: var(--ink);
+          .aw-trust .item:hover {{ opacity: 1; transform: translateY(-2px); }}
+          .aw-trust .item svg {{ flex: none; color: var(--marine); width: 18px; height: 18px; }}
+          .aw-trust .item b {{ display: block; font-size: 12.5px; color: var(--ink);
             font-weight: 600; font-family: var(--display); }}
-          .aw-trust .item span {{ font-size: 11px; color: var(--ink-soft); font-family: var(--mono); }}
+          .aw-trust .item span {{ display: none; }}
 
           /* --- Section label + heading --- */
           .aw-section-label {{
-            text-transform: uppercase; letter-spacing: .16em; font-size: 11px;
-            color: var(--marine); font-weight: 500; margin: 4px 0 3px; font-family: var(--mono);
+            text-transform: uppercase; letter-spacing: .14em; font-size: 12px;
+            color: var(--marine); font-weight: 600; margin: 4px 0 6px; font-family: var(--sans);
           }}
-          .aw-section-label::before {{ content: "// "; color: var(--gold); }}
-          .aw-section-head {{ font-family: var(--display); font-size: 26px; color: var(--ink);
-            font-weight: 600; margin: 2px 0 4px; letter-spacing: -.025em; }}
-          .aw-section-sub {{ color: var(--ink-soft); font-size: 14.5px; margin: 0 0 8px; max-width: 62ch; }}
+          .aw-section-head {{ font-family: var(--display); font-size: 34px; color: var(--ink);
+            font-weight: 800; margin: 2px 0 8px; letter-spacing: -.02em; line-height: 1.12; }}
+          .aw-section-sub {{ color: var(--ink-soft); font-size: 15px; margin: 0 0 8px; max-width: 62ch; }}
+
+          /* Centered variant — the reference centers its dark feature sections. */
+          .aw-center {{ text-align: center; }}
+          .aw-center .aw-section-head, .aw-center .aw-section-sub {{ margin-left: auto; margin-right: auto; }}
 
           /* --- Sub-section header (ledger tick) --- */
           .aw-subhead {{ display: flex; align-items: baseline; gap: 10px; margin: 8px 0 10px;
@@ -253,45 +277,86 @@ def inject_theme() -> None:
 
           /* --- Provenance badges (AI / rule-based / compliance-flagged) --- */
           .aw-badge {{
-            display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono);
-            font-size: 10.5px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
-            padding: 3px 9px; border-radius: 2px; border: 1px solid var(--line);
+            display: inline-flex; align-items: center; gap: 5px; font-family: var(--sans);
+            font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+            padding: 4px 11px; border-radius: 999px; border: 1px solid var(--line);
             background: var(--paper2); color: var(--ink-soft); margin: 0 6px 6px 0;
           }}
-          .aw-badge.ai {{ background: var(--marine); color: var(--paper); border-color: var(--marine-dark); }}
-          .aw-badge.flag {{ background: rgba(180,71,46,.1); color: var(--neg); border-color: rgba(180,71,46,.35); }}
+          .aw-badge.ai {{ background: var(--marine); color: #0B0C1F; border-color: var(--marine-dark); }}
+          .aw-badge.flag {{ background: rgba(255,118,0,.14); color: var(--neg); border-color: rgba(255,118,0,.4); }}
 
           /* --- Survey section banners --- */
           .aw-survey-section {{
-            background: var(--marine); color: var(--paper); border-radius: 3px;
-            padding: 12px 18px; margin: 26px 0 4px; font-weight: 600; font-size: 16px;
+            background: var(--marine); color: #0B0C1F; border-radius: 14px;
+            padding: 12px 18px; margin: 26px 0 4px; font-weight: 700; font-size: 16px;
             font-family: var(--display); letter-spacing: -.01em;
           }}
-          .aw-survey-section span {{ opacity: .85; font-weight: 400; font-size: 12px;
-            font-family: var(--mono); }}
+          .aw-survey-section span {{ opacity: .75; font-weight: 500; font-size: 12px;
+            font-family: var(--sans); }}
           .aw-survey-body {{
             border: 1px solid var(--line); border-top: none;
-            border-radius: 0 0 3px 3px; padding: 18px 20px 8px; margin-bottom: 8px;
+            border-radius: 0 0 14px 14px; padding: 18px 20px 8px; margin-bottom: 8px;
             background: var(--paper2);
           }}
 
+          /* --- Glow-orb graphic panel: stands in for the reference's 3D
+             sphere renders inside feature/spotlight blocks. --- */
+          .pw-orb-panel {{
+            width: 100%; aspect-ratio: 16/10; border-radius: 16px; position: relative;
+            background-color: #05061c; background-size: cover; background-repeat: no-repeat;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+            display: flex; align-items: flex-start; padding: 16px 18px;
+          }}
+          .pw-orb-label {{ color: rgba(255,255,255,.55); font-family: var(--sans);
+            font-size: 13px; font-weight: 600; }}
+
+          /* --- Floating product screenshot --- */
+          .pw-shot {{
+            border-radius: 20px; border: 1px solid var(--line); overflow: hidden;
+            box-shadow: var(--shadow-md); max-width: 900px; margin: 0 auto;
+            background: var(--paper2);
+          }}
+          .pw-shot img {{ width: 100%; display: block; }}
+
+          /* --- Numbered spotlight (the reference's "Key Features" blocks) --- */
+          .pw-spot {{
+            display: flex; gap: 44px; align-items: center; margin: 46px 0;
+            animation: aw-rise .6s var(--ease-settle) both;
+          }}
+          .pw-spot.rev {{ flex-direction: row-reverse; }}
+          .pw-spot .media {{ flex: 1; min-width: 0; }}
+          .pw-spot .media .pw-orb-panel {{ aspect-ratio: 4/3; }}
+          .pw-spot .text {{ flex: 1; min-width: 0; }}
+          .pw-spot .eyebrow {{
+            text-transform: uppercase; letter-spacing: .14em; font-size: 12px;
+            color: var(--marine); font-weight: 600; margin-bottom: 10px; font-family: var(--sans);
+          }}
+          .pw-spot h3 {{ font-size: 30px; font-family: var(--display); font-weight: 800;
+            letter-spacing: -.02em; margin: 0 0 12px; line-height: 1.1; }}
+          .pw-spot p {{ color: var(--ink-soft); font-size: 15.5px; line-height: 1.65; margin: 0;
+            max-width: 42ch; }}
+
           /* --- Cards --- */
           .aw-card {{
-            background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
-            padding: 24px; height: 100%;
+            background: var(--paper2); border: 1px solid var(--line); border-radius: 18px;
+            padding: 26px; height: 100%;
             transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
                         box-shadow .22s var(--ease-settle);
           }}
           .aw-card:hover {{
-            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--shadow-md);
+            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--glow-ring);
           }}
-          .aw-card h3 {{ margin: 14px 0 7px; font-size: 18px; font-family: var(--display);
-            font-weight: 600; letter-spacing: -.02em; }}
+          .aw-card h3 {{ margin: 16px 0 7px; font-size: 19px; font-family: var(--display);
+            font-weight: 700; letter-spacing: -.01em; }}
           .aw-card p  {{ color: var(--ink-soft); font-size: 14px; line-height: 1.62; margin: 0; }}
           .aw-card .ico {{
-            width: 44px; height: 44px; border-radius: 3px; background: var(--soft);
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid var(--line); color: var(--marine);
+            width: 68px; height: 68px; border-radius: 16px; position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; color: #ffffff;
+            background:
+              radial-gradient(circle at 32% 28%, rgba(255,255,255,.85), transparent 42%),
+              radial-gradient(circle at 68% 72%, var(--glow-cyan), transparent 55%),
+              radial-gradient(circle at 30% 75%, var(--glow-blue), var(--teal) 70%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
           }}
 
           /* --- Process timeline (a real sequence → numbered ledger entries) --- */
@@ -305,9 +370,9 @@ def inject_theme() -> None:
           .aw-step:nth-child(3) {{ animation-delay: .21s; }}
           .aw-step:nth-child(4) {{ animation-delay: .29s; }}
           .aw-step .n {{
-            width: 40px; height: 40px; border-radius: 3px; font-family: var(--mono);
+            width: 40px; height: 40px; border-radius: 12px; font-family: var(--display);
             background: var(--paper2); border: 1px solid var(--marine); color: var(--marine);
-            display: flex; align-items: center; justify-content: center; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; font-weight: 700;
             font-size: 15px; position: relative; z-index: 2;
           }}
           .aw-step:not(:last-child)::after {{
@@ -315,98 +380,103 @@ def inject_theme() -> None:
             background: var(--line); z-index: 1;
           }}
           .aw-step h4 {{ font-size: 16px; margin: 12px 0 5px; font-family: var(--display);
-            font-weight: 600; letter-spacing: -.02em; }}
+            font-weight: 700; letter-spacing: -.01em; }}
           .aw-step p {{ font-size: 13px; color: var(--ink-soft); line-height: 1.55; margin: 0;
             padding-right: 12px; }}
 
           /* --- Service / fee tiers --- */
           .aw-tier {{
-            background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
-            padding: 26px 24px; height: 100%;
+            background: var(--paper2); border: 1px solid var(--line); border-radius: 18px;
+            padding: 28px 26px; height: 100%;
             transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
                         box-shadow .22s var(--ease-settle);
             display: flex; flex-direction: column;
           }}
           .aw-tier:hover {{
-            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--shadow-md);
+            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--glow-ring);
           }}
           .aw-tier.feat {{ border: 1px solid var(--marine); border-top: 3px solid var(--gold); }}
           .aw-tier .badge {{ align-self: flex-start; background: var(--marine); color: var(--paper);
-            font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
-            padding: 4px 10px; border-radius: 2px; margin-bottom: 10px; font-family: var(--mono); }}
+            font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+            padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; font-family: var(--sans); }}
           .aw-tier h3 {{ font-family: var(--display); font-size: 20px; margin: 0 0 3px;
-            font-weight: 600; color: var(--ink); letter-spacing: -.02em; }}
+            font-weight: 700; color: var(--ink); letter-spacing: -.01em; }}
           .aw-tier .price {{ font-size: 15px; color: var(--marine); font-weight: 600; margin: 0 0 12px;
-            font-family: var(--mono); }}
+            font-family: var(--sans); }}
           .aw-tier ul {{ list-style: none; padding: 0; margin: 0; }}
           .aw-tier li {{ font-size: 13.5px; color: var(--ink-soft); padding: 6px 0 6px 22px;
             position: relative; line-height: 1.45; }}
           .aw-tier li::before {{ content: "+"; position: absolute; left: 0; top: 6px;
-            color: var(--gold); font-weight: 700; font-family: var(--mono); }}
+            color: var(--gold); font-weight: 700; font-family: var(--sans); }}
 
           /* --- Team / advisor --- */
           .aw-team {{ display: flex; gap: 22px; align-items: center; }}
           .aw-team .photo {{
-            width: 150px; height: 150px; border-radius: 3px; flex: none;
-            background: var(--marine); border: 1px solid var(--ink);
+            width: 150px; height: 150px; border-radius: 18px; flex: none;
+            background: var(--marine); border: 1px solid var(--line);
             display: flex; align-items: center; justify-content: center;
-            color: var(--paper); font-family: var(--display); font-size: 44px; font-weight: 600;
+            color: var(--paper); font-family: var(--display); font-size: 44px; font-weight: 700;
             overflow: hidden;
           }}
           .aw-team .photo img {{ width: 100%; height: 100%; object-fit: cover; display: block; }}
           .aw-team h3 {{ margin: 0 0 2px; font-size: 21px; font-family: var(--display);
-            letter-spacing: -.02em; }}
-          .aw-team .role {{ color: var(--marine); font-size: 12.5px; font-weight: 500; margin: 0 0 8px;
-            font-family: var(--mono); }}
+            letter-spacing: -.01em; }}
+          .aw-team .role {{ color: var(--marine); font-size: 12.5px; font-weight: 600; margin: 0 0 8px;
+            font-family: var(--sans); }}
           .aw-team .creds {{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }}
           .aw-team .creds span {{ font-size: 11px; background: var(--soft);
-            border: 1px solid var(--line); color: var(--ink); padding: 3px 9px;
-            border-radius: 2px; font-weight: 500; font-family: var(--mono); }}
+            border: 1px solid var(--line); color: var(--ink); padding: 4px 11px;
+            border-radius: 999px; font-weight: 500; font-family: var(--sans); }}
           .aw-team p {{ font-size: 14px; color: var(--ink-soft); line-height: 1.62; margin: 4px 0 0; }}
 
           /* --- Testimonials --- */
           .aw-quote {{
-            background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
-            padding: 24px; height: 100%; position: relative;
+            background: var(--paper2); border: 1px solid var(--line); border-radius: 18px;
+            padding: 26px; height: 100%; position: relative;
             transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
                         box-shadow .22s var(--ease-settle);
           }}
           .aw-quote:hover {{
-            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--shadow-md);
+            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--glow-ring);
           }}
           .aw-quote .mark {{ font-family: var(--display); font-size: 46px; color: var(--gold);
             line-height: .5; display: block; height: 22px; }}
           .aw-quote p {{ font-size: 14.5px; color: var(--ink); line-height: 1.6; margin: 6px 0 14px; }}
           .aw-quote .who {{ display: flex; align-items: center; gap: 10px; }}
-          .aw-quote .av {{ width: 34px; height: 34px; border-radius: 2px; flex: none;
+          .aw-quote .av {{ width: 34px; height: 34px; border-radius: 10px; flex: none;
             background: var(--marine); color: var(--paper);
             display: flex; align-items: center; justify-content: center; font-size: 13px;
-            font-weight: 600; font-family: var(--mono); }}
+            font-weight: 700; font-family: var(--display); }}
           .aw-quote .who b {{ font-size: 13px; color: var(--ink); display: block;
             font-family: var(--display); font-weight: 600; }}
-          .aw-quote .who span {{ font-size: 11px; color: var(--ink-soft); font-family: var(--mono); }}
+          .aw-quote .who span {{ font-size: 11px; color: var(--ink-soft); font-family: var(--sans); }}
 
           /* --- Insights --- */
           .aw-insight {{
-            background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
+            background: var(--paper2); border: 1px solid var(--line); border-radius: 18px;
             overflow: hidden; height: 100%;
             transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
                         box-shadow .22s var(--ease-settle);
           }}
           .aw-insight:hover {{
-            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--shadow-md);
+            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--glow-ring);
           }}
-          .aw-insight .top {{ height: 64px; background: var(--marine);
-            display: flex; align-items: center; justify-content: flex-start; padding: 0 20px; }}
-          .aw-insight .top span {{ color: var(--paper); font-size: 10.5px;
-            text-transform: uppercase; letter-spacing: .14em; font-weight: 500; font-family: var(--mono); }}
-          .aw-insight .top span::before {{ content: "// "; color: var(--gold); }}
+          .aw-insight .top {{
+            height: 100px; display: flex; align-items: center; justify-content: flex-start;
+            padding: 0 20px; position: relative; overflow: hidden;
+            background:
+              radial-gradient(circle at 75% 20%, rgba(255,255,255,.5), transparent 40%),
+              radial-gradient(circle at 85% 90%, var(--glow-cyan), transparent 55%),
+              radial-gradient(circle at 10% 60%, var(--glow-blue), var(--marine-dark) 70%);
+          }}
+          .aw-insight .top span {{ color: #ffffff; font-size: 10.5px; position: relative;
+            text-transform: uppercase; letter-spacing: .14em; font-weight: 600; font-family: var(--sans); }}
           .aw-insight .body {{ padding: 16px 20px 20px; }}
           .aw-insight h4 {{ font-size: 16px; margin: 0 0 6px; font-family: var(--display);
-            font-weight: 600; line-height: 1.28; letter-spacing: -.02em; }}
+            font-weight: 700; line-height: 1.28; letter-spacing: -.01em; }}
           .aw-insight p {{ font-size: 13px; color: var(--ink-soft); line-height: 1.55; margin: 0; }}
-          .aw-insight .meta {{ font-size: 11px; color: var(--marine); font-weight: 500; margin-top: 10px;
-            font-family: var(--mono); }}
+          .aw-insight .meta {{ font-size: 11px; color: var(--marine); font-weight: 600; margin-top: 10px;
+            font-family: var(--sans); }}
 
           /* --- Card-grid entrance stagger: left-to-right by column position.
              Scoped by the card's own class, so this is safe to reuse across
@@ -442,6 +512,37 @@ def inject_theme() -> None:
             }}
           }}
 
+          /* --- Form inputs (text, select, date, textarea) — dark-themed to
+             match; Streamlit's defaults are a plain white field. --- */
+          [data-testid="stTextInput"] input, [data-testid="stTextArea"] textarea,
+          [data-testid="stDateInput"] input, [data-testid="stNumberInput"] input,
+          [data-testid="stSelectbox"] input, [data-testid="stSelectbox"] [role="group"],
+          [data-baseweb="select"] > div, [data-baseweb="input"] {{
+            background: var(--paper2) !important; color: var(--ink) !important;
+            border-color: var(--line) !important; border-radius: 10px !important;
+          }}
+          [data-testid="stTextInput"] input::placeholder, [data-testid="stTextArea"] textarea::placeholder,
+          [data-testid="stSelectbox"] input::placeholder {{
+            color: var(--ink-soft) !important; opacity: .7;
+          }}
+          [data-testid="stSelectbox"] button {{ background: transparent !important; }}
+          [data-testid="stNumberInputContainer"] {{
+            background: var(--paper2) !important; border-radius: 10px !important;
+          }}
+          [data-testid="stNumberInputContainer"] * {{ background-color: transparent !important; }}
+          [data-testid="stNumberInputContainer"] input {{ color: var(--ink) !important; }}
+          [data-testid="stNumberInputStepDown"] svg, [data-testid="stNumberInputStepUp"] svg {{
+            fill: var(--ink-soft) !important;
+          }}
+          [data-testid="stSelectbox"] svg, [data-baseweb="select"] svg {{ fill: var(--ink-soft) !important; }}
+          [data-testid="stWidgetLabel"] p {{ color: var(--ink) !important; font-weight: 500; }}
+          [role="listbox"], div[data-baseweb="popover"] {{ background: var(--paper2) !important;
+            border: 1px solid var(--line) !important; }}
+          [role="option"], div[data-baseweb="popover"] li {{ color: var(--ink) !important;
+            background: var(--paper2) !important; }}
+          [role="option"]:hover, div[data-baseweb="popover"] li:hover {{ background: var(--soft) !important; }}
+          div[data-baseweb="calendar"] {{ background: var(--paper2) !important; }}
+
           /* --- Disclosures footer --- */
           .aw-foot {{
             margin-top: 30px; border-top: 1px solid var(--line); padding-top: 22px;
@@ -449,87 +550,102 @@ def inject_theme() -> None:
           }}
           .aw-foot .cols {{ display: flex; gap: 40px; flex-wrap: wrap; margin-bottom: 16px; }}
           .aw-foot .cols b {{ color: var(--ink); font-family: var(--display);
-            font-size: 13px; display: block; margin-bottom: 6px; font-weight: 600; }}
-          .aw-foot .cols div {{ font-size: 12px; font-family: var(--mono); line-height: 1.7; }}
+            font-size: 13px; display: block; margin-bottom: 6px; font-weight: 700; }}
+          .aw-foot .cols div {{ font-size: 12px; font-family: var(--sans); line-height: 1.7; }}
           .aw-foot .fine {{ font-size: 11px; color: var(--ink-soft); border-top: 1px dashed var(--line);
             padding-top: 12px; }}
 
-          /* --- Metrics: the signature — mono values on a ledger underline --- */
+          /* --- Metrics --- */
           [data-testid="stMetric"] {{
             background: var(--paper2); border: 1px solid var(--line);
-            border-bottom: 2px solid var(--marine); border-radius: 3px; padding: 14px 18px;
+            border-bottom: 2px solid var(--marine); border-radius: 14px; padding: 14px 18px;
           }}
           [data-testid="stMetricValue"] {{ font-size: 24px; color: var(--ink);
-            font-family: var(--mono); font-weight: 600; letter-spacing: -.02em; }}
-          [data-testid="stMetricLabel"] {{ color: var(--ink-soft); font-family: var(--mono);
+            font-family: var(--display); font-weight: 700; letter-spacing: -.02em; }}
+          [data-testid="stMetricLabel"] {{ color: var(--ink-soft); font-family: var(--sans);
             letter-spacing: 0; font-size: 11px; }}
           [data-testid="stMetricLabel"] * {{ white-space: normal; overflow: visible;
             text-overflow: clip; }}
-          [data-testid="stMetricDelta"] {{ font-family: var(--mono); font-size: 12px; }}
+          [data-testid="stMetricDelta"] {{ font-family: var(--sans); font-size: 12px; }}
 
-          /* --- Buttons --- */
+          /* --- Buttons: solid pill + circular arrow badge, the reference's
+             signature CTA shape. --- */
           .stButton button, .stFormSubmitButton button {{
-            border-radius: 3px; font-weight: 600; font-family: var(--sans);
+            border-radius: 999px; font-weight: 600; font-family: var(--sans);
+            padding: 12px 46px 12px 22px !important; position: relative;
             transition: transform .16s var(--ease-settle), background .16s var(--ease-settle),
                         border-color .16s var(--ease-settle), box-shadow .16s var(--ease-settle);
+          }}
+          .stButton button::after, .stFormSubmitButton button::after {{
+            content: "\\2192"; position: absolute; right: 7px; top: 50%;
+            transform: translateY(-50%); width: 27px; height: 27px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1;
           }}
           .stButton button:active, .stFormSubmitButton button:active {{
             transform: scale(.97); transition-duration: .08s;
           }}
           .stButton button[kind="primary"], .stButton button[kind="primaryFormSubmit"],
           .stFormSubmitButton button[kind="primaryFormSubmit"] {{
-            background: var(--marine); border-color: var(--marine); color: #ffffff;
+            background: #ffffff; border-color: #ffffff; color: #0B0C1F;
           }}
           .stButton button[kind="primary"] *, .stButton button[kind="primaryFormSubmit"] *,
-          .stFormSubmitButton button[kind="primaryFormSubmit"] * {{ color: #ffffff !important; }}
+          .stFormSubmitButton button[kind="primaryFormSubmit"] * {{ color: #0B0C1F !important; }}
+          .stButton button[kind="primary"]::after, .stButton button[kind="primaryFormSubmit"]::after,
+          .stFormSubmitButton button[kind="primaryFormSubmit"]::after {{
+            background: #0B0C1F; color: #ffffff;
+          }}
           .stButton button[kind="primary"]:hover, .stButton button[kind="primaryFormSubmit"]:hover,
           .stFormSubmitButton button[kind="primaryFormSubmit"]:hover {{
-            background: var(--marine-dark); border-color: var(--marine-dark); color: #ffffff;
+            background: #EDEFF6; border-color: #EDEFF6;
             transform: translateY(-1px); box-shadow: var(--shadow-md);
           }}
-          .stButton button[kind="secondary"] {{ color: var(--ink); border-color: var(--line);
-            background: var(--paper2); }}
+          .stButton button[kind="secondary"] {{
+            color: var(--ink); border-color: var(--line); background: rgba(255,255,255,.05);
+          }}
+          .stButton button[kind="secondary"]::after {{ background: rgba(255,255,255,.92); color: #0B0C1F; }}
           .stButton button[kind="secondary"]:hover {{
-            color: var(--ink); border-color: var(--marine);
-            background: var(--soft); transform: translateY(-1px);
+            color: var(--ink); border-color: rgba(255,255,255,.32);
+            background: rgba(255,255,255,.1); transform: translateY(-1px);
           }}
 
-          /* --- Top navigation: mono ledger tabs in a bordered bar --- */
+          /* --- Top navigation: rounded pill bar --- */
           div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-nav_"]) {{
             background: var(--paper2); border: 1px solid var(--line);
-            border-radius: 3px; padding: 7px 9px; gap: 6px;
+            border-radius: 999px; padding: 7px 9px; gap: 6px;
           }}
           [class*="st-key-nav_"] button {{
             border: none !important; background: transparent !important;
             color: var(--ink-soft) !important; font-weight: 500 !important;
-            border-radius: 2px !important; font-family: var(--mono) !important;
-            font-size: 12.5px !important; letter-spacing: .02em;
+            border-radius: 999px !important; font-family: var(--sans) !important;
+            font-size: 12.5px !important; letter-spacing: .02em; padding: 8px 16px !important;
             box-shadow: none !important; transition: background .16s ease, color .16s ease !important;
           }}
+          [class*="st-key-nav_"] button::after {{ display: none; }}
           [class*="st-key-nav_"] button:hover {{
             background: var(--soft) !important; color: var(--ink) !important;
             transform: none !important; box-shadow: none !important;
           }}
           [class*="st-key-nav_"] button[kind="primary"] {{
-            background: var(--marine) !important; color: #ffffff !important; box-shadow: none !important;
+            background: #ffffff !important; color: #0B0C1F !important; box-shadow: none !important;
           }}
-          [class*="st-key-nav_"] button[kind="primary"] * {{ color: #ffffff !important; }}
+          [class*="st-key-nav_"] button[kind="primary"] * {{ color: #0B0C1F !important; }}
           [class*="st-key-nav_"] button[kind="primary"]:hover {{
-            background: var(--marine-dark) !important; transform: none !important;
+            background: #EDEFF6 !important; transform: none !important;
           }}
           [class*="st-key-gearbtn"] button {{
             border: 1px solid var(--line) !important; background: var(--paper2) !important;
-            color: var(--marine) !important; border-radius: 2px !important; box-shadow: none !important;
+            color: var(--marine) !important; border-radius: 999px !important; box-shadow: none !important;
           }}
+          [class*="st-key-gearbtn"] button::after {{ display: none; }}
           [class*="st-key-gearbtn"] button:hover {{
             border-color: var(--marine) !important; background: var(--soft) !important;
           }}
 
           hr {{ opacity: .4; border-color: var(--line); }}
-          [data-testid="stExpander"] {{ border-radius: 3px; border-color: var(--line); }}
+          [data-testid="stExpander"] {{ border-radius: 14px; border-color: var(--line); }}
 
           /* --- Loading state: on-brand spinner instead of Streamlit's default --- */
-          [data-testid="stSpinner"] {{ color: var(--marine); font-family: var(--mono); font-size: 13px; }}
+          [data-testid="stSpinner"] {{ color: var(--marine); font-family: var(--sans); font-size: 13px; }}
           [data-testid="stSpinner"] > div {{ color: var(--marine); }}
           [data-testid="stSpinner"] svg {{ color: var(--marine) !important; }}
 
@@ -537,14 +653,14 @@ def inject_theme() -> None:
             * {{ transition: none !important; animation: none !important; }}
           }}
           @media (max-width: 820px) {{
-            .aw-hero {{ padding: 30px 24px; }}
-            .aw-hero h1 {{ font-size: 31px; }}
-            .aw-hero-grid {{ flex-direction: column; }}
+            .aw-hero {{ padding: 40px 12px 28px; }}
+            .aw-hero h1 {{ font-size: 38px; }}
             .aw-ledger {{ flex-wrap: wrap; }}
             .aw-steps {{ flex-direction: column; gap: 16px; }}
             .aw-step:not(:last-child)::after {{ display: none; }}
             .aw-team {{ flex-direction: column; text-align: center; align-items: center; }}
             .aw-team .creds {{ justify-content: center; }}
+            .pw-spot, .pw-spot.rev {{ flex-direction: column; gap: 20px; margin: 32px 0; }}
           }}
         </style>
         """,
@@ -613,6 +729,39 @@ def hero_media_html() -> str:
             mime = "jpeg" if ext == "jpg" else ext
             return f'<img src="data:image/{mime};base64,{b64}" alt="Client family"/>'
     return coastal_svg()
+
+
+def product_shot_html() -> str:
+    """The floating product screenshot from assets/product-shot.jpg, if present.
+
+    A real screenshot of the app's own Dashboard, not a mockup.
+    """
+    f = Path(__file__).parent / "assets" / "product-shot.jpg"
+    if f.exists():
+        b64 = base64.b64encode(f.read_bytes()).decode()
+        return f'<img src="data:image/jpeg;base64,{b64}" alt="WealthSync dashboard"/>'
+    return ""
+
+
+_ORB_VARIANTS = {
+    1: "radial-gradient(circle at 30% 25%, rgba(255,255,255,.7), transparent 40%),"
+       "radial-gradient(circle at 75% 70%, var(--glow-cyan), transparent 55%),"
+       "radial-gradient(circle at 25% 80%, var(--glow-blue), var(--teal) 70%)",
+    2: "radial-gradient(circle at 70% 20%, rgba(255,255,255,.6), transparent 40%),"
+       "radial-gradient(circle at 20% 75%, var(--glow-blue), transparent 55%),"
+       "radial-gradient(circle at 80% 85%, var(--gold), var(--marine-dark) 70%)",
+    3: "radial-gradient(circle at 25% 70%, rgba(255,255,255,.6), transparent 40%),"
+       "radial-gradient(circle at 80% 30%, var(--glow-cyan), transparent 50%),"
+       "radial-gradient(circle at 60% 85%, var(--glow-blue), var(--marine-dark) 75%)",
+}
+
+
+def orb_panel_html(variant: int = 1, label: str = "") -> str:
+    """A CSS-only glow-orb graphic panel — stands in for the reference's
+    3D-rendered sphere images inside feature/spotlight blocks."""
+    bg = _ORB_VARIANTS.get(variant, _ORB_VARIANTS[1])
+    tag = f'<span class="pw-orb-label">{label}</span>' if label else ""
+    return f'<div class="pw-orb-panel" style="background-image:{bg};">{tag}</div>'
 
 
 def advisor_photo_html(initials: str = "LR") -> str:
@@ -691,12 +840,13 @@ def icon(name: str, size: int = 22) -> str:
             f'stroke-linejoin="round">{body}</svg>')
 
 
-def section_header(label: str, title: str, subtitle: str = "") -> None:
+def section_header(label: str, title: str, subtitle: str = "", centered: bool = False) -> None:
     """A consistent 'eyebrow + display heading + subtitle' section opener."""
     sub = f'<div class="aw-section-sub">{subtitle}</div>' if subtitle else ""
+    wrap_open, wrap_close = ('<div class="aw-center">', "</div>") if centered else ("", "")
     st.markdown(
-        f'<div class="aw-section-label">{label}</div>'
-        f'<div class="aw-section-head">{title}</div>{sub}',
+        f'{wrap_open}<div class="aw-section-label">{label}</div>'
+        f'<div class="aw-section-head">{title}</div>{sub}{wrap_close}',
         unsafe_allow_html=True,
     )
 

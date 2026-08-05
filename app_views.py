@@ -296,28 +296,43 @@ def home() -> None:
                   <span class="k">risk &amp; return window</span></div>
               </div>
             </div>
-            <div class="aw-hero-media">{ui.hero_media_html()}</div>
           </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    # --- Trust strip ------------------------------------------------------
-    ui.trust_strip()
-
-    st.write("")
-    b1, b2, b3, _ = st.columns([1, 1, 1, 2])
+    b1, b2, _ = st.columns([1, 1, 2])
     if b1.button("Open Dashboard", type="primary", width="stretch"):
         ui.go_to("Dashboard")
     if b2.button("Portfolio Analysis", width="stretch"):
         ui.go_to("Portfolio Analysis")
-    if b3.button("Take Client Survey", width="stretch"):
-        ui.go_to("Client Survey")
+    st.markdown(
+        '<div style="margin:2px 0 6px;">'
+        '<span class="aw-section-label" style="margin:0;">or</span> '
+        '<span style="color:var(--ink-soft); font-size:14px;">take the client survey from '
+        "the top nav to get a suitability recommendation first.</span></div>",
+        unsafe_allow_html=True,
+    )
 
-    # --- How we help ------------------------------------------------------
+    # --- Floating product screenshot ---------------------------------------
+    shot = ui.product_shot_html()
+    if shot:
+        st.write("")
+        st.write("")
+        st.markdown(f'<div class="pw-shot">{shot}</div>', unsafe_allow_html=True)
+
+    # --- Trust strip --------------------------------------------------------
     st.write("")
-    ui.section_header("How we help", "Advice built around your family",
-                      "Three ways we turn your goals into a plan you can actually follow.")
+    st.write("")
+    ui.trust_strip()
+
+    # --- How we help --------------------------------------------------------
+    st.write("")
+    st.write("")
+    ui.section_header("Features", "Real numbers, not a black box.",
+                      "Three ways we turn your goals into a plan you can actually follow.",
+                      centered=True)
+    st.write("")
     r1 = st.columns(3)
     with r1[0]:
         ui.card(ui.icon("family"), "Get to know your family",
@@ -332,29 +347,40 @@ def home() -> None:
                 "Live valuation, concentration and risk, tax-aware rebalancing, and a "
                 "report you can keep — every figure computed, never guessed.")
 
-    # --- Our process ------------------------------------------------------
+    # --- Our process (numbered spotlight) ------------------------------------
     st.write("")
-    ui.section_header("How it works", "A clear path from first call to ongoing care")
-    steps = [
-        ("1", "Discovery", "We listen first — your goals, timeline, and what financial "
-         "security means to your family."),
-        ("2", "Plan", "We build a written plan: suitable allocation, retirement readiness, "
-         "and the trade-offs behind each choice."),
-        ("3", "Implement", "We put the plan to work — tax-aware, account by account, with "
-         "everything documented in your IPS."),
-        ("4", "Review", "We meet on a set cadence to rebalance, stress-test, and adjust as "
-         "your life changes."),
-    ]
+    st.write("")
     st.markdown(
-        '<div class="aw-steps">'
-        + "".join(
-            f'<div class="aw-step"><div class="n">{n}</div>'
-            f'<h4>{t}</h4><p>{d}</p></div>'
-            for n, t, d in steps
-        )
-        + "</div>",
+        '<div class="aw-center"><div class="aw-section-head">A clear path from first '
+        'call to ongoing care</div></div>',
         unsafe_allow_html=True,
     )
+    st.write("")
+    steps = [
+        ("01", "Discovery", "We listen first — your goals, timeline, and what financial "
+         "security means to your family.", 1),
+        ("02", "Plan", "We build a written plan: suitable allocation, retirement readiness, "
+         "and the trade-offs behind each choice.", 2),
+        ("03", "Implement", "We put the plan to work — tax-aware, account by account, with "
+         "everything documented in your IPS.", 3),
+        ("04", "Review", "We meet on a set cadence to rebalance, stress-test, and adjust as "
+         "your life changes.", 1),
+    ]
+    for i, (n, title, body, variant) in enumerate(steps):
+        rev = " rev" if i % 2 else ""
+        st.markdown(
+            f"""
+            <div class="pw-spot{rev}">
+              <div class="media">{ui.orb_panel_html(variant, n)}</div>
+              <div class="text">
+                <div class="eyebrow">Step {n}</div>
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     # --- Services & fees --------------------------------------------------
     st.write("")
