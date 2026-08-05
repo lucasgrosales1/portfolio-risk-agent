@@ -134,6 +134,12 @@ def inject_theme() -> None:
             --sans: 'Inter', -apple-system, system-ui, sans-serif;
             --shadow-sm: 0 1px 0 rgba(20,24,31,.04);
             --shadow-md: 0 8px 24px rgba(20,24,31,.08);
+            --ease-settle: cubic-bezier(.16,1,.3,1);
+          }}
+
+          @keyframes aw-rise {{
+            from {{ opacity: 0; transform: translateY(10px); }}
+            to   {{ opacity: 1; transform: translateY(0); }}
           }}
 
           #MainMenu {{ visibility: hidden; }}
@@ -176,6 +182,7 @@ def inject_theme() -> None:
             background: var(--paper2); border: 1px solid var(--line);
             border-top: 3px solid var(--gold); border-radius: 4px;
             padding: 42px 44px; box-shadow: var(--shadow-sm);
+            animation: aw-rise .55s var(--ease-settle) both;
           }}
           .aw-hero-grid {{ display: flex; gap: 36px; align-items: center; }}
           .aw-hero-text {{ flex: 1.5; min-width: 0; }}
@@ -209,6 +216,16 @@ def inject_theme() -> None:
             flex: 1 1 0; min-width: 150px; display: flex; align-items: center; gap: 11px;
             background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
             padding: 13px 16px;
+            animation: aw-rise .5s var(--ease-settle) both;
+            transition: transform .2s var(--ease-settle), border-color .2s var(--ease-settle),
+                        box-shadow .2s var(--ease-settle);
+          }}
+          .aw-trust .item:nth-child(1) {{ animation-delay: .08s; }}
+          .aw-trust .item:nth-child(2) {{ animation-delay: .15s; }}
+          .aw-trust .item:nth-child(3) {{ animation-delay: .22s; }}
+          .aw-trust .item:nth-child(4) {{ animation-delay: .29s; }}
+          .aw-trust .item:hover {{
+            transform: translateY(-3px); border-color: var(--marine); box-shadow: var(--shadow-md);
           }}
           .aw-trust .item svg {{ flex: none; color: var(--marine); }}
           .aw-trust .item b {{ display: block; font-size: 13px; color: var(--ink);
@@ -262,9 +279,12 @@ def inject_theme() -> None:
           .aw-card {{
             background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
             padding: 24px; height: 100%;
-            transition: transform .18s ease, border-color .18s ease;
+            transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
+                        box-shadow .22s var(--ease-settle);
           }}
-          .aw-card:hover {{ transform: translateY(-2px); border-color: var(--marine); }}
+          .aw-card:hover {{
+            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--shadow-md);
+          }}
           .aw-card h3 {{ margin: 14px 0 7px; font-size: 18px; font-family: var(--display);
             font-weight: 600; letter-spacing: -.02em; }}
           .aw-card p  {{ color: var(--ink-soft); font-size: 14px; line-height: 1.62; margin: 0; }}
@@ -276,7 +296,14 @@ def inject_theme() -> None:
 
           /* --- Process timeline (a real sequence → numbered ledger entries) --- */
           .aw-steps {{ display: flex; gap: 0; margin: 8px 0 4px; }}
-          .aw-step {{ flex: 1; position: relative; padding: 4px 18px 4px 0; }}
+          .aw-step {{
+            flex: 1; position: relative; padding: 4px 18px 4px 0;
+            animation: aw-rise .5s var(--ease-settle) both;
+          }}
+          .aw-step:nth-child(1) {{ animation-delay: .05s; }}
+          .aw-step:nth-child(2) {{ animation-delay: .13s; }}
+          .aw-step:nth-child(3) {{ animation-delay: .21s; }}
+          .aw-step:nth-child(4) {{ animation-delay: .29s; }}
           .aw-step .n {{
             width: 40px; height: 40px; border-radius: 3px; font-family: var(--mono);
             background: var(--paper2); border: 1px solid var(--marine); color: var(--marine);
@@ -296,10 +323,13 @@ def inject_theme() -> None:
           .aw-tier {{
             background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
             padding: 26px 24px; height: 100%;
-            transition: transform .18s ease, border-color .18s ease;
+            transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
+                        box-shadow .22s var(--ease-settle);
             display: flex; flex-direction: column;
           }}
-          .aw-tier:hover {{ transform: translateY(-2px); border-color: var(--marine); }}
+          .aw-tier:hover {{
+            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--shadow-md);
+          }}
           .aw-tier.feat {{ border: 1px solid var(--marine); border-top: 3px solid var(--gold); }}
           .aw-tier .badge {{ align-self: flex-start; background: var(--marine); color: var(--paper);
             font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
@@ -338,6 +368,11 @@ def inject_theme() -> None:
           .aw-quote {{
             background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
             padding: 24px; height: 100%; position: relative;
+            transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
+                        box-shadow .22s var(--ease-settle);
+          }}
+          .aw-quote:hover {{
+            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--shadow-md);
           }}
           .aw-quote .mark {{ font-family: var(--display); font-size: 46px; color: var(--gold);
             line-height: .5; display: block; height: 22px; }}
@@ -355,9 +390,12 @@ def inject_theme() -> None:
           .aw-insight {{
             background: var(--paper2); border: 1px solid var(--line); border-radius: 3px;
             overflow: hidden; height: 100%;
-            transition: transform .18s ease, border-color .18s ease;
+            transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
+                        box-shadow .22s var(--ease-settle);
           }}
-          .aw-insight:hover {{ transform: translateY(-2px); border-color: var(--marine); }}
+          .aw-insight:hover {{
+            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--shadow-md);
+          }}
           .aw-insight .top {{ height: 64px; background: var(--marine);
             display: flex; align-items: center; justify-content: flex-start; padding: 0 20px; }}
           .aw-insight .top span {{ color: var(--paper); font-size: 10.5px;
@@ -369,6 +407,40 @@ def inject_theme() -> None:
           .aw-insight p {{ font-size: 13px; color: var(--ink-soft); line-height: 1.55; margin: 0; }}
           .aw-insight .meta {{ font-size: 11px; color: var(--marine); font-weight: 500; margin-top: 10px;
             font-family: var(--mono); }}
+
+          /* --- Card-grid entrance stagger: left-to-right by column position.
+             Scoped by the card's own class, so this is safe to reuse across
+             every st.columns(3) row on the page (How we help / Services /
+             Testimonials / Insights) without a dedicated wrapper per row. --- */
+          div[data-testid="stColumn"]:nth-child(1) .aw-card,
+          div[data-testid="stColumn"]:nth-child(1) .aw-tier,
+          div[data-testid="stColumn"]:nth-child(1) .aw-quote,
+          div[data-testid="stColumn"]:nth-child(1) .aw-insight {{
+            animation: aw-rise .5s var(--ease-settle) both; animation-delay: .05s;
+          }}
+          div[data-testid="stColumn"]:nth-child(2) .aw-card,
+          div[data-testid="stColumn"]:nth-child(2) .aw-tier,
+          div[data-testid="stColumn"]:nth-child(2) .aw-quote,
+          div[data-testid="stColumn"]:nth-child(2) .aw-insight {{
+            animation: aw-rise .5s var(--ease-settle) both; animation-delay: .13s;
+          }}
+          div[data-testid="stColumn"]:nth-child(3) .aw-card,
+          div[data-testid="stColumn"]:nth-child(3) .aw-tier,
+          div[data-testid="stColumn"]:nth-child(3) .aw-quote,
+          div[data-testid="stColumn"]:nth-child(3) .aw-insight {{
+            animation: aw-rise .5s var(--ease-settle) both; animation-delay: .21s;
+          }}
+
+          /* Scroll-driven reveal — additive progressive enhancement only;
+             browsers without support simply keep the mount-triggered version
+             above. Same keyframe, so it reads as one consistent system. */
+          @supports (animation-timeline: view()) {{
+            .aw-card, .aw-tier, .aw-quote, .aw-insight, .aw-step {{
+              animation-delay: 0s;
+              animation-timeline: view();
+              animation-range: entry 0% cover 35%;
+            }}
+          }}
 
           /* --- Disclosures footer --- */
           .aw-foot {{
@@ -398,7 +470,11 @@ def inject_theme() -> None:
           /* --- Buttons --- */
           .stButton button, .stFormSubmitButton button {{
             border-radius: 3px; font-weight: 600; font-family: var(--sans);
-            transition: transform .15s ease, background .15s ease, border-color .15s ease;
+            transition: transform .16s var(--ease-settle), background .16s var(--ease-settle),
+                        border-color .16s var(--ease-settle), box-shadow .16s var(--ease-settle);
+          }}
+          .stButton button:active, .stFormSubmitButton button:active {{
+            transform: scale(.97); transition-duration: .08s;
           }}
           .stButton button[kind="primary"], .stButton button[kind="primaryFormSubmit"],
           .stFormSubmitButton button[kind="primaryFormSubmit"] {{
@@ -409,7 +485,7 @@ def inject_theme() -> None:
           .stButton button[kind="primary"]:hover, .stButton button[kind="primaryFormSubmit"]:hover,
           .stFormSubmitButton button[kind="primaryFormSubmit"]:hover {{
             background: var(--marine-dark); border-color: var(--marine-dark); color: #ffffff;
-            transform: translateY(-1px);
+            transform: translateY(-1px); box-shadow: var(--shadow-md);
           }}
           .stButton button[kind="secondary"] {{ color: var(--ink); border-color: var(--line);
             background: var(--paper2); }}
@@ -451,6 +527,11 @@ def inject_theme() -> None:
 
           hr {{ opacity: .4; border-color: var(--line); }}
           [data-testid="stExpander"] {{ border-radius: 3px; border-color: var(--line); }}
+
+          /* --- Loading state: on-brand spinner instead of Streamlit's default --- */
+          [data-testid="stSpinner"] {{ color: var(--marine); font-family: var(--mono); font-size: 13px; }}
+          [data-testid="stSpinner"] > div {{ color: var(--marine); }}
+          [data-testid="stSpinner"] svg {{ color: var(--marine) !important; }}
 
           @media (prefers-reduced-motion: reduce) {{
             * {{ transition: none !important; animation: none !important; }}
