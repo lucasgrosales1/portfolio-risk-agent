@@ -33,6 +33,13 @@ FALLBACK_RISK_FREE_RATE = 0.042
 CACHE_TTL_SECONDS = 60 * 60 * 12  # refresh prices at most twice a day
 TRADING_DAYS_PER_YEAR = 252
 
+# yfinance's own per-request defaults range from 10s to 30s depending on the
+# call, which is fine once data is flowing but too slow to sit through on a
+# cold Streamlit Cloud load if Yahoo is unreachable or just slow to answer.
+# An explicit, shorter timeout here means a failure surfaces as a clear
+# message in a few seconds instead of the page hanging.
+FETCH_TIMEOUT_SECONDS = 15
+
 
 class PriceDataError(RuntimeError):
     """Raised when market data can't be retrieved for a required ticker."""
@@ -84,14 +91,27 @@ def _download_history(tickers: list[str], period: str) -> pd.DataFrame:
     """Download daily closes. Returns a DataFrame with one column per ticker."""
     import yfinance as yf
 
-    raw = yf.download(
-        tickers=tickers,
-        period=period,
-        interval="1d",
-        auto_adjust=True,   # adjust for splits and dividends
-        progress=False,
-        threads=True,
-    )
+    try:
+        raw = yf.download(
+            tickers=tickers,
+            period=period,
+            interval="1d",
+            auto_adjust=True,   # adjust for splits and dividends
+            progress=False,
+            threads=True,
+            timeout=FETCH_TIMEOUT_SECONDS,
+        )
+    except Exception as exc:
+        # yfinance's underlying HTTP layer (curl_cffi/requests) can raise any
+        # of several timeout/connection exception types depending on where a
+        # cold Cloud load fails -- catching broadly and re-raising as our own
+        # PriceDataError is what lets the existing UI error handling (both
+        # call sites in app_views.py) show a clean message instead of a raw
+        # traceback crashing the page.
+        raise PriceDataError(
+            f"Could not reach the market data service for: {', '.join(tickers)}. "
+            f"This is usually transient -- please try again in a moment. ({exc})"
+        ) from exc
 
     if raw is None or raw.empty:
         raise PriceDataError(
@@ -225,7 +245,7 @@ def fetch_risk_free_rate() -> tuple[float, bool]:
     try:
         import yfinance as yf
 
-        hist = yf.Ticker(RISK_FREE_TICKER).history(period="5d")
+        hist = yf.Ticker(RISK_FREE_TICKER).history(period="5d", timeout=FETCH_TIMEOUT_SECONDS)
         if hist is not None and not hist.empty:
             # ^IRX quotes in percent — 4.25 means 4.25%.
             return float(hist["Close"].iloc[-1]) / 100.0, True

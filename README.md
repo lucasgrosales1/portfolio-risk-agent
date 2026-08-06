@@ -222,7 +222,7 @@ demonstrates its point with the same returns run in two orders — see
 
 ## Automated tests
 
-A 90+ test `pytest` suite covers the analytics and suitability engines with
+A 95+ test `pytest` suite covers the analytics and suitability engines with
 known-value assertions (fixed synthetic inputs → hand-verified expected
 outputs), the AI agent pair with a mocked Anthropic client, and an
 `AppTest` smoke check for all 5 pages plus the welcome screen. Fully
@@ -273,7 +273,7 @@ doesn't have many.
 - [x] Theme the remaining Streamlit-default charts (structured-product payoff diagrams)
 - [x] Pin `requirements.txt` to known-good versions
 - [x] Screen-reader accessible names on every button (Streamlit aria-label fix)
-- [ ] yfinance fetch timeout + graceful degradation on a cold Cloud load
+- [x] yfinance fetch timeout + graceful degradation on a cold Cloud load
 
 ---
 

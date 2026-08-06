@@ -1377,7 +1377,11 @@ def portfolio_analysis() -> None:
                         try:
                             portfolio = load_portfolio(DATA_DIR / csv)
                             analysis = run_analysis(portfolio, rec.recommended_model)
-                        except (PortfolioError, FileNotFoundError, ValueError, KeyError):
+                        except (PortfolioError, PriceDataError, FileNotFoundError,
+                                ValueError, KeyError) as exc:
+                            st.warning(f"Portfolio holdings analysis unavailable right now "
+                                       f"({exc}) -- showing the suitability plan without it.",
+                                       icon="⚠️")
                             analysis = None
                 generated[nm] = {
                     "id": f"sample_{nm}", "name": p.client_name,
