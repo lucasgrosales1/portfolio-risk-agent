@@ -163,17 +163,57 @@ def inject_theme() -> None:
           header[data-testid="stHeader"] {{ background: transparent; pointer-events: none; }}
           header[data-testid="stHeader"] * {{ pointer-events: auto; }}
 
-          /* Near-black navy base with soft glow blooms standing in for the
-             reference's glossy 3D spheres. */
-          [data-testid="stAppViewContainer"] {{
-            background:
-              radial-gradient(1100px 620px at 18% -8%, rgba(125,178,245,.20), transparent 60%),
-              radial-gradient(900px 520px at 92% 4%, rgba(165,237,238,.13), transparent 55%),
-              radial-gradient(700px 420px at 50% 30%, rgba(90,60,190,.10), transparent 60%),
-              {PAPER};
+          /* Near-black navy base — the moving color comes from .pw-bg-glow
+             (a fixed, animated layer) below, not a static gradient here. */
+          [data-testid="stAppViewContainer"] {{ background: {PAPER}; }}
+
+          .block-container {{
+            padding-top: 1.1rem; padding-bottom: 3rem; max-width: 1180px;
+            position: relative; z-index: 1;
           }}
 
-          .block-container {{ padding-top: 1.1rem; padding-bottom: 3rem; max-width: 1180px; }}
+          /* --- Living background: slow-drifting blurred color blooms, the
+             site's own palette in motion. transform/opacity only — no
+             background-position keyframes — per the motion rule. Fixed +
+             behind all content (z-index: 0 vs. .block-container's 1). --- */
+          .pw-bg-glow {{
+            position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+          }}
+          .pw-bg-glow .blob {{
+            position: absolute; border-radius: 50%; filter: blur(80px); will-change: transform;
+          }}
+          .pw-bg-glow .b1 {{
+            width: 680px; height: 680px; top: -220px; left: -140px; opacity: .42;
+            background: radial-gradient(circle, var(--glow-blue), transparent 70%);
+            animation: pw-drift-1 24s var(--ease-settle) infinite;
+          }}
+          .pw-bg-glow .b2 {{
+            width: 600px; height: 600px; top: 6%; right: -180px; opacity: .34;
+            background: radial-gradient(circle, var(--glow-cyan), transparent 70%);
+            animation: pw-drift-2 29s var(--ease-settle) infinite;
+          }}
+          .pw-bg-glow .b3 {{
+            width: 560px; height: 560px; bottom: -200px; left: 28%; opacity: .26;
+            background: radial-gradient(circle, var(--gold), transparent 72%);
+            animation: pw-drift-3 33s var(--ease-settle) infinite;
+          }}
+          .pw-bg-glow .b4 {{
+            width: 460px; height: 460px; bottom: 10%; right: 12%; opacity: .30;
+            background: radial-gradient(circle, var(--marine), transparent 72%);
+            animation: pw-drift-2 26s var(--ease-settle) infinite reverse;
+          }}
+          @keyframes pw-drift-1 {{
+            0%, 100% {{ transform: translate(0, 0) scale(1); }}
+            50%      {{ transform: translate(70px, 50px) scale(1.18); }}
+          }}
+          @keyframes pw-drift-2 {{
+            0%, 100% {{ transform: translate(0, 0) scale(1); }}
+            50%      {{ transform: translate(-60px, 65px) scale(1.12); }}
+          }}
+          @keyframes pw-drift-3 {{
+            0%, 100% {{ transform: translate(0, 0) scale(1); }}
+            50%      {{ transform: translate(50px, -55px) scale(1.2); }}
+          }}
           html, body, [class*="css"], .stMarkdown, p, li {{
             color: var(--ink); font-family: var(--sans);
           }}
@@ -780,6 +820,12 @@ def inject_theme() -> None:
             .pw-scroll-col {{ gap: 20px; padding: 12px 0; }}
           }}
         </style>
+        <div class="pw-bg-glow" aria-hidden="true">
+          <div class="blob b1"></div>
+          <div class="blob b2"></div>
+          <div class="blob b3"></div>
+          <div class="blob b4"></div>
+        </div>
         """,
         unsafe_allow_html=True,
     )
