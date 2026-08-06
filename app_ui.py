@@ -303,8 +303,13 @@ def inject_theme() -> None:
           .aw-hero-grid {{ display: block; max-width: 640px; }}
           .aw-hero-text {{ min-width: 0; }}
           .aw-hero-media {{ display: none; }}
-          .aw-hero h1 {{ color: var(--ink); font-size: 60px; margin: 0 0 18px; max-width: 14ch;
-            line-height: 1.02; font-weight: 800; letter-spacing: -.03em; }}
+          .aw-hero h1 {{
+            font-size: 60px; margin: 0 0 18px; max-width: 14ch;
+            line-height: 1.08; font-weight: 800; letter-spacing: -.03em;
+            background: linear-gradient(180deg, #FFFFFF 0%, #DCE8FA 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            filter: drop-shadow(0 2px 28px rgba(125,178,245,.28));
+          }}
           .aw-hero p  {{ color: var(--ink-soft); font-size: 17px; line-height: 1.68; margin: 0;
             max-width: 46ch; }}
           .aw-hero .eyebrow {{
@@ -347,8 +352,13 @@ def inject_theme() -> None:
             text-transform: uppercase; letter-spacing: .14em; font-size: 12px;
             color: var(--marine); font-weight: 600; margin: 4px 0 6px; font-family: var(--sans);
           }}
-          .aw-section-head {{ font-family: var(--display); font-size: 34px; color: var(--ink);
-            font-weight: 800; margin: 2px 0 8px; letter-spacing: -.02em; line-height: 1.12; }}
+          .aw-section-head {{
+            font-family: var(--display); font-size: 34px;
+            font-weight: 800; margin: 2px 0 8px; letter-spacing: -.02em; line-height: 1.16;
+            background: linear-gradient(180deg, #FFFFFF 0%, #E4ECF9 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            filter: drop-shadow(0 2px 18px rgba(125,178,245,.20));
+          }}
           .aw-section-sub {{ color: var(--ink-soft); font-size: 15px; margin: 0 0 8px; max-width: 62ch; }}
 
           /* Centered variant — the reference centers its dark feature sections. */
