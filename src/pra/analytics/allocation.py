@@ -144,11 +144,18 @@ def value_portfolio(portfolio: Portfolio, market: MarketData) -> AllocationResul
 
     positions: list[Position] = []
     for ticker, lots in lots_by_ticker.items():
-        meta = market.metadata.get(ticker, {})
+        is_cash = lots[0].asset_class == CASH
+        # Don't trust yfinance metadata for the cash placeholder ticker: "CASH"
+        # is also the real Nasdaq symbol for Pathward Financial, so a metadata
+        # lookup silently returns that unrelated company's name/sector instead
+        # of falling back to "Cash" — meta.get(..., default) only uses the
+        # default when the key is absent, not when yfinance returns a
+        # same-shaped-but-wrong answer.
+        meta = {} if is_cash else market.metadata.get(ticker, {})
         positions.append(
             Position(
                 ticker=ticker,
-                name=meta.get("name", "Cash" if ticker == "CASH" else ticker),
+                name="Cash" if is_cash else meta.get("name", ticker),
                 asset_class=lots[0].asset_class,
                 sector=meta.get("sector"),
                 lots=lots,

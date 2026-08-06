@@ -1058,6 +1058,45 @@ def _investment_score(plan) -> int:
     return max(0, min(100, round(score)))
 
 
+def _market_snapshot_rows(positions, market) -> list[dict]:
+    """Per-holding price, day change, and 52-week range from the same cached
+    price history the analytics already run on (market.prices / current_prices)
+    — not a separate data source, so it can never disagree with the rest of
+    the page. Tickers with no price series (e.g. CASH) show an em-dash.
+
+    Pre-formatted to plain strings rather than left as NaN + a NumberColumn
+    format: Streamlit's glide-data-grid renders a NaN cell under a custom
+    printf-style format as the literal text "None", not blank — formatting
+    here sidesteps that rather than fighting it.
+    """
+    rows = []
+    for p in positions:
+        # Cash has no real market series — "CASH" also happens to be Pathward
+        # Financial's real ticker, so market.prices["CASH"] is that unrelated
+        # stock's history, not a cash proxy. Never show it here.
+        series = market.prices.get(p.ticker) if p.asset_class != "Cash" else None
+        if series is not None:
+            series = series.dropna()
+        if series is not None and len(series) >= 2:
+            prev_close = float(series.iloc[-2])
+            last = float(series.iloc[-1])
+            change = last - prev_close
+            change_pct = (last - prev_close) / prev_close * 100 if prev_close else 0.0
+            window = series.tail(252)
+            day_change = f"{change:+.2f}"
+            day_change_pct = f"{change_pct:+.2f}%"
+            low_52w = f"${float(window.min()):.2f}"
+            high_52w = f"${float(window.max()):.2f}"
+        else:
+            day_change = day_change_pct = low_52w = high_52w = "—"
+        rows.append({
+            "Ticker": p.ticker, "Name": p.name, "Price": p.price,
+            "Day change": day_change, "Day change %": day_change_pct,
+            "52w low": low_52w, "52w high": high_52w,
+        })
+    return rows
+
+
 def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True) -> None:
     a, r, plan = result.allocation, result.risk, result.plan
     c1, c2, c3, c4 = st.columns(4)
@@ -1106,6 +1145,13 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
         "Unrealized": st.column_config.NumberColumn(format="$%,.0f"),
         "Weight": st.column_config.NumberColumn(format="%.1f%%"),
         "Return": st.column_config.NumberColumn(format="%.1f%%")})
+
+    st.markdown("#### Market snapshot")
+    st.caption("Price, day change, and 52-week range from the same cached market data "
+               "the analytics above already use.")
+    mdf = pd.DataFrame(_market_snapshot_rows(a.positions, result.market))
+    st.dataframe(mdf, hide_index=True, width="stretch",
+                 column_config={"Price": st.column_config.NumberColumn(format="$%.2f")})
 
     left, right = st.columns(2)
     with left:

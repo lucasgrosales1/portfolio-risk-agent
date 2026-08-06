@@ -119,3 +119,30 @@ def test_value_portfolio_unclassified_ticker_is_flagged():
 
     assert result.unclassified == ["WEIRD"]
     assert any("WEIRD" in w for w in result.warnings)
+
+
+def test_value_portfolio_cash_name_ignores_ticker_collision():
+    """"CASH" is also the real Nasdaq ticker for Pathward Financial, Inc. --
+    a yfinance metadata lookup for our cash placeholder can return that
+    unrelated company's real name/sector. The cash position must always be
+    labeled "Cash" regardless of what (if anything) metadata has under that
+    key, since it isn't a real security and its "metadata" is a coincidence.
+    """
+    index = pd.date_range("2024-01-01", periods=2, freq="D")
+    prices = pd.DataFrame({"VOO": [398.0, 400.0]}, index=index)
+    market = make_market_data(
+        prices, {"VOO": 400.0},
+        metadata={"CASH": {"name": "Pathward Financial, Inc.", "sector": "Financial Services"}},
+    )
+    holdings = [
+        Holding("VOO", 100, 300.0, date(2020, 1, 1), "taxable"),
+        Holding("CASH", 5000, 1.0, date(2022, 1, 1), "taxable"),
+    ]
+    portfolio = Portfolio(holdings=holdings, client_name="Cash Collision Test")
+
+    result = value_portfolio(portfolio, market)
+
+    cash = next(p for p in result.positions if p.ticker == "CASH")
+    assert cash.name == "Cash"
+    assert cash.sector is None
+    assert cash.price == 1.0
