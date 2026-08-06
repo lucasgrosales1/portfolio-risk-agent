@@ -10,6 +10,7 @@ that math: one writes the client-facing narrative, a second, independent one
 reviews it and flags any claim that doesn't trace back to a computed figure.
 Full architecture below.
 
+![Welcome](docs/screenshots/welcome.png)
 ![Home](docs/screenshots/home.png)
 
 ---
@@ -212,11 +213,11 @@ demonstrates its point with the same returns run in two orders — see
 
 ## Automated tests
 
-An 80+ test `pytest` suite covers the analytics and suitability engines with
+A 90+ test `pytest` suite covers the analytics and suitability engines with
 known-value assertions (fixed synthetic inputs → hand-verified expected
 outputs), the AI agent pair with a mocked Anthropic client, and an
-`AppTest` smoke check for all 5 pages. Fully offline — nothing hits yfinance
-or the Anthropic API.
+`AppTest` smoke check for all 5 pages plus the welcome screen. Fully
+offline — nothing hits yfinance or the Anthropic API.
 
 ```bash
 pip install -r requirements-dev.txt
@@ -256,9 +257,10 @@ doesn't have many.
       sequence-of-returns stress test, structured-product gating, IPS
 - [x] Automated test suite (analytics, suitability, agents, page smoke tests)
 - [x] Deployed live on Streamlit Community Cloud
+- [x] Full visual redesign — dark theme, motion/scroll polish, one-time welcome screen
+- [x] Native dataframe/table theming; downloadable report + IPS preview readability
+- [ ] Theme the remaining Streamlit-default charts (structured-product payoff diagrams)
 - [ ] yfinance fetch timeout + graceful degradation on a cold Cloud load
-- [ ] Theme the remaining Streamlit-default charts/tables and the downloadable
-      report/IPS to match the app's own design system
 - [ ] Pin `requirements.txt` to known-good versions
 
 ---
