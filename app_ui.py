@@ -8,6 +8,7 @@ dependency on any of this; the web layer is a thin shell over the real engine.
 from __future__ import annotations
 
 import base64
+import math
 from pathlib import Path
 
 import streamlit as st
@@ -398,6 +399,70 @@ def inject_theme() -> None:
           .pw-orb-label {{ color: rgba(255,255,255,.55); font-family: var(--sans);
             font-size: 13px; font-weight: 600; }}
 
+          /* --- Step photo panel: real photography, tinted toward the palette
+             so it reads as part of the dark theme rather than a pasted-in
+             light photo. --- */
+          .pw-step-photo {{
+            width: 100%; aspect-ratio: 4/3; border-radius: 16px; position: relative;
+            overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+          }}
+          .pw-step-photo img {{
+            width: 100%; height: 100%; object-fit: cover; display: block;
+            filter: saturate(.8) brightness(.82) contrast(1.02);
+          }}
+          .pw-step-photo::after {{
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(155deg, rgba(5,6,28,.18) 0%, rgba(8,9,36,.6) 100%);
+          }}
+          .pw-step-photo .n {{
+            position: absolute; top: 16px; left: 18px; z-index: 1;
+            color: rgba(255,255,255,.9); font-family: var(--sans);
+            font-size: 13px; font-weight: 600; letter-spacing: .04em;
+          }}
+
+          /* --- Score gauge card (Protection / Investment score) --- */
+          .pw-score-card {{
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 18px;
+            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            padding: 28px 26px; height: 100%; display: flex; flex-direction: column;
+            transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
+                        box-shadow .22s var(--ease-settle);
+          }}
+          .pw-score-card:hover {{
+            transform: translateY(-4px); border-color: var(--marine); box-shadow: var(--glow-ring);
+          }}
+          .pw-score-head {{ display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; margin-bottom: 6px; }}
+          .pw-score-head h3 {{ font-size: 18px; margin: 0; font-family: var(--display);
+            font-weight: 700; }}
+          .pw-score-pill {{
+            font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+            padding: 3px 10px; border-radius: 999px; border: 1px solid; background: rgba(255,255,255,.04);
+            flex: none;
+          }}
+          .pw-score-gauge {{ position: relative; margin: 10px 0 2px; }}
+          .pw-score-svg {{ width: 100%; display: block; overflow: visible; }}
+          .pw-score-svg .track {{ fill: none; stroke: rgba(255,255,255,.12); stroke-width: 9; }}
+          .pw-score-svg .fill {{ fill: none; stroke-width: 9; stroke-linecap: round; }}
+          .pw-score-value {{ position: absolute; left: 0; right: 0; bottom: -4px; text-align: center; }}
+          .pw-score-value .v {{ font-size: 34px; font-weight: 800; font-family: var(--display);
+            color: var(--ink); line-height: 1; }}
+          .pw-score-value .k {{ font-size: 11px; color: var(--ink-soft); text-transform: uppercase;
+            letter-spacing: .08em; margin-top: 5px; }}
+          .pw-score-card p {{ color: var(--ink-soft); font-size: 14px; line-height: 1.6;
+            margin: 14px 0 18px; flex: 1; }}
+          .pw-score-card a.pw-score-btn, a.pw-score-btn, .pw-score-btn {{
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            background: transparent; border: 1px solid var(--line); border-radius: 999px;
+            color: var(--ink) !important; font-family: var(--sans); font-weight: 600;
+            font-size: 14px; padding: 11px 20px; text-decoration: none !important;
+            transition: border-color .2s var(--ease-settle), background .2s var(--ease-settle),
+                        transform .16s var(--ease-settle);
+          }}
+          .pw-score-btn:hover {{ border-color: var(--marine); background: var(--soft); }}
+          .pw-score-btn:active {{ transform: scale(.97); }}
+          .pw-score-btn .ico {{ font-size: 13px; }}
+
           /* --- Floating product screenshot --- */
           .pw-shot {{
             border-radius: 20px; border: 1px solid var(--line); overflow: hidden;
@@ -416,9 +481,9 @@ def inject_theme() -> None:
           }}
           .pw-scroll-col {{
             flex: 1.15; min-width: 0; display: flex; flex-direction: column;
-            gap: 9vh; padding: 6vh 0;
+            gap: 3.5vh; padding: 4vh 0;
           }}
-          .pw-scroll-card {{ min-height: 42vh; display: flex; align-items: center; }}
+          .pw-scroll-card {{ min-height: 30vh; display: flex; align-items: center; }}
           .pw-scroll-card .aw-card {{ width: 100%; }}
 
           /* --- Numbered spotlight (the reference's "Key Features" blocks) --- */
@@ -987,6 +1052,73 @@ def orb_panel_html(variant: int = 1, label: str = "") -> str:
     bg = _ORB_VARIANTS.get(variant, _ORB_VARIANTS[1])
     tag = f'<span class="pw-orb-label">{label}</span>' if label else ""
     return f'<div class="pw-orb-panel" style="background-image:{bg};">{tag}</div>'
+
+
+def step_photo_html(name: str, label: str = "", alt: str = "") -> str:
+    """A process-step photo from assets/step-{name}.jpg, tinted to the palette.
+
+    Falls back to the CSS glow-orb panel if the file isn't present, so a
+    missing asset never breaks the page.
+    """
+    assets = Path(__file__).parent / "assets"
+    for ext in ("jpg", "jpeg", "png", "webp"):
+        f = assets / f"step-{name}.{ext}"
+        if f.exists():
+            b64 = base64.b64encode(f.read_bytes()).decode()
+            mime = "jpeg" if ext == "jpg" else ext
+            tag = f'<span class="n">{label}</span>' if label else ""
+            return (f'<div class="pw-step-photo">'
+                    f'<img src="data:image/{mime};base64,{b64}" alt="{alt}"/>{tag}</div>')
+    return orb_panel_html(1, label)
+
+
+def score_gauge_html(title: str, score: int, description: str, learn_more_anchor: str = "") -> str:
+    """A half-circle gauge score card. `score` is 0-100 and must already be a
+    real computed figure (see app_views._protection_score / _investment_score)
+    — this function only renders it, never invents it.
+
+    Strength tier drives the arc color, reusing the same semantic palette as
+    gains/losses elsewhere (--pos/--gold/--neg) rather than new colors.
+    """
+    max_score = 100
+    frac = max(0.0, min(1.0, score / max_score))
+    if frac >= 0.8:
+        strength, color = "Strong", "var(--pos)"
+    elif frac >= 0.4:
+        strength, color = "Moderate", "var(--gold)"
+    else:
+        strength, color = "Weak", "var(--neg)"
+
+    cx, cy, r = 50.0, 46.0, 40.0
+    theta = math.radians(180 - frac * 180)
+    x1 = cx + r * math.cos(theta)
+    y1 = cy - r * math.sin(theta)
+    fill_path = f"M {cx - r},{cy} A {r},{r} 0 0 1 {x1:.2f},{y1:.2f}"
+    track_path = f"M {cx - r},{cy} A {r},{r} 0 1 1 {cx + r},{cy}"
+
+    btn = (f'<a class="pw-score-btn" href="#{learn_more_anchor}">Learn more '
+           f'<span class="ico">&rarr;</span></a>') if learn_more_anchor else ""
+
+    return f"""
+    <div class="pw-score-card">
+      <div class="pw-score-head">
+        <h3>{title}</h3>
+        <span class="pw-score-pill" style="color:{color};border-color:{color};">{strength}</span>
+      </div>
+      <div class="pw-score-gauge">
+        <svg viewBox="0 0 100 55" class="pw-score-svg" aria-hidden="true">
+          <path d="{track_path}" class="track"/>
+          <path d="{fill_path}" stroke="{color}" class="fill"/>
+        </svg>
+        <div class="pw-score-value">
+          <div class="v">{score}</div>
+          <div class="k">out of {max_score}</div>
+        </div>
+      </div>
+      <p>{description}</p>
+      {btn}
+    </div>
+    """
 
 
 def advisor_photo_html(initials: str = "LR") -> str:

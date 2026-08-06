@@ -372,20 +372,20 @@ def home() -> None:
     st.write("")
     steps = [
         ("01", "Discovery", "We listen first — your goals, timeline, and what financial "
-         "security means to your family.", 1),
+         "security means to your family.", "discovery"),
         ("02", "Plan", "We build a written plan: suitable allocation, retirement readiness, "
-         "and the trade-offs behind each choice.", 2),
+         "and the trade-offs behind each choice.", "plan"),
         ("03", "Implement", "We put the plan to work — tax-aware, account by account, with "
-         "everything documented in your IPS.", 3),
+         "everything documented in your IPS.", "implement"),
         ("04", "Review", "We meet on a set cadence to rebalance, stress-test, and adjust as "
-         "your life changes.", 1),
+         "your life changes.", "review"),
     ]
-    for i, (n, title, body, variant) in enumerate(steps):
+    for i, (n, title, body, photo) in enumerate(steps):
         rev = " rev" if i % 2 else ""
         st.markdown(
             f"""
             <div class="pw-spot{rev}">
-              <div class="media">{ui.orb_panel_html(variant, n)}</div>
+              <div class="media">{ui.step_photo_html(photo, n, title)}</div>
               <div class="text">
                 <div class="eyebrow">Step {n}</div>
                 <h3>{title}</h3>
@@ -1033,6 +1033,31 @@ def _render_sample_client(rec_wrap: dict) -> None:
     _render_recommendation(rec_wrap["rec"])
 
 
+def _protection_score(concentration) -> int:
+    """100 minus a deduction per concentration flag, scaled by severity.
+
+    Every input here is a real ConcentrationFlag already computed by
+    analytics/concentration.py — this only maps flags to a 0-100 display
+    score, it doesn't invent risk assessment of its own.
+    """
+    deductions = {"high": 22, "moderate": 12, "low": 5}
+    score = 100 - sum(deductions.get(f.severity, 5) for f in concentration.flags)
+    return max(0, min(100, round(score)))
+
+
+def _investment_score(plan) -> int:
+    """100 minus scaled average absolute drift from the target allocation.
+
+    Drift comes straight from analytics/rebalance.py's ClassDrift.drift —
+    the same number already shown in the Rebalancing table below.
+    """
+    if not plan.drifts:
+        return 100
+    avg_abs_drift = sum(abs(d.drift) for d in plan.drifts) / len(plan.drifts)
+    score = 100 - avg_abs_drift * 100 * 2.2
+    return max(0, min(100, round(score)))
+
+
 def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True) -> None:
     a, r, plan = result.allocation, result.risk, result.plan
     c1, c2, c3, c4 = st.columns(4)
@@ -1043,6 +1068,31 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
               f"S&P {r.benchmark_volatility:.1%}", delta_color="off")
     c4.metric("Max drawdown", f"{r.max_drawdown:.1%}", f"S&P {r.benchmark_max_drawdown:.1%}",
               delta_color="off")
+
+    st.write("")
+    s1, s2 = st.columns(2)
+    with s1:
+        st.markdown(
+            ui.score_gauge_html(
+                "Protection Score", _protection_score(result.concentration),
+                "How well-diversified this portfolio is against a single position, "
+                "sector, or employer-stock shock — derived from the concentration "
+                "flags below. Higher means fewer, smaller risk-of-loss clusters.",
+                learn_more_anchor="pra-concentration",
+            ),
+            unsafe_allow_html=True,
+        )
+    with s2:
+        st.markdown(
+            ui.score_gauge_html(
+                "Investment Score", _investment_score(plan),
+                "How closely current holdings track the target allocation — derived "
+                "from the rebalancing drift below. Higher means less deviation from "
+                "the suitable model.",
+                learn_more_anchor="pra-rebalancing",
+            ),
+            unsafe_allow_html=True,
+        )
 
     st.markdown("#### Holdings")
     df = pd.DataFrame([{
@@ -1071,6 +1121,7 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
                              f"{r.benchmark_annualized_return:.1%}", "—", "1.00", "1.00"]}),
             hide_index=True, width="stretch")
     with right:
+        st.markdown('<div id="pra-concentration"></div>', unsafe_allow_html=True)
         st.markdown("#### Concentration")
         if not result.concentration.flags:
             st.success("No concentration guidelines exceeded.", icon="✅")
@@ -1078,6 +1129,7 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
             color = {"high": "🔴", "moderate": "🟠", "low": "🟡"}.get(f.severity, "⚪")
             st.markdown(f"{color} **{f.subject}** ({f.weight:.0%}) — {f.message}")
 
+    st.markdown('<div id="pra-rebalancing"></div>', unsafe_allow_html=True)
     st.markdown("#### Rebalancing")
     st.dataframe(pd.DataFrame({
         "Asset class": [d.asset_class for d in plan.drifts],
