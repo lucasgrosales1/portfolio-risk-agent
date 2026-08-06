@@ -11,6 +11,7 @@ import base64
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 # --------------------------------------------------------------------------
 # Branding — swap FIRM_NAME for any firm's name.
@@ -147,6 +148,7 @@ def inject_theme() -> None:
             --glass: rgba(11,12,46,.58);
             --glass-border: rgba(255,255,255,.10);
             --glass-blur: blur(20px) saturate(140%);
+            --scroll-y: 0;
           }}
 
           @keyframes aw-rise {{
@@ -180,33 +182,38 @@ def inject_theme() -> None:
             position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
           }}
           .pw-bg-glow .blob {{
-            position: absolute; border-radius: 50%; filter: blur(64px); will-change: transform;
-            mix-blend-mode: screen;
+            position: absolute; border-radius: 50%; filter: blur(64px);
+            will-change: transform, translate; mix-blend-mode: screen;
           }}
           .pw-bg-glow .b1 {{
             width: 900px; height: 900px; top: -280px; left: -220px; opacity: .62;
             background: radial-gradient(circle, var(--glow-blue), transparent 68%);
             animation: pw-drift-1 15s var(--ease-settle) infinite;
+            translate: calc(var(--scroll-y, 0) * -0.07px) calc(var(--scroll-y, 0) * 0.05px);
           }}
           .pw-bg-glow .b2 {{
             width: 820px; height: 820px; top: -4%; right: -240px; opacity: .55;
             background: radial-gradient(circle, var(--glow-cyan), transparent 68%);
             animation: pw-drift-2 18s var(--ease-settle) infinite;
+            translate: calc(var(--scroll-y, 0) * 0.06px) calc(var(--scroll-y, 0) * -0.04px);
           }}
           .pw-bg-glow .b3 {{
             width: 760px; height: 760px; bottom: -260px; left: 20%; opacity: .48;
             background: radial-gradient(circle, var(--gold), transparent 70%);
             animation: pw-drift-3 21s var(--ease-settle) infinite;
+            translate: calc(var(--scroll-y, 0) * -0.05px) calc(var(--scroll-y, 0) * -0.06px);
           }}
           .pw-bg-glow .b4 {{
             width: 640px; height: 640px; bottom: 2%; right: 6%; opacity: .5;
             background: radial-gradient(circle, var(--marine), transparent 70%);
             animation: pw-drift-2 17s var(--ease-settle) infinite reverse;
+            translate: calc(var(--scroll-y, 0) * 0.08px) calc(var(--scroll-y, 0) * 0.03px);
           }}
           .pw-bg-glow .b5 {{
             width: 560px; height: 560px; top: 34%; left: 42%; opacity: .34;
             background: radial-gradient(circle, var(--teal), transparent 70%);
             animation: pw-drift-3 24s var(--ease-settle) infinite reverse;
+            translate: calc(var(--scroll-y, 0) * -0.06px) calc(var(--scroll-y, 0) * 0.07px);
           }}
           @keyframes pw-drift-1 {{
             0%, 100% {{ transform: translate(0, 0) scale(1); }}
@@ -269,6 +276,8 @@ def inject_theme() -> None:
             background: radial-gradient(circle at 35% 30%,
               rgba(255,255,255,.55), var(--glow-blue) 32%, var(--teal) 62%, transparent 75%);
             filter: blur(2px); opacity: .55;
+            animation: pw-orb-float-1 13s ease-in-out infinite;
+            translate: calc(var(--scroll-y, 0) * -0.12px) calc(var(--scroll-y, 0) * 0.18px);
           }}
           .aw-hero::after {{
             content: ""; position: absolute; bottom: -60px; right: 18%;
@@ -276,6 +285,16 @@ def inject_theme() -> None:
             background: radial-gradient(circle at 40% 30%,
               rgba(255,255,255,.5), var(--glow-cyan) 40%, transparent 78%);
             opacity: .4;
+            animation: pw-orb-float-2 10s ease-in-out infinite;
+            translate: calc(var(--scroll-y, 0) * 0.16px) calc(var(--scroll-y, 0) * -0.1px);
+          }}
+          @keyframes pw-orb-float-1 {{
+            0%, 100% {{ transform: translate(0, 0) scale(1); }}
+            50%      {{ transform: translate(-30px, 34px) scale(1.08); }}
+          }}
+          @keyframes pw-orb-float-2 {{
+            0%, 100% {{ transform: translate(0, 0) scale(1); }}
+            50%      {{ transform: translate(22px, -26px) scale(1.14); }}
           }}
           .aw-hero > * {{ position: relative; z-index: 1; }}
           /* Single-column hero — the reference has no side image; the product
@@ -809,7 +828,7 @@ def inject_theme() -> None:
             font-family: var(--display); font-weight: 600; }}
 
           @media (prefers-reduced-motion: reduce) {{
-            * {{ transition: none !important; animation: none !important; }}
+            * {{ transition: none !important; animation: none !important; translate: none !important; }}
           }}
           @media (max-width: 820px) {{
             .aw-hero {{ padding: 40px 12px 28px; }}
@@ -835,6 +854,42 @@ def inject_theme() -> None:
         </div>
         """,
         unsafe_allow_html=True,
+    )
+    _scroll_bridge()
+
+
+def _scroll_bridge() -> None:
+    """Sync the real page's scroll position onto --scroll-y on <html>.
+
+    st.markdown()-injected HTML doesn't execute <script> tags (standard
+    innerHTML behavior), so a scroll listener can't run there. A components.v1
+    iframe *does* get a real document with working <script>, and — since it's
+    served same-origin by Streamlit — can reach window.parent.document, which
+    is what makes this work at all. Zero-height and pointer-events don't
+    matter here since nothing about the iframe itself is visible; only its
+    effect (writing a CSS variable the theme's CSS reads) is.
+
+    Streamlit doesn't scroll window/body — the page content lives in an inner
+    <section data-testid="stMain"> that scrolls internally, confirmed by
+    inspecting scrollTop across the real DOM (window.scrollY stays 0 the whole
+    time). That element, not window, is the one to watch.
+    """
+    components.html(
+        """
+        <script>
+        function tick() {
+          try {
+            const doc = window.parent.document;
+            const main = doc.querySelector('[data-testid="stMain"]');
+            const y = main ? main.scrollTop : (window.parent.scrollY || doc.documentElement.scrollTop || 0);
+            doc.documentElement.style.setProperty('--scroll-y', y);
+          } catch (e) { /* cross-origin or no parent — leave --scroll-y at its default */ }
+          requestAnimationFrame(tick);
+        }
+        tick();
+        </script>
+        """,
+        height=0,
     )
 
 
