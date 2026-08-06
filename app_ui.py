@@ -144,6 +144,9 @@ def inject_theme() -> None:
             --shadow-md: 0 30px 70px rgba(0,0,0,.55);
             --glow-ring: 0 0 0 1px rgba(125,178,245,.22), 0 20px 50px rgba(0,0,0,.45);
             --ease-settle: cubic-bezier(.16,1,.3,1);
+            --glass: rgba(11,12,46,.58);
+            --glass-border: rgba(255,255,255,.10);
+            --glass-blur: blur(20px) saturate(140%);
           }}
 
           @keyframes aw-rise {{
@@ -351,9 +354,13 @@ def inject_theme() -> None:
           .pw-spot p {{ color: var(--ink-soft); font-size: 15.5px; line-height: 1.65; margin: 0;
             max-width: 42ch; }}
 
-          /* --- Cards --- */
+          /* --- Cards: frosted glass — translucent + blurred, so the page's
+             glow orbs read through the surface instead of a flat panel. --- */
+          .aw-card, .aw-tier, .aw-quote, .aw-insight {{
+            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+          }}
           .aw-card {{
-            background: var(--paper2); border: 1px solid var(--line); border-radius: 18px;
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 18px;
             padding: 26px; height: 100%;
             transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
                         box-shadow .22s var(--ease-settle);
@@ -401,7 +408,7 @@ def inject_theme() -> None:
 
           /* --- Service / fee tiers --- */
           .aw-tier {{
-            background: var(--paper2); border: 1px solid var(--line); border-radius: 18px;
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 18px;
             padding: 28px 26px; height: 100%;
             transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
                         box-shadow .22s var(--ease-settle);
@@ -446,7 +453,7 @@ def inject_theme() -> None:
 
           /* --- Testimonials --- */
           .aw-quote {{
-            background: var(--paper2); border: 1px solid var(--line); border-radius: 18px;
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 18px;
             padding: 26px; height: 100%; position: relative;
             transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
                         box-shadow .22s var(--ease-settle);
@@ -468,7 +475,7 @@ def inject_theme() -> None:
 
           /* --- Insights --- */
           .aw-insight {{
-            background: var(--paper2); border: 1px solid var(--line); border-radius: 18px;
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 18px;
             overflow: hidden; height: 100%;
             transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle),
                         box-shadow .22s var(--ease-settle);
@@ -572,7 +579,8 @@ def inject_theme() -> None:
 
           /* --- Metrics --- */
           [data-testid="stMetric"] {{
-            background: var(--paper2); border: 1px solid var(--line);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
             border-bottom: 2px solid var(--marine); border-radius: 14px; padding: 14px 18px;
           }}
           [data-testid="stMetricValue"] {{ font-size: 24px; color: var(--ink);
