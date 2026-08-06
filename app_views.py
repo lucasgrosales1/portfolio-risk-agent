@@ -718,7 +718,8 @@ def dashboard() -> None:
     store = _shared_store()
     clients = _sim_clients()
     surveys = store["surveys"]
-    pending_invites = [inv for inv in store["invites"].values() if inv["status"] == "pending"]
+    pending_invites = [(tok, inv) for tok, inv in store["invites"].items()
+                       if inv["status"] == "pending"]
     today = dt.date.today()
     incomplete = [c for c in clients if not c["complete"]]
     week = [c for c in clients if 0 <= (c["meeting"] - today).days <= 7]
@@ -792,7 +793,8 @@ def dashboard() -> None:
         st.divider()
         with st.expander(f"✉️ Awaiting response — {len(pending_invites)} survey invite"
                           f"{'s' if len(pending_invites) != 1 else ''} sent", expanded=True):
-            for inv in sorted(pending_invites, key=lambda i: i["created_at"], reverse=True):
+            for tok, inv in sorted(pending_invites, key=lambda pair: pair[1]["created_at"],
+                                   reverse=True):
                 with st.container(border=True):
                     st.markdown(
                         f"**{inv['name']}** — sent {inv['created_at']:%b %d, %I:%M %p}  \n"
@@ -801,6 +803,10 @@ def dashboard() -> None:
                         + (f" · 📞 {inv['phone']}" if inv.get("phone") else "")
                         + "</span>",
                         unsafe_allow_html=True)
+                    # Lets the advisor recover the link if they've navigated away
+                    # from Client Survey since creating it -- otherwise it only
+                    # ever existed in that one page render.
+                    ui.invite_link_html(tok)
 
     # --- Review client surveys (real submissions) ------------------------
     st.divider()
