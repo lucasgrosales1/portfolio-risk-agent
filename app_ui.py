@@ -157,7 +157,11 @@ def inject_theme() -> None:
           #MainMenu {{ visibility: hidden; }}
           footer {{ visibility: hidden; }}
           [data-testid="stToolbar"] {{ visibility: hidden; }}
-          header[data-testid="stHeader"] {{ background: transparent; }}
+          /* Transparent but full-width + high z-index — without this it silently
+             intercepts every hover/click in the top ~60px band (including the
+             wordmark), since it sits invisibly above the content there. */
+          header[data-testid="stHeader"] {{ background: transparent; pointer-events: none; }}
+          header[data-testid="stHeader"] * {{ pointer-events: auto; }}
 
           /* Near-black navy base with soft glow blooms standing in for the
              reference's glossy 3D spheres. */
