@@ -23,7 +23,7 @@ if _SRC.exists() and str(_SRC) not in sys.path:
 import streamlit as st  # noqa: E402
 
 import app_ui as ui  # noqa: E402
-from app_views import PAGES  # noqa: E402
+from app_views import PAGES, render_client_invite  # noqa: E402
 
 _FAVICON = Path(__file__).parent / "assets" / "favicon.png"
 st.set_page_config(
@@ -34,7 +34,14 @@ st.set_page_config(
 
 ui.inject_theme()
 
-if not st.session_state.get("welcomed", False):
+_invite_token = st.query_params.get("invite")
+
+if _invite_token:
+    # A client following a link an advisor sent them — takes priority over
+    # everything else (the welcome splash, the nav bar): they get a stripped
+    # view scoped to that one survey, never the advisor workspace.
+    render_client_invite(_invite_token)
+elif not st.session_state.get("welcomed", False):
     # First thing a fresh session sees — a one-time splash, not a page. Once
     # dismissed for this session, every subsequent rerun (including nav
     # clicks, which themselves trigger a rerun) skips straight past this.

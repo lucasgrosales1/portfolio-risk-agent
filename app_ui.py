@@ -914,6 +914,14 @@ def inject_theme() -> None:
           .pw-dropdown-item:last-child {{ border-bottom: none; }}
           .pw-dropdown-item span {{ color: var(--ink-soft); font-size: 12px; display: block; }}
 
+          /* --- Client-invite link display --- */
+          .pw-invite-link {{
+            background: var(--soft); border: 1px solid var(--line); border-radius: 8px;
+            padding: 10px 14px; font-family: var(--mono); font-size: 13px; color: var(--ink);
+            word-break: break-all; -webkit-user-select: all; user-select: all;
+            margin: 8px 0 4px; cursor: text;
+          }}
+
           /* --- Bar chart (real AUM figures, no charting library needed) --- */
           .pw-bar-chart {{ display: flex; flex-direction: column; gap: 12px; }}
           .pw-bar-row {{ display: grid; grid-template-columns: 160px 1fr 90px; gap: 14px;
@@ -989,6 +997,42 @@ def _scroll_bridge() -> None:
           requestAnimationFrame(tick);
         }
         tick();
+        </script>
+        """,
+        height=0,
+    )
+
+
+def invite_link_html(token: str) -> None:
+    """Displays a client-invite link, computed client-side.
+
+    Streamlit has no server-side API for "the public URL this app is
+    running at" (it doesn't know whether it's localhost:8501 or the deployed
+    streamlit.app domain). window.parent.location does know, so this reads
+    it the same cross-frame way _scroll_bridge reads scroll position — a
+    components.v1 iframe reaching into the parent document, since a
+    st.markdown()-injected <script> tag would never execute at all.
+    """
+    box_id = f"pw-invite-link-{token}"
+    st.markdown(
+        f'<div id="{box_id}" class="pw-invite-link">Building link…</div>',
+        unsafe_allow_html=True,
+    )
+    components.html(
+        f"""
+        <script>
+        try {{
+          const doc = window.parent.document;
+          const el = doc.getElementById("{box_id}");
+          if (el) {{
+            el.textContent = window.parent.location.origin
+              + window.parent.location.pathname + "?invite={token}";
+          }}
+        }} catch (e) {{
+          const doc = window.parent.document;
+          const el = doc.getElementById("{box_id}");
+          if (el) el.textContent = "?invite={token}  (append this to your app's URL)";
+        }}
         </script>
         """,
         height=0,

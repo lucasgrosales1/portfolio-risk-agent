@@ -151,6 +151,15 @@ enable the AI agent pair, copy `.env.example` to `.env` and add a key from
 [console.anthropic.com](https://console.anthropic.com). Cost is roughly two
 cents per report (one Sonnet call, one Haiku call).
 
+**No email service configured, either.** The Client Survey page's "Send this
+survey to a client" panel generates a real, working `?invite=<token>` link
+(routed in `streamlit_app.py`, stored in the shared `st.cache_resource` store
+in `app_views.py`) but stops short of sending it — the advisor copies and
+sends it themselves. Wiring a provider (e.g. SendGrid, Postmark, or SES)
+would mean adding a `send_invite_email()` call next to where the token is
+created in `_render_send_to_client_panel()`; the demo intentionally doesn't
+fake that last step.
+
 ### Portfolio file format
 
 One row per **tax lot**, not per ticker — the same holding bought on three dates
@@ -259,6 +268,8 @@ doesn't have many.
 - [x] Deployed live on Streamlit Community Cloud
 - [x] Full visual redesign — dark theme, motion/scroll polish, one-time welcome screen
 - [x] Native dataframe/table theming; downloadable report + IPS preview readability
+- [x] Cross-session client survey delivery — advisor generates a shareable
+      invite link; the client's response appears on the advisor's Dashboard
 - [ ] Theme the remaining Streamlit-default charts (structured-product payoff diagrams)
 - [ ] yfinance fetch timeout + graceful degradation on a cold Cloud load
 - [ ] Pin `requirements.txt` to known-good versions

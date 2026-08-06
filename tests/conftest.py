@@ -17,6 +17,22 @@ import pytest
 import pra.prices as prices_module
 from pra.prices import MarketData
 
+import app_views
+
+
+@pytest.fixture(autouse=True)
+def _reset_shared_store():
+    """app_views._shared_store is an st.cache_resource -- the same dict is
+    returned to every caller for the life of the process, which is the whole
+    point (it's what lets one browser session's survey submission show up in
+    another's Dashboard). But that also means it survives across separate
+    AppTest.from_file() instantiations within one pytest run, unlike
+    session_state, which is naturally fresh each time. Without this, a
+    survey/invite/lead created by one test would leak into the next."""
+    app_views._shared_store.clear()
+    yield
+    app_views._shared_store.clear()
+
 
 def make_market_data(
     prices: pd.DataFrame,

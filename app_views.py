@@ -18,10 +18,12 @@ connect-a-rep actions are simulated and labeled as such.
 from __future__ import annotations
 
 import datetime as dt
+import secrets
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 import app_ui as ui
 from pra.config import has_api_key
@@ -61,6 +63,29 @@ SAMPLE_PORTFOLIOS = {
 ASSET_LABELS = ["Cash & savings", "Brokerage & investment accounts",
                 "Retirement accounts (401k, IRA)", "Home value", "Other assets"]
 LIABILITY_LABELS = ["Mortgage", "Auto & student loans", "Credit cards", "Other debt"]
+
+
+# ==========================================================================
+# Shared (cross-session) store
+# ==========================================================================
+@st.cache_resource
+def _shared_store() -> dict:
+    """Process-wide state, shared across every visitor -- unlike
+    st.session_state, which is isolated per browser tab/connection and can
+    never see what a different session submitted. This is what actually lets
+    a client fill out a survey on their own device and have it show up on
+    the advisor's dashboard in a different session.
+
+    Trade-off, stated plainly: this resets whenever the app process restarts
+    (a redeploy, or a Streamlit Community Cloud sleep/wake cycle). That's a
+    real limitation for a demo, not a system of record -- surviving restarts
+    permanently would need an external database, which this project doesn't
+    have. @st.cache_resource guarantees the same dict is returned to every
+    caller for the life of the process, which is the only property needed
+    here.
+    """
+    return {"surveys": [], "survey_seq": 0, "invites": {}, "demo_seeded": False,
+            "consult_leads": []}
 
 
 # ==========================================================================
@@ -120,10 +145,13 @@ def _portfolio_picker(context: str, navigate: bool = False) -> None:
 
 def _ensure_demo_survey() -> None:
     """Seed one realistic demo client so the full analysis and IPS can be shown
-    without filling out the survey first."""
-    if st.session_state.get("demo_seeded"):
+    without filling out the survey first. Seeded once per process (via the
+    shared store's own flag, not session_state) so every visitor sees the
+    same single demo entry rather than each session growing its own copy."""
+    store = _shared_store()
+    if store["demo_seeded"]:
         return
-    st.session_state["demo_seeded"] = True
+    store["demo_seeded"] = True
     p = ClientProfile(
         client_name="The Rivera Family", age=52, dependents=2, time_horizon_years=13,
         employment=Employment.EMPLOYED, annual_income=220_000, net_worth=1_400_000,
@@ -132,11 +160,9 @@ def _ensure_demo_survey() -> None:
         drawdown_tolerance=0.25, experience=Experience.GOOD, investable_assets=900_000,
         goals=[FinancialGoal(GoalType.RETIREMENT, 2_500_000, 13, "high"),
                FinancialGoal(GoalType.COLLEGE, 200_000, 9, "medium")])
-    st.session_state.setdefault("surveys", [])
-    st.session_state.setdefault("survey_seq", 0)
-    st.session_state["survey_seq"] += 1
-    st.session_state["surveys"].append({
-        "id": st.session_state["survey_seq"], "name": p.client_name,
+    store["survey_seq"] += 1
+    store["surveys"].append({
+        "id": store["survey_seq"], "name": p.client_name,
         "phone": "(305) 555-0148", "email": "rivera.family@example.com",
         "submitted_at": dt.datetime.now() - dt.timedelta(hours=3),
         "rec": build_recommendation(p),
@@ -639,8 +665,7 @@ def _schedule_consultation() -> None:
                     "name": name.strip(), "email": email.strip(), "phone": phone.strip(),
                     "focus": focus, "date": date, "slot": slot,
                     "requested_at": dt.datetime.now()}
-                st.session_state.setdefault("consult_leads", []).append(
-                    st.session_state["consult_booked"])
+                _shared_store()["consult_leads"].append(st.session_state["consult_booked"])
                 st.rerun()
 
 
@@ -690,13 +715,15 @@ def dashboard() -> None:
 
     st.write("")
     _ensure_demo_survey()
+    store = _shared_store()
     clients = _sim_clients()
-    surveys = st.session_state.get("surveys", [])
+    surveys = store["surveys"]
+    pending_invites = [inv for inv in store["invites"].values() if inv["status"] == "pending"]
     today = dt.date.today()
     incomplete = [c for c in clients if not c["complete"]]
     week = [c for c in clients if 0 <= (c["meeting"] - today).days <= 7]
 
-    leads = st.session_state.get("consult_leads", [])
+    leads = store["consult_leads"]
     m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("Active clients", len(clients))
     m2.metric("Profiles incomplete", len(incomplete))
@@ -759,6 +786,21 @@ def dashboard() -> None:
                  "Profile": "Complete" if c["complete"] else "Incomplete", "Purpose": c["reason"]}
                 for c in sorted(clients, key=lambda c: c["meeting"])]
         st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+
+    # --- Pending survey invites (sent, awaiting the client's response) ---
+    if pending_invites:
+        st.divider()
+        with st.expander(f"✉️ Awaiting response — {len(pending_invites)} survey invite"
+                          f"{'s' if len(pending_invites) != 1 else ''} sent", expanded=True):
+            for inv in sorted(pending_invites, key=lambda i: i["created_at"], reverse=True):
+                with st.container(border=True):
+                    st.markdown(
+                        f"**{inv['name']}** — sent {inv['created_at']:%b %d, %I:%M %p}  \n"
+                        f"<span style='color:#6b7280;font-size:13px'>"
+                        f"✉️ {inv['email']}"
+                        + (f" · 📞 {inv['phone']}" if inv.get("phone") else "")
+                        + "</span>",
+                        unsafe_allow_html=True)
 
     # --- Review client surveys (real submissions) ------------------------
     st.divider()
@@ -1258,7 +1300,7 @@ def portfolio_analysis() -> None:
     ui.section_header("Analysis & planning", "Portfolio Analysis",
                       "Choose a sample client, review a filed survey, or load a portfolio.")
     st.write("")
-    surveys = st.session_state.get("surveys", [])
+    surveys = _shared_store()["surveys"]
     active = _active()
     samples = _sample_clients()
     generated = st.session_state.setdefault("generated", {})
@@ -1346,7 +1388,86 @@ def client_survey() -> None:
     if st.session_state.get("survey_done"):
         _survey_thank_you()
         return
+    _render_send_to_client_panel()
+    _render_survey_form()
 
+
+def render_client_invite(token: str) -> None:
+    """The client's own view of a survey an advisor sent them — reached via
+    a ?invite=<token> link, handled in streamlit_app.py before the normal
+    welcome/nav/page dispatch. No nav bar, no advisor tools: just the form,
+    scoped to this one invite.
+    """
+    st.markdown(
+        f'<div class="aw-brand" style="margin-bottom:18px">'
+        f'<div class="mark">{ui.brand_mark_html(40)}</div>'
+        f'<div><div class="name">{ui.FIRM_NAME}</div></div></div>',
+        unsafe_allow_html=True,
+    )
+
+    if st.session_state.get("survey_done"):
+        _survey_thank_you()
+        return
+
+    store = _shared_store()
+    invite = store["invites"].get(token)
+    if invite is None:
+        st.error("This link isn't valid, or has expired. Please contact your advisor "
+                 "for a new one.")
+        return
+    if invite["status"] == "responded":
+        st.success("This survey has already been submitted — thank you. If you need to "
+                    "change anything, contact your advisor directly.")
+        return
+
+    st.info(f"**{invite['name']}** — your advisor at {ui.FIRM_NAME} sent you this survey "
+            "to prepare for your meeting.", icon="✉️")
+    _render_survey_form(prefill=invite, invite_token=token)
+
+
+def _render_send_to_client_panel() -> None:
+    """Advisor-only: create a shareable link that opens a stripped, client-only
+    copy of this same form for one specific person — see render_client_invite.
+    """
+    store = _shared_store()
+    with st.expander("✉️  Send this survey to a client", expanded=False):
+        st.caption("Creates a link that opens this survey for one client only — their "
+                   "response appears below and on the Dashboard when they submit it.")
+        c1, c2, c3 = st.columns(3)
+        name = c1.text_input("Client name", key="invite_name")
+        email = c2.text_input("Email", key="invite_email", placeholder="client@email.com")
+        phone = c3.text_input("Phone (optional)", key="invite_phone",
+                              placeholder="(555) 123-4567")
+        if st.button("Create client link", key="invite_create", type="primary"):
+            if not name.strip() or "@" not in email:
+                st.error("Enter the client's name and a valid email.")
+            else:
+                token = secrets.token_urlsafe(6)
+                store["invites"][token] = {
+                    "name": name.strip(), "email": email.strip(), "phone": phone.strip(),
+                    "created_at": dt.datetime.now(), "status": "pending",
+                }
+                st.session_state["last_invite_token"] = token
+
+        token = st.session_state.get("last_invite_token")
+        if token and token in store["invites"]:
+            inv = store["invites"][token]
+            st.success(f"Link created for **{inv['name']}**.")
+            ui.invite_link_html(token)
+            st.caption("No email service is configured for this demo, so nothing sends "
+                       "automatically — copy the link above and send it yourself. Add a "
+                       "real email API key later and this can send it for you (see README).")
+
+        pending = [inv for inv in store["invites"].values() if inv["status"] == "pending"]
+        if pending:
+            st.caption(f"{len(pending)} invite(s) currently awaiting a response.")
+
+
+def _render_survey_form(prefill: dict | None = None, invite_token: str | None = None) -> None:
+    """The actual intake form. Used both for the advisor's own Client Survey
+    page and for a client filling it out remotely via an invite link —
+    `prefill`/`invite_token` are only set in the latter case.
+    """
     st.markdown(
         f"""
         <div class="aw-hero" style="padding:34px 40px">
@@ -1433,13 +1554,14 @@ def client_survey() -> None:
                 '<span>— a few details to complete your profile</span></div>',
                 unsafe_allow_html=True)
     a1, a2, a3 = st.columns(3)
-    name = a1.text_input("Your name", "", key="sv_name")
+    name = a1.text_input("Your name", prefill["name"] if prefill else "", key="sv_name")
     age = a2.number_input("Age", 18, 100, 45, key="sv_age")
     dependents = a3.number_input("Dependents", 0, 15, 0, key="sv_dep")
     ct1, ct2 = st.columns(2)
-    phone = ct1.text_input("Phone number", "", key="sv_phone",
-                           placeholder="(555) 123-4567")
-    email = ct2.text_input("Email", "", key="sv_email", placeholder="you@email.com")
+    phone = ct1.text_input("Phone number", prefill.get("phone", "") if prefill else "",
+                           key="sv_phone", placeholder="(555) 123-4567")
+    email = ct2.text_input("Email", prefill["email"] if prefill else "",
+                           key="sv_email", placeholder="you@email.com")
     e1, e2 = st.columns(2)
     employment = e1.selectbox("Employment", list(Employment),
                               format_func=lambda e: e.value.replace("_", " ").title(), key="sv_emp")
@@ -1491,25 +1613,31 @@ def client_survey() -> None:
             social_security_income=float(ss_income), pension_income=float(pension),
             goals=goals)
 
-        st.session_state.setdefault("surveys", [])
-        st.session_state.setdefault("survey_seq", 0)
-        st.session_state["survey_seq"] += 1
-        st.session_state["surveys"].append({
-            "id": st.session_state["survey_seq"],
+        store = _shared_store()
+        store["survey_seq"] += 1
+        record = {
+            "id": store["survey_seq"],
             "name": profile.client_name,
             "phone": phone.strip() or "—", "email": email.strip() or "—",
             "submitted_at": dt.datetime.now(),
             "rec": build_recommendation(profile),
             "assets": assets, "liabilities": liabs, "net_worth": net_worth,
-        })
+        }
+        store["surveys"].append(record)
+        if invite_token and invite_token in store["invites"]:
+            store["invites"][invite_token]["status"] = "responded"
+            store["invites"][invite_token]["survey_id"] = record["id"]
+        # A local copy for this session's own thank-you page -- reading back
+        # from the shared list by "last item" would be a race condition if
+        # another session submits between this append and that page's render.
+        st.session_state["my_survey_record"] = record
         st.session_state["survey_shared"] = bool(share)
         st.session_state["survey_done"] = True
         st.rerun()
 
 
 def _survey_thank_you() -> None:
-    surveys = st.session_state.get("surveys", [])
-    rec_wrap = surveys[-1] if surveys else None
+    rec_wrap = st.session_state.get("my_survey_record")
     name = rec_wrap["name"] if rec_wrap else "there"
     shared = st.session_state.get("survey_shared", False)
 
@@ -1529,8 +1657,7 @@ def _survey_thank_you() -> None:
     with c2:
         if shared:
             st.success(f"✓ Your responses were shared with the {ui.FIRM_NAME} advisory team and "
-                       "now appear on their dashboard for review. "
-                       "*(Simulated — no real data is transmitted.)*")
+                       "now appear on their dashboard for review.")
         else:
             st.info("Your responses were saved but not shared.")
         if rec_wrap:
@@ -1541,8 +1668,8 @@ def _survey_thank_you() -> None:
                             f"- Orientation: **{p.objective.value.title()}**\n"
                             f"- Net worth: **${rec_wrap['net_worth']:,.0f}**")
                 st.caption("Your advisor will translate this into a specific, suitable plan.")
-        if st.button("Start a new survey", width="stretch"):
-            for k in ("survey_done", "survey_shared"):
+        if "invite" not in st.query_params and st.button("Start a new survey", width="stretch"):
+            for k in ("survey_done", "survey_shared", "my_survey_record"):
                 st.session_state.pop(k, None)
             st.rerun()
 
