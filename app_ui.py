@@ -317,6 +317,33 @@ def inject_theme() -> None:
             color: var(--marine); font-weight: 600; margin-bottom: 18px; font-family: var(--sans);
           }}
 
+          /* --- Welcome splash: one-time, full-viewport, shown before the
+             app itself (see app_ui.welcome_screen / streamlit_app.py). --- */
+          [class*="st-key-pw_welcome"] {{
+            position: fixed; inset: 0; z-index: 2;
+            display: flex; align-items: center; justify-content: center;
+          }}
+          [class*="st-key-pw_welcome"] > div {{
+            max-width: 460px; width: 100%; padding: 0 24px; text-align: center;
+            animation: aw-rise .6s var(--ease-settle) both;
+          }}
+          .pw-welcome-mark {{ width: 64px; height: 64px; margin: 0 auto 30px; line-height: 0; }}
+          [class*="st-key-pw_welcome"] .eyebrow {{
+            text-transform: uppercase; letter-spacing: .14em; font-size: 12px;
+            color: var(--marine); font-weight: 600; margin-bottom: 16px; font-family: var(--sans);
+          }}
+          [class*="st-key-pw_welcome"] h1 {{
+            font-size: 42px; line-height: 1.12; font-weight: 800; letter-spacing: -.03em;
+            margin: 0 0 16px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #DCE8FA 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            filter: drop-shadow(0 2px 24px rgba(125,178,245,.25));
+          }}
+          [class*="st-key-pw_welcome"] p {{
+            color: var(--ink-soft); font-size: 16px; line-height: 1.65;
+            margin: 0 auto 30px; max-width: 38ch;
+          }}
+
           /* --- Ledger signature: a strip of computed mini-stats --- */
           .aw-ledger {{ display: flex; gap: 0; margin: 26px 0 2px; border-top: 1px solid var(--line); }}
           .aw-ledger .cell {{ flex: 1; padding: 14px 16px 2px 0; border-right: 1px solid var(--line); }}
@@ -966,6 +993,30 @@ def _scroll_bridge() -> None:
         """,
         height=0,
     )
+
+
+def welcome_screen() -> None:
+    """A one-time, full-viewport splash — shown before the app itself, not a
+    page. "Get Started" sets the session flag that skips straight past this
+    on every subsequent rerun, so it plays exactly once per browser session,
+    the same way a nav click already reruns the script.
+    """
+    with st.container(key="pw_welcome"):
+        st.markdown(
+            f"""
+            <div class="pw-welcome-mark">{brand_mark_html(64)}</div>
+            <div class="eyebrow">Florida &middot; fee-only fiduciary</div>
+            <h1>Welcome to {FIRM_NAME}.</h1>
+            <p>Portfolio analysis and suitability planning built on one rule: every
+               figure your family sees is computed, never guessed.</p>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("Get Started  →", key="welcome_get_started",
+                      type="primary", width="stretch"):
+            st.session_state["welcomed"] = True
+            st.session_state.setdefault("page", "Home")
+            st.rerun()
 
 
 def top_nav() -> str:

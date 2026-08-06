@@ -33,7 +33,14 @@ st.set_page_config(
 )
 
 ui.inject_theme()
-active_page = ui.top_nav()
 
-# Dispatch to the selected page. Unknown keys fall back to Home.
-PAGES.get(active_page, PAGES["Home"])()
+if not st.session_state.get("welcomed", False):
+    # First thing a fresh session sees — a one-time splash, not a page. Once
+    # dismissed for this session, every subsequent rerun (including nav
+    # clicks, which themselves trigger a rerun) skips straight past this.
+    ui.welcome_screen()
+else:
+    active_page = ui.top_nav()
+
+    # Dispatch to the selected page. Unknown keys fall back to Home.
+    PAGES.get(active_page, PAGES["Home"])()
