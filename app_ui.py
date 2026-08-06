@@ -191,6 +191,22 @@ def inject_theme() -> None:
             padding-top: 8px; font-family: var(--sans); }}
           .aw-navsep {{ display: none; }}
 
+          /* --- Shimmer: a diagonal light sweep on hover, for the wordmark at
+             the top — transform/opacity only, per the motion rule. --- */
+          .pw-shimmer {{
+            position: relative; display: inline-block; overflow: hidden; cursor: default;
+          }}
+          .pw-shimmer::before {{
+            content: ""; position: absolute; inset: -60% -20%; pointer-events: none;
+            mix-blend-mode: screen; opacity: 0;
+            background: linear-gradient(105deg,
+              transparent 40%, rgba(255,255,255,.95) 47%, var(--glow-cyan) 50%,
+              rgba(255,255,255,.95) 53%, transparent 60%);
+            transform: translateX(-140%) skewX(-10deg);
+            transition: transform 1.05s var(--ease-settle), opacity .25s var(--ease-settle);
+          }}
+          .pw-shimmer:hover::before {{ transform: translateX(140%) skewX(-10deg); opacity: 1; }}
+
           /* --- Hero: full-bleed dark panel, glow orbs, no card frame --- */
           .aw-hero {{
             background: transparent; border: none; position: relative;
@@ -595,15 +611,30 @@ def inject_theme() -> None:
              signature CTA shape. --- */
           .stButton button, .stFormSubmitButton button {{
             border-radius: 999px; font-weight: 600; font-family: var(--sans);
-            padding: 12px 46px 12px 22px !important; position: relative;
+            padding: 12px 46px 12px 22px !important; position: relative; overflow: hidden;
             transition: transform .16s var(--ease-settle), background .16s var(--ease-settle),
                         border-color .16s var(--ease-settle), box-shadow .16s var(--ease-settle);
           }}
+          /* Shine sweep on hover — a diagonal highlight bar, transform/opacity
+             only (no background-position animation, per the motion rule). */
+          .stButton button::before, .stFormSubmitButton button::before {{
+            content: ""; position: absolute; inset: -30% -10%; z-index: 1;
+            pointer-events: none; opacity: 0;
+            background: linear-gradient(105deg,
+              transparent 42%, rgba(125,178,245,.55) 48%, rgba(255,255,255,.85) 50%,
+              rgba(125,178,245,.55) 52%, transparent 58%);
+            transform: translateX(-130%) skewX(-10deg);
+            transition: transform .9s var(--ease-settle), opacity .25s var(--ease-settle);
+          }}
+          .stButton button:hover::before, .stFormSubmitButton button:hover::before {{
+            transform: translateX(130%) skewX(-10deg); opacity: 1;
+          }}
           .stButton button::after, .stFormSubmitButton button::after {{
-            content: "\\2192"; position: absolute; right: 7px; top: 50%;
+            content: "\\2192"; position: absolute; right: 7px; top: 50%; z-index: 2;
             transform: translateY(-50%); width: 27px; height: 27px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1;
           }}
+          .stButton button > div, .stFormSubmitButton button > div {{ position: relative; z-index: 2; }}
           .stButton button:active, .stFormSubmitButton button:active {{
             transform: scale(.97); transition-duration: .08s;
           }}
@@ -761,7 +792,7 @@ def top_nav() -> str:
             <div class="aw-brand">
               <div class="mark">{brand_mark_html(42)}</div>
               <div>
-                <div class="name">{FIRM_NAME}</div>
+                <div class="name pw-shimmer">{FIRM_NAME}</div>
                 <div class="tag">{FIRM_TAGLINE}</div>
               </div>
             </div>
