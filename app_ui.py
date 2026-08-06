@@ -180,39 +180,45 @@ def inject_theme() -> None:
             position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
           }}
           .pw-bg-glow .blob {{
-            position: absolute; border-radius: 50%; filter: blur(80px); will-change: transform;
+            position: absolute; border-radius: 50%; filter: blur(64px); will-change: transform;
+            mix-blend-mode: screen;
           }}
           .pw-bg-glow .b1 {{
-            width: 680px; height: 680px; top: -220px; left: -140px; opacity: .42;
-            background: radial-gradient(circle, var(--glow-blue), transparent 70%);
-            animation: pw-drift-1 24s var(--ease-settle) infinite;
+            width: 900px; height: 900px; top: -280px; left: -220px; opacity: .62;
+            background: radial-gradient(circle, var(--glow-blue), transparent 68%);
+            animation: pw-drift-1 15s var(--ease-settle) infinite;
           }}
           .pw-bg-glow .b2 {{
-            width: 600px; height: 600px; top: 6%; right: -180px; opacity: .34;
-            background: radial-gradient(circle, var(--glow-cyan), transparent 70%);
-            animation: pw-drift-2 29s var(--ease-settle) infinite;
+            width: 820px; height: 820px; top: -4%; right: -240px; opacity: .55;
+            background: radial-gradient(circle, var(--glow-cyan), transparent 68%);
+            animation: pw-drift-2 18s var(--ease-settle) infinite;
           }}
           .pw-bg-glow .b3 {{
-            width: 560px; height: 560px; bottom: -200px; left: 28%; opacity: .26;
-            background: radial-gradient(circle, var(--gold), transparent 72%);
-            animation: pw-drift-3 33s var(--ease-settle) infinite;
+            width: 760px; height: 760px; bottom: -260px; left: 20%; opacity: .48;
+            background: radial-gradient(circle, var(--gold), transparent 70%);
+            animation: pw-drift-3 21s var(--ease-settle) infinite;
           }}
           .pw-bg-glow .b4 {{
-            width: 460px; height: 460px; bottom: 10%; right: 12%; opacity: .30;
-            background: radial-gradient(circle, var(--marine), transparent 72%);
-            animation: pw-drift-2 26s var(--ease-settle) infinite reverse;
+            width: 640px; height: 640px; bottom: 2%; right: 6%; opacity: .5;
+            background: radial-gradient(circle, var(--marine), transparent 70%);
+            animation: pw-drift-2 17s var(--ease-settle) infinite reverse;
+          }}
+          .pw-bg-glow .b5 {{
+            width: 560px; height: 560px; top: 34%; left: 42%; opacity: .34;
+            background: radial-gradient(circle, var(--teal), transparent 70%);
+            animation: pw-drift-3 24s var(--ease-settle) infinite reverse;
           }}
           @keyframes pw-drift-1 {{
             0%, 100% {{ transform: translate(0, 0) scale(1); }}
-            50%      {{ transform: translate(70px, 50px) scale(1.18); }}
+            50%      {{ transform: translate(140px, 100px) scale(1.32); }}
           }}
           @keyframes pw-drift-2 {{
             0%, 100% {{ transform: translate(0, 0) scale(1); }}
-            50%      {{ transform: translate(-60px, 65px) scale(1.12); }}
+            50%      {{ transform: translate(-130px, 120px) scale(1.24); }}
           }}
           @keyframes pw-drift-3 {{
             0%, 100% {{ transform: translate(0, 0) scale(1); }}
-            50%      {{ transform: translate(50px, -55px) scale(1.2); }}
+            50%      {{ transform: translate(110px, -115px) scale(1.3); }}
           }}
           html, body, [class*="css"], .stMarkdown, p, li {{
             color: var(--ink); font-family: var(--sans);
@@ -825,6 +831,7 @@ def inject_theme() -> None:
           <div class="blob b2"></div>
           <div class="blob b3"></div>
           <div class="blob b4"></div>
+          <div class="blob b5"></div>
         </div>
         """,
         unsafe_allow_html=True,
