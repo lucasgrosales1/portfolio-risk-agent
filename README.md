@@ -270,9 +270,10 @@ doesn't have many.
 - [x] Native dataframe/table theming; downloadable report + IPS preview readability
 - [x] Cross-session client survey delivery — advisor generates a shareable
       invite link; the client's response appears on the advisor's Dashboard
-- [ ] Theme the remaining Streamlit-default charts (structured-product payoff diagrams)
+- [x] Theme the remaining Streamlit-default charts (structured-product payoff diagrams)
+- [x] Pin `requirements.txt` to known-good versions
+- [x] Screen-reader accessible names on every button (Streamlit aria-label fix)
 - [ ] yfinance fetch timeout + graceful degradation on a cold Cloud load
-- [ ] Pin `requirements.txt` to known-good versions
 
 ---
 
