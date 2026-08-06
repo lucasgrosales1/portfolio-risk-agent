@@ -966,6 +966,50 @@ def inject_theme() -> None:
         unsafe_allow_html=True,
     )
     _scroll_bridge()
+    _fix_button_accessible_names()
+
+
+def _fix_button_accessible_names() -> None:
+    """Restores a real accessible name on every Streamlit button.
+
+    Streamlit's BaseButton always renders `aria-label=""` unless a `help=`
+    tooltip is set. An explicit empty aria-label isn't "no label" to a
+    browser's accessible-name computation — it overrides the button's visible
+    text with an empty string, so a screen reader announces every button in
+    the app (nav, "Submit survey", all of them) as unlabeled. This copies each
+    button's own visible text into its aria-label instead.
+
+    Same cross-frame technique as _scroll_bridge — st.markdown() never
+    executes <script> tags, so this has to run from a components.v1 iframe
+    reaching into window.parent.document. A MutationObserver (rather than a
+    one-shot pass) is required because every widget interaction triggers a
+    Streamlit rerun that replaces the DOM wholesale, including newly-shown
+    buttons an initial pass would never see. The installed-flag on
+    window.parent guards against stacking a duplicate observer on every one
+    of those reruns, since this component itself gets re-injected each time.
+    """
+    components.html(
+        """
+        <script>
+        try {
+          const doc = window.parent.document;
+          const win = window.parent;
+          if (!win.__pwAriaFixInstalled) {
+            win.__pwAriaFixInstalled = true;
+            const fix = () => {
+              doc.querySelectorAll('button[aria-label=""]').forEach((btn) => {
+                const label = (btn.innerText || btn.textContent || "").trim();
+                if (label) btn.setAttribute("aria-label", label);
+              });
+            };
+            fix();
+            new MutationObserver(fix).observe(doc.body, {childList: true, subtree: true});
+          }
+        } catch (e) { /* cross-origin or no parent — leave labels as-is */ }
+        </script>
+        """,
+        height=0,
+    )
 
 
 def _scroll_bridge() -> None:
