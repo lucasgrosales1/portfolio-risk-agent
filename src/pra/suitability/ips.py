@@ -197,8 +197,9 @@ def render_ips_html(rec) -> str:
 <html lang="en"><head><meta charset="utf-8">
 <title>Investment Policy Statement — {escape(doc.client_name)}</title>
 <style>
+  html {{ background: #fff; color-scheme: light; }}
   body {{ font: 14px/1.6 "Segoe UI",-apple-system,Helvetica,Arial,sans-serif; color:#1f2937;
-         max-width: 820px; margin: 0 auto; padding: 40px 28px 64px; }}
+         background: #fff; max-width: 820px; margin: 0 auto; padding: 40px 28px 64px; }}
   h1 {{ font-size: 24px; color:#0d2b4a; margin:0 0 2px; }}
   .sub {{ color:#5c6370; margin-bottom: 18px; border-bottom: 2px solid #1a4d7a; padding-bottom: 12px; }}
   h2 {{ font-size: 13px; text-transform: uppercase; letter-spacing:.08em; color:#1a4d7a;

@@ -481,9 +481,9 @@ def inject_theme() -> None:
           }}
           .pw-scroll-col {{
             flex: 1.15; min-width: 0; display: flex; flex-direction: column;
-            gap: 3.5vh; padding: 4vh 0;
+            gap: 22px; padding: 2vh 0;
           }}
-          .pw-scroll-card {{ min-height: 30vh; display: flex; align-items: center; }}
+          .pw-scroll-card {{ min-height: 0; display: flex; align-items: center; }}
           .pw-scroll-card .aw-card {{ width: 100%; }}
 
           /* --- Numbered spotlight (the reference's "Key Features" blocks) --- */
