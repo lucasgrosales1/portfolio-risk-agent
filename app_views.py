@@ -855,7 +855,7 @@ def _render_structured_gallery() -> None:
         with st.container(border=True):
             st.markdown("**Income / autocallable note**")
             st.line_chart(_payoff_df(_payoff_curve(_income_note_payoff, t), "Note return %"),
-                          height=190)
+                          height=190, color=[ui.GOLD, ui.TEAL])
             st.markdown(
                 f"**In the portfolio.** Held as a small satellite sleeve, an income note can "
                 f"raise a portfolio's cash flow beyond what bonds yield today — an illustrative "
@@ -874,7 +874,7 @@ def _render_structured_gallery() -> None:
         with st.container(border=True):
             st.markdown("**Principal-protected note**")
             st.line_chart(_payoff_df(_payoff_curve(_principal_protected_payoff, t), "PPN return %"),
-                          height=190)
+                          height=190, color=[ui.GOLD, ui.TEAL])
             st.markdown(
                 f"**In the portfolio.** For a nervous client sitting in cash, a PPN can be the "
                 f"bridge back into the market: principal is returned at maturity while capturing "
@@ -893,7 +893,7 @@ def _render_structured_gallery() -> None:
         with st.container(border=True):
             st.markdown("**Buffer with a cap**")
             st.line_chart(_payoff_df(_payoff_curve(_buffered_payoff, t), "Buffered return %"),
-                          height=190)
+                          height=190, color=[ui.GOLD, ui.TEAL])
             st.markdown(
                 f"**In the portfolio.** A buffer lets a cautious client hold more growth exposure "
                 f"than they otherwise could: it absorbs the **first {t['buffer']:.0%} of losses**, "
@@ -945,7 +945,9 @@ def _render_recommendation(rec) -> None:
         chart_df = pd.DataFrame({sc.name: sc.values for sc in stress.scenarios},
                                 index=range(1, stress.horizon_years + 1))
         chart_df.index.name = "Year"
-        st.line_chart(chart_df, height=300)
+        # Column order is fixed (Steady, Early bear, Late bear) -- see stress.py.
+        scenario_colors = [ui.POS, ui.NEG, ui.GOLD][:len(chart_df.columns)]
+        st.line_chart(chart_df, height=300, color=scenario_colors)
         cols = st.columns(3)
         for col, sc in zip(cols, stress.scenarios):
             status = "Survived" if sc.survived else f"Depleted yr {sc.depletion_year}"
@@ -973,7 +975,7 @@ def _render_recommendation(rec) -> None:
                          "Underlying (1:1) %": [u * 100 for u, _ in p.payoff]},
                         index=[round(u * 100, 1) for u, _ in p.payoff])
                     df.index.name = "Underlying return %"
-                    st.line_chart(df, height=230)
+                    st.line_chart(df, height=230, color=[ui.GOLD, ui.TEAL])
         else:
             st.markdown(f"**✗ {p.name}** — {p.rationale}")
     st.caption("Payoff diagrams use illustrative, clearly-stated assumed terms at maturity — "

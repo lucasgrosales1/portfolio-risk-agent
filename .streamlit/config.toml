@@ -1,13 +1,15 @@
 # WealthSync Advisors theme — dark "AI Finance" clone (near-black navy,
 # sky-blue accent). Drives native widgets CSS can't reach (dataframes,
-# glide-data-grid canvas cells) — must stay in sync with app_ui.py's palette.
+# glide-data-grid canvas cells, Vega-Lite charts) — must stay in sync with
+# app_ui.py's palette and its own @import of these same two Google Fonts.
 [theme]
 base = "dark"
 primaryColor = "#7DB2F5"
 backgroundColor = "#05061C"
 secondaryBackgroundColor = "#0B0C2E"
 textColor = "#FFFFFF"
-font = "sans serif"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "Plus Jakarta Sans:https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
 
 [server]
 maxUploadSize = 5
