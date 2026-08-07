@@ -314,11 +314,31 @@ def inject_theme() -> None:
             32%  {{ opacity: .85; transform: scale(1.05); }}
             100% {{ opacity: 0; transform: scale(1.35); }}
           }}
-          /* Single-column hero — the reference has no side image; the product
-             screenshot appears in its own floating section further down. */
-          .aw-hero-grid {{ display: block; max-width: 640px; }}
+          .aw-hero-grid {{
+            display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr);
+            gap: 48px; align-items: center;
+          }}
           .aw-hero-text {{ min-width: 0; }}
-          .aw-hero-media {{ display: none; }}
+          /* A real photo, not another glow orb -- tinted toward the palette
+             (same treatment as the process-step photos) so it reads as part
+             of the dark theme instead of a pasted-in bright rectangle, and
+             color-matched on purpose: this aerial Miami shot is almost all
+             ocean blue/teal, the same family the hero's own glow orbs live
+             in, so the two read as one composition instead of competing. */
+          .aw-hero-media {{
+            position: relative; border-radius: 22px; overflow: hidden;
+            aspect-ratio: 4/3; box-shadow: inset 0 0 0 1px rgba(255,255,255,.10),
+            0 30px 70px rgba(0,0,0,.4);
+          }}
+          .aw-hero-media img {{
+            width: 100%; height: 100%; object-fit: cover; display: block;
+            filter: saturate(.96) brightness(.96) contrast(1.03);
+          }}
+          .aw-hero-media::after {{
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(155deg, rgba(5,6,28,.08) 0%, rgba(8,9,36,.42) 100%),
+              linear-gradient(0deg, rgba(5,6,28,.5) 0%, transparent 34%);
+          }}
           .aw-hero h1 {{
             font-size: 60px; margin: 0 0 18px; max-width: 14ch;
             line-height: 1.08; font-weight: 800; letter-spacing: -.03em;
@@ -327,10 +347,11 @@ def inject_theme() -> None:
             filter: drop-shadow(0 2px 28px rgba(125,178,245,.28));
           }}
           .aw-hero p  {{ color: var(--ink-soft); font-size: 17px; line-height: 1.68; margin: 0;
-            max-width: 46ch; }}
+            max-width: 46ch; text-shadow: 0 1px 12px rgba(0,0,0,.4); }}
           .aw-hero .eyebrow {{
             text-transform: uppercase; letter-spacing: .14em; font-size: 12px;
-            color: var(--marine); font-weight: 600; margin-bottom: 18px; font-family: var(--sans);
+            color: #ffffff; font-weight: 700; margin-bottom: 18px; font-family: var(--sans);
+            text-shadow: 0 1px 16px rgba(0,0,0,.65), 0 1px 3px rgba(0,0,0,.5);
           }}
 
           /* --- Welcome splash: one-time, full-viewport, shown before the
@@ -395,15 +416,17 @@ def inject_theme() -> None:
           .aw-section-label {{
             text-transform: uppercase; letter-spacing: .14em; font-size: 12px;
             color: var(--marine); font-weight: 600; margin: 4px 0 6px; font-family: var(--sans);
+            text-shadow: 0 1px 14px rgba(0,0,0,.6), 0 1px 3px rgba(0,0,0,.55);
           }}
           .aw-section-head {{
             font-family: var(--display); font-size: 34px;
             font-weight: 800; margin: 2px 0 8px; letter-spacing: -.02em; line-height: 1.16;
             background: linear-gradient(180deg, #FFFFFF 0%, #E4ECF9 100%);
             -webkit-background-clip: text; background-clip: text; color: transparent;
-            filter: drop-shadow(0 2px 18px rgba(125,178,245,.20));
+            filter: drop-shadow(0 2px 18px rgba(125,178,245,.20)) drop-shadow(0 1px 6px rgba(0,0,0,.35));
           }}
-          .aw-section-sub {{ color: var(--ink-soft); font-size: 15px; margin: 0 0 8px; max-width: 62ch; }}
+          .aw-section-sub {{ color: var(--ink-soft); font-size: 15px; margin: 0 0 8px; max-width: 62ch;
+            text-shadow: 0 1px 10px rgba(0,0,0,.4); }}
 
           /* Centered variant — the reference centers its dark feature sections. */
           .aw-center {{ text-align: center; }}
@@ -902,18 +925,27 @@ def inject_theme() -> None:
           }}
           [class*="st-key-welcome_get_started"] button {{
             width: auto !important;
-            padding: 32px 104px 32px 52px !important; font-size: 27px !important;
+            padding: 36px 50px !important; font-size: 32px !important;
+            /* Symmetric padding (was 52px/104px, reserving lopsided space
+               for the ::after circle) plus flex on the button itself is
+               what actually centers "Get Started" -- the circle is pulled
+               out of absolute positioning below so it becomes a normal
+               flex item sitting next to the text instead of an overlay the
+               text had to make room for. */
+            display: inline-flex !important; align-items: center !important;
+            justify-content: center !important; gap: 24px;
           }}
           /* The button label renders as a <p> inside stMarkdownContainer,
              which [class*="st-key-pw_welcome"] p (sized for the splash's
              own body copy) also matches and was winning on specificity,
              capping the label below the button's own larger font-size. */
           [class*="st-key-welcome_get_started"] button p {{
-            font-size: 27px !important; margin: 0 !important;
+            font-size: 32px !important; margin: 0 !important;
           }}
           [class*="st-key-welcome_get_started"] button::after {{
-            width: 58px !important; height: 58px !important; right: 14px !important;
-            font-size: 23px !important;
+            position: static !important; transform: none !important; margin: 0 !important;
+            width: 62px !important; height: 62px !important;
+            font-size: 25px !important; flex: none;
           }}
 
           /* --- Get Started: animated gradient fill + gradient border ring.
@@ -1096,19 +1128,21 @@ def inject_theme() -> None:
           @media (max-width: 820px) {{
             .aw-hero {{ padding: 40px 12px 28px; }}
             .aw-hero h1 {{ font-size: 38px; }}
+            .aw-hero-grid {{ grid-template-columns: 1fr; gap: 28px; }}
+            .aw-hero-media {{ aspect-ratio: 16/10; order: 2; }}
             .pw-welcome-mark {{ width: 64px; height: 64px; margin-bottom: 24px; }}
             [class*="st-key-pw_welcome"] .eyebrow {{ font-size: 12px; margin-bottom: 14px; }}
             [class*="st-key-pw_welcome"] h1 {{ font-size: 40px; margin-bottom: 16px; }}
             [class*="st-key-pw_welcome"] p {{ font-size: 16px; margin-bottom: 26px; }}
             [class*="st-key-welcome_get_started"] button {{
-              padding: 20px 60px 20px 30px !important; font-size: 18px !important;
+              padding: 24px 32px !important; font-size: 22px !important; gap: 16px;
             }}
             [class*="st-key-welcome_get_started"] button p {{
-              font-size: 18px !important; margin: 0 !important;
+              font-size: 22px !important; margin: 0 !important;
             }}
             [class*="st-key-welcome_get_started"] button::after {{
-              width: 40px !important; height: 40px !important; right: 10px !important;
-              font-size: 16px !important;
+              width: 44px !important; height: 44px !important;
+              font-size: 18px !important;
             }}
             .aw-ledger {{ flex-wrap: wrap; }}
             .aw-steps {{ flex-direction: column; gap: 16px; }}

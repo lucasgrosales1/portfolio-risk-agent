@@ -329,6 +329,7 @@ def home() -> None:
                   <span class="k">risk &amp; return window</span></div>
               </div>
             </div>
+            <div class="aw-hero-media">{ui.hero_media_html()}</div>
           </div>
         </div>
         """,
@@ -783,7 +784,7 @@ def dashboard() -> None:
             with st.container(border=True):
                 st.markdown(
                     f"🟢 **{ld['name']}** — {ld['focus']}  \n"
-                    f"<span style='color:#6b7280;font-size:13px'>Requested "
+                    f"<span style='color:var(--ink-soft);font-size:13px'>Requested "
                     f"{ld['date']:%a %b %d} at {ld['slot']} · 📞 {ld['phone'] or '—'} · "
                     f"📧 {ld['email']}</span>", unsafe_allow_html=True)
 
@@ -797,7 +798,7 @@ def dashboard() -> None:
             flag = "🔴" if days <= 1 else ("🟠" if days <= 3 else "🟢")
             with st.container(border=True):
                 st.markdown(f"{flag} **{c['name']}** — {when}, {c['time']}  \n"
-                            f"<span style='color:#6b7280;font-size:13px'>{c['reason']} · "
+                            f"<span style='color:var(--ink-soft);font-size:13px'>{c['reason']} · "
                             f"${c['aum']:,.0f}</span>", unsafe_allow_html=True)
     with right:
         ui.subhead("📋 Profiles awaiting completion")
@@ -806,7 +807,7 @@ def dashboard() -> None:
         for c in incomplete:
             with st.container(border=True):
                 st.markdown(f"**{c['name']}**  \n"
-                            f"<span style='color:#6b7280;font-size:13px'>{c['reason']}</span>",
+                            f"<span style='color:var(--ink-soft);font-size:13px'>{c['reason']}</span>",
                             unsafe_allow_html=True)
 
     st.divider()
@@ -827,7 +828,7 @@ def dashboard() -> None:
                 with st.container(border=True):
                     st.markdown(
                         f"**{inv['name']}** — sent {inv['created_at']:%b %d, %I:%M %p}  \n"
-                        f"<span style='color:#6b7280;font-size:13px'>"
+                        f"<span style='color:var(--ink-soft);font-size:13px'>"
                         f"📧 {inv['email']}"
                         + (f" · 📞 {inv['phone']}" if inv.get("phone") else "")
                         + "</span>",
@@ -850,7 +851,7 @@ def dashboard() -> None:
                 a, b = st.columns([3, 1])
                 a.markdown(
                     f"**{rec_wrap['name']}** · submitted {rec_wrap['submitted_at']:%b %d, %I:%M %p}  \n"
-                    f"<span style='color:#6b7280;font-size:13px'>"
+                    f"<span style='color:var(--ink-soft);font-size:13px'>"
                     f"📞 {rec_wrap.get('phone', '—')} · 📧 {rec_wrap.get('email', '—')} · "
                     f"Recommended: {rec.recommended_label} · "
                     f"Net worth ${rec_wrap['net_worth']:,.0f}</span>",
@@ -1032,7 +1033,7 @@ def _render_recommendation(rec) -> None:
         if f.recommended:
             st.markdown(f"**✅ {f.name}** — {f.rationale}")
         else:
-            st.markdown(f"<span style='color:#6b7280'>◦ {f.name} — {f.rationale}</span>",
+            st.markdown(f"<span style='color:var(--ink-soft)'>◦ {f.name} — {f.rationale}</span>",
                         unsafe_allow_html=True)
 
     # --- Structured note analysis ----------------------------------------
