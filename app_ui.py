@@ -361,21 +361,34 @@ def inject_theme() -> None:
             display: flex; align-items: center; justify-content: center;
           }}
           [class*="st-key-pw_welcome"] > div {{
-            max-width: 700px; width: 100%; padding: 0 24px; text-align: center;
+            max-width: 900px; width: 100%; padding: 0 24px; text-align: center;
             animation: aw-rise .6s var(--ease-settle) both;
           }}
-          .pw-welcome-mark {{ width: 84px; height: 84px; margin: 0 auto 34px; line-height: 0; }}
+          .pw-welcome-mark {{ width: 88px; height: 88px; margin: 0 auto 36px; line-height: 0; }}
           [class*="st-key-pw_welcome"] .eyebrow {{
-            text-transform: uppercase; letter-spacing: .14em; font-size: 15px;
-            color: #FFFFFF; font-weight: 700; margin-bottom: 20px; font-family: var(--sans);
+            text-transform: uppercase; letter-spacing: .16em; font-size: 15px;
+            color: #FFFFFF; font-weight: 700; margin-bottom: 22px; font-family: var(--sans);
             text-shadow: 0 1px 16px rgba(0,0,0,.65), 0 1px 3px rgba(0,0,0,.5);
           }}
+          /* The lead-in ("Welcome to") stays modest -- plain, lighter weight,
+             smaller -- so the brand name it sets up reads as the actual
+             statement instead of both competing at equal weight. A tighter,
+             higher-contrast gradient (was near-invisible white-to-pale-blue)
+             plus a two-color glow gives the name real presence. */
           [class*="st-key-pw_welcome"] h1 {{
-            font-size: 68px; line-height: 1.08; font-weight: 800; letter-spacing: -.03em;
-            margin: 0 0 22px;
-            background: linear-gradient(180deg, #FFFFFF 0%, #DCE8FA 100%);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-            filter: drop-shadow(0 2px 24px rgba(125,178,245,.25));
+            font-size: 84px; line-height: 1.06; font-weight: 800; letter-spacing: -.035em;
+            margin: 0 0 26px; color: #ffffff;
+            background: linear-gradient(135deg, #FFFFFF 0%, #FFFFFF 40%, {NAVY} 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 32px rgba(125,178,245,.4))
+                    drop-shadow(0 1px 2px rgba(0,0,0,.3));
+          }}
+          .pw-welcome-lead {{
+            display: block; font-size: 30px; font-weight: 500; letter-spacing: -.01em;
+            margin-bottom: 4px; color: var(--ink-soft);
+            background: none; -webkit-text-fill-color: var(--ink-soft);
+            filter: none; text-shadow: 0 1px 12px rgba(0,0,0,.4);
           }}
           [class*="st-key-pw_welcome"] p {{
             color: var(--ink-soft); font-size: 20px; line-height: 1.6;
@@ -1132,7 +1145,8 @@ def inject_theme() -> None:
             .aw-hero-media {{ aspect-ratio: 16/10; order: 2; }}
             .pw-welcome-mark {{ width: 64px; height: 64px; margin-bottom: 24px; }}
             [class*="st-key-pw_welcome"] .eyebrow {{ font-size: 12px; margin-bottom: 14px; }}
-            [class*="st-key-pw_welcome"] h1 {{ font-size: 40px; margin-bottom: 16px; }}
+            [class*="st-key-pw_welcome"] h1 {{ font-size: 44px; margin-bottom: 16px; }}
+            .pw-welcome-lead {{ font-size: 19px; }}
             [class*="st-key-pw_welcome"] p {{ font-size: 16px; margin-bottom: 26px; }}
             [class*="st-key-welcome_get_started"] button {{
               padding: 24px 32px !important; font-size: 22px !important; gap: 16px;
@@ -1318,7 +1332,7 @@ def welcome_screen() -> None:
             f"""
             <div class="pw-welcome-mark">{brand_mark_html(64)}</div>
             <div class="eyebrow">Florida &middot; fee-only fiduciary</div>
-            <h1>Welcome to {FIRM_NAME}.</h1>
+            <h1><span class="pw-welcome-lead">Welcome to</span><br>{FIRM_NAME}.</h1>
             <p>Portfolio analysis and suitability planning built on one rule: every
                figure your family sees is computed, never guessed.</p>
             """,
