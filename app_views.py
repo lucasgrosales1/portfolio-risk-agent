@@ -603,7 +603,7 @@ the things that matter most.
 **{ui.FIRM_NAME}**
 📍 1200 Harborview Blvd, Suite 300 · Sarasota, FL 34236
 📞 (941) 555-0192
-✉️ hello@wealthsyncadvisors.com
+📧 hello@wealthsyncadvisors.com
 🕘 Mon–Fri, 9:00 AM – 5:00 PM ET
                 """
             )
@@ -763,7 +763,7 @@ def dashboard() -> None:
                     f"🟢 **{ld['name']}** — {ld['focus']}  \n"
                     f"<span style='color:#6b7280;font-size:13px'>Requested "
                     f"{ld['date']:%a %b %d} at {ld['slot']} · 📞 {ld['phone'] or '—'} · "
-                    f"✉️ {ld['email']}</span>", unsafe_allow_html=True)
+                    f"📧 {ld['email']}</span>", unsafe_allow_html=True)
 
     st.divider()
     left, right = st.columns([1, 1])
@@ -798,7 +798,7 @@ def dashboard() -> None:
     # --- Pending survey invites (sent, awaiting the client's response) ---
     if pending_invites:
         st.divider()
-        with st.expander(f"✉️ Awaiting response — {len(pending_invites)} survey invite"
+        with st.expander(f"📧 Awaiting response — {len(pending_invites)} survey invite"
                           f"{'s' if len(pending_invites) != 1 else ''} sent", expanded=True):
             for tok, inv in sorted(pending_invites, key=lambda pair: pair[1]["created_at"],
                                    reverse=True):
@@ -806,7 +806,7 @@ def dashboard() -> None:
                     st.markdown(
                         f"**{inv['name']}** — sent {inv['created_at']:%b %d, %I:%M %p}  \n"
                         f"<span style='color:#6b7280;font-size:13px'>"
-                        f"✉️ {inv['email']}"
+                        f"📧 {inv['email']}"
                         + (f" · 📞 {inv['phone']}" if inv.get("phone") else "")
                         + "</span>",
                         unsafe_allow_html=True)
@@ -829,7 +829,7 @@ def dashboard() -> None:
                 a.markdown(
                     f"**{rec_wrap['name']}** · submitted {rec_wrap['submitted_at']:%b %d, %I:%M %p}  \n"
                     f"<span style='color:#6b7280;font-size:13px'>"
-                    f"📞 {rec_wrap.get('phone', '—')} · ✉️ {rec_wrap.get('email', '—')} · "
+                    f"📞 {rec_wrap.get('phone', '—')} · 📧 {rec_wrap.get('email', '—')} · "
                     f"Recommended: {rec.recommended_label} · "
                     f"Net worth ${rec_wrap['net_worth']:,.0f}</span>",
                     unsafe_allow_html=True)
@@ -1039,7 +1039,7 @@ def _render_client_header(rec_wrap: dict) -> None:
     rec = rec_wrap["rec"]
     st.success(f"**{rec_wrap['name']}** — submitted "
                f"{rec_wrap['submitted_at']:%b %d, %Y %I:%M %p}", icon="📝")
-    st.caption(f"📞 {rec_wrap.get('phone', '—')}  ·  ✉️ {rec_wrap.get('email', '—')}")
+    st.caption(f"📞 {rec_wrap.get('phone', '—')}  ·  📧 {rec_wrap.get('email', '—')}")
 
     st.markdown("#### Client answers at a glance")
     p = rec.profile
@@ -1440,7 +1440,7 @@ def render_client_invite(token: str) -> None:
         return
 
     st.info(f"**{invite['name']}** — your advisor at {ui.FIRM_NAME} sent you this survey "
-            "to prepare for your meeting.", icon="✉️")
+            "to prepare for your meeting.", icon="📧")
     _render_survey_form(prefill=invite, invite_token=token)
 
 
@@ -1449,7 +1449,7 @@ def _render_send_to_client_panel() -> None:
     copy of this same form for one specific person — see render_client_invite.
     """
     store = _shared_store()
-    with st.expander("✉️  Send this survey to a client", expanded=False):
+    with st.expander("📧  Send this survey to a client", expanded=False):
         st.caption("Creates a link that opens this survey for one client only — their "
                    "response appears below and on the Dashboard when they submit it.")
         c1, c2, c3 = st.columns(3)
