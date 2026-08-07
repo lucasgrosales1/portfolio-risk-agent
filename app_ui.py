@@ -916,6 +916,72 @@ def inject_theme() -> None:
             font-size: 23px !important;
           }}
 
+          /* --- Get Started: animated gradient fill + gradient border ring.
+             Typed custom properties (@property) let the browser interpolate
+             a radial-gradient's position/colors/stops smoothly on hover
+             instead of snapping; unsupported browsers just skip the
+             transition and show the end-state gradient directly, so this is
+             pure progressive enhancement. Colors are the app's own palette
+             (paper/teal/navy/gold), not the reference's arbitrary hues. */
+          @property --pos-x {{ syntax: '<percentage>'; initial-value: 20%; inherits: false; }}
+          @property --pos-y {{ syntax: '<percentage>'; initial-value: 120%; inherits: false; }}
+          @property --spread-x {{ syntax: '<percentage>'; initial-value: 140%; inherits: false; }}
+          @property --spread-y {{ syntax: '<percentage>'; initial-value: 160%; inherits: false; }}
+          @property --g-color-1 {{ syntax: '<color>'; initial-value: {PAPER}; inherits: false; }}
+          @property --g-color-2 {{ syntax: '<color>'; initial-value: {PAPER2}; inherits: false; }}
+          @property --g-color-3 {{ syntax: '<color>'; initial-value: {TEAL}; inherits: false; }}
+          @property --g-color-4 {{ syntax: '<color>'; initial-value: {NAVY_DARK}; inherits: false; }}
+          @property --g-color-5 {{ syntax: '<color>'; initial-value: {PAPER}; inherits: false; }}
+          @property --border-angle {{ syntax: '<angle>'; initial-value: 20deg; inherits: true; }}
+          @property --border-color-1 {{
+            syntax: '<color>'; initial-value: rgba(125,178,245,.2); inherits: true;
+          }}
+          @property --border-color-2 {{
+            syntax: '<color>'; initial-value: rgba(76,127,214,.7); inherits: true;
+          }}
+          [class*="st-key-welcome_get_started"] button {{
+            position: relative;
+            background: radial-gradient(
+              var(--spread-x) var(--spread-y) at var(--pos-x) var(--pos-y),
+              var(--g-color-1) 35%, var(--g-color-2) 58%, var(--g-color-3) 75%,
+              var(--g-color-4) 88%, var(--g-color-5) 100%) !important;
+            border-color: transparent !important;
+            transition:
+              --pos-x .5s, --pos-y .5s, --spread-x .5s, --spread-y .5s,
+              --g-color-1 .5s, --g-color-2 .5s, --g-color-3 .5s, --g-color-4 .5s,
+              --g-color-5 .5s, --border-angle .5s, --border-color-1 .5s,
+              --border-color-2 .5s, transform .16s var(--ease-settle),
+              box-shadow .16s var(--ease-settle) !important;
+          }}
+          [class*="st-key-welcome_get_started"] button::before {{
+            content: ""; position: absolute; inset: 0; z-index: 1;
+            border-radius: inherit; padding: 1.5px;
+            background: linear-gradient(var(--border-angle), var(--border-color-1), var(--border-color-2));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude; pointer-events: none; opacity: 1 !important;
+            transform: none !important;
+          }}
+          [class*="st-key-welcome_get_started"] button:hover {{
+            --pos-x: 90%; --pos-y: 20%; --spread-x: 110%; --spread-y: 120%;
+            --g-color-1: {SAND}; --g-color-2: {NAVY}; --g-color-3: {TEAL_LIGHT};
+            --g-color-4: {TEAL}; --g-color-5: {PAPER};
+            --border-angle: 200deg;
+            --border-color-1: rgba(255,224,140,.5); --border-color-2: rgba(125,178,245,.85);
+            background: radial-gradient(
+              var(--spread-x) var(--spread-y) at var(--pos-x) var(--pos-y),
+              var(--g-color-1) 0%, var(--g-color-2) 30%, var(--g-color-3) 55%,
+              var(--g-color-4) 78%, var(--g-color-5) 100%) !important;
+            transform: translateY(-2px); box-shadow: 0 16px 40px rgba(0,0,0,.4);
+          }}
+          [class*="st-key-welcome_get_started"] button[kind="primary"],
+          [class*="st-key-welcome_get_started"] button[kind="primary"] * {{
+            color: #ffffff !important;
+          }}
+          [class*="st-key-welcome_get_started"] button::after {{
+            background: #ffffff !important; color: {PAPER} !important; z-index: 2;
+          }}
+
           /* --- Top navigation: rounded pill bar --- */
           div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-nav_"]) {{
             background: var(--paper2); border: 1px solid var(--line);
@@ -1022,6 +1088,10 @@ def inject_theme() -> None:
 
           @media (prefers-reduced-motion: reduce) {{
             * {{ transition: none !important; animation: none !important; translate: none !important; }}
+            /* Higher-specificity than the universal rule above, so it needs
+               its own explicit opt-out -- the gradient button's transition
+               list would otherwise still win and animate on hover. */
+            [class*="st-key-welcome_get_started"] button {{ transition: none !important; }}
           }}
           @media (max-width: 820px) {{
             .aw-hero {{ padding: 40px 12px 28px; }}
