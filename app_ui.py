@@ -904,6 +904,13 @@ def inject_theme() -> None:
             width: auto !important;
             padding: 32px 104px 32px 52px !important; font-size: 27px !important;
           }}
+          /* The button label renders as a <p> inside stMarkdownContainer,
+             which [class*="st-key-pw_welcome"] p (sized for the splash's
+             own body copy) also matches and was winning on specificity,
+             capping the label below the button's own larger font-size. */
+          [class*="st-key-welcome_get_started"] button p {{
+            font-size: 27px !important; margin: 0 !important;
+          }}
           [class*="st-key-welcome_get_started"] button::after {{
             width: 58px !important; height: 58px !important; right: 14px !important;
             font-size: 23px !important;
@@ -1025,6 +1032,9 @@ def inject_theme() -> None:
             [class*="st-key-pw_welcome"] p {{ font-size: 16px; margin-bottom: 26px; }}
             [class*="st-key-welcome_get_started"] button {{
               padding: 20px 60px 20px 30px !important; font-size: 18px !important;
+            }}
+            [class*="st-key-welcome_get_started"] button p {{
+              font-size: 18px !important; margin: 0 !important;
             }}
             [class*="st-key-welcome_get_started"] button::after {{
               width: 40px !important; height: 40px !important; right: 10px !important;
