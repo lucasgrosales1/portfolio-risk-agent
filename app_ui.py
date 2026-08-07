@@ -298,6 +298,30 @@ def inject_theme() -> None:
             50%      {{ transform: translate(22px, -26px) scale(1.14); }}
           }}
           .aw-hero > * {{ position: relative; z-index: 1; }}
+          /* One-time arrival flourish, only on the render right after "Get
+             Started" -- streamlit_app.py has no persistent DOM across the
+             welcome-splash-to-Home swap (a full script rerun replaces it, not
+             a client-side route change), so a literal cross-page slide isn't
+             possible. This substitutes a brighter, more deliberate entrance
+             than Home's everyday aw-rise, plus a soft light bloom that blooms
+             and fades behind the headline -- both purely CSS, playing once on
+             mount, never re-triggered by an ordinary in-place rerun. */
+          .aw-hero.pw-hero-arrival {{ animation: pw-arrival-rise .85s var(--ease-settle) both; }}
+          @keyframes pw-arrival-rise {{
+            0%   {{ opacity: 0; transform: translateY(26px) scale(.97); }}
+            100% {{ opacity: 1; transform: translateY(0) scale(1); }}
+          }}
+          .pw-arrival-flash {{
+            position: absolute; inset: -10% -5%; z-index: 0; pointer-events: none;
+            background: radial-gradient(circle at 28% 38%,
+              rgba(255,255,255,.4), var(--glow-blue) 30%, transparent 66%);
+            opacity: 0; animation: pw-arrival-flash 1.15s var(--ease-settle) both;
+          }}
+          @keyframes pw-arrival-flash {{
+            0%   {{ opacity: 0; transform: scale(.55); }}
+            32%  {{ opacity: .85; transform: scale(1.05); }}
+            100% {{ opacity: 0; transform: scale(1.35); }}
+          }}
           /* Single-column hero — the reference has no side image; the product
              screenshot appears in its own floating section further down. */
           .aw-hero-grid {{ display: block; max-width: 640px; }}
@@ -342,6 +366,16 @@ def inject_theme() -> None:
           [class*="st-key-pw_welcome"] p {{
             color: var(--ink-soft); font-size: 16px; line-height: 1.65;
             margin: 0 auto 30px; max-width: 38ch;
+          }}
+          /* The one hero CTA on the whole splash -- scaled up from the
+             everyday button size so it doesn't read as an afterthought next
+             to its own circular arrow badge. */
+          [class*="st-key-welcome_get_started"] button {{
+            padding: 20px 68px 20px 34px !important; font-size: 18px !important;
+          }}
+          [class*="st-key-welcome_get_started"] button::after {{
+            width: 40px !important; height: 40px !important; right: 10px !important;
+            font-size: 17px !important;
           }}
 
           /* --- Ledger signature: a strip of computed mini-stats --- */
@@ -445,11 +479,11 @@ def inject_theme() -> None:
           }}
           .pw-step-photo img {{
             width: 100%; height: 100%; object-fit: cover; display: block;
-            filter: saturate(.8) brightness(.82) contrast(1.02);
+            filter: saturate(.92) brightness(1.02) contrast(1.02);
           }}
           .pw-step-photo::after {{
             content: ""; position: absolute; inset: 0;
-            background: linear-gradient(155deg, rgba(5,6,28,.18) 0%, rgba(8,9,36,.6) 100%);
+            background: linear-gradient(155deg, rgba(5,6,28,.05) 0%, rgba(8,9,36,.32) 100%);
           }}
           .pw-step-photo .n {{
             position: absolute; top: 16px; left: 18px; z-index: 1;
@@ -1120,9 +1154,10 @@ def welcome_screen() -> None:
             """,
             unsafe_allow_html=True,
         )
-        if st.button("Get Started  →", key="welcome_get_started",
+        if st.button("Get Started", key="welcome_get_started",
                       type="primary", width="stretch"):
             st.session_state["welcomed"] = True
+            st.session_state["just_welcomed"] = True
             st.session_state.setdefault("page", "Home")
             st.rerun()
 

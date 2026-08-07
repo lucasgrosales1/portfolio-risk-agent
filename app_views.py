@@ -303,9 +303,16 @@ def _triangle_to_risk_tolerance(wg: float, ws: float, total: float) -> RiskToler
 # Home
 # ==========================================================================
 def home() -> None:
+    # Only true the one render right after "Get Started" -- see the
+    # pw-hero-arrival CSS note in app_ui.py for why this is a one-time flag
+    # rather than something that could key off which page is active.
+    arrival = st.session_state.pop("just_welcomed", False)
+    hero_class = "aw-hero pw-hero-arrival" if arrival else "aw-hero"
+    flash_div = '<div class="pw-arrival-flash"></div>' if arrival else ""
     st.markdown(
         f"""
-        <div class="aw-hero">
+        <div class="{hero_class}">
+          {flash_div}
           <div class="aw-hero-grid">
             <div class="aw-hero-text">
               <div class="eyebrow">Florida &middot; fee-only fiduciary</div>
