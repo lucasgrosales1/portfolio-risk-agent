@@ -953,6 +953,26 @@ def inject_theme() -> None:
             .pw-sticky-col {{ position: static; }}
             .pw-scroll-card {{ min-height: 0; }}
             .pw-scroll-col {{ gap: 20px; padding: 12px 0; }}
+
+            /* Streamlit stacks st.columns() into a single vertical column
+               below its own ~640px breakpoint. The nav bar's 999px pill
+               radius (correct for a short, wide horizontal bar) turns into
+               an odd stadium shape around four stacked rows, and secondary
+               nav buttons -- deliberately transparent so the shared pill
+               background shows through as a segmented control -- lose all
+               visible definition once they're no longer tightly packed
+               side by side. Card-radius corners + an individual background
+               restore both. */
+            div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-nav_"]) {{
+              border-radius: 18px;
+            }}
+            [class*="st-key-nav_"] button {{
+              background: var(--soft) !important; border: 1px solid var(--line) !important;
+              width: 100%;
+            }}
+            [class*="st-key-nav_"] button[kind="primary"] {{
+              border-color: #ffffff !important;
+            }}
           }}
         </style>
         <div class="pw-bg-glow" aria-hidden="true">
