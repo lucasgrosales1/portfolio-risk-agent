@@ -340,24 +340,25 @@ def inject_theme() -> None:
             display: flex; align-items: center; justify-content: center;
           }}
           [class*="st-key-pw_welcome"] > div {{
-            max-width: 460px; width: 100%; padding: 0 24px; text-align: center;
+            max-width: 700px; width: 100%; padding: 0 24px; text-align: center;
             animation: aw-rise .6s var(--ease-settle) both;
           }}
-          .pw-welcome-mark {{ width: 64px; height: 64px; margin: 0 auto 30px; line-height: 0; }}
+          .pw-welcome-mark {{ width: 84px; height: 84px; margin: 0 auto 34px; line-height: 0; }}
           [class*="st-key-pw_welcome"] .eyebrow {{
-            text-transform: uppercase; letter-spacing: .14em; font-size: 12px;
-            color: var(--marine); font-weight: 600; margin-bottom: 16px; font-family: var(--sans);
+            text-transform: uppercase; letter-spacing: .14em; font-size: 15px;
+            color: #FFFFFF; font-weight: 700; margin-bottom: 20px; font-family: var(--sans);
+            text-shadow: 0 1px 16px rgba(0,0,0,.65), 0 1px 3px rgba(0,0,0,.5);
           }}
           [class*="st-key-pw_welcome"] h1 {{
-            font-size: 42px; line-height: 1.12; font-weight: 800; letter-spacing: -.03em;
-            margin: 0 0 16px;
+            font-size: 68px; line-height: 1.08; font-weight: 800; letter-spacing: -.03em;
+            margin: 0 0 22px;
             background: linear-gradient(180deg, #FFFFFF 0%, #DCE8FA 100%);
             -webkit-background-clip: text; background-clip: text; color: transparent;
             filter: drop-shadow(0 2px 24px rgba(125,178,245,.25));
           }}
           [class*="st-key-pw_welcome"] p {{
-            color: var(--ink-soft); font-size: 16px; line-height: 1.65;
-            margin: 0 auto 30px; max-width: 38ch;
+            color: var(--ink-soft); font-size: 20px; line-height: 1.6;
+            margin: 0 auto 38px; max-width: 44ch;
           }}
 
           /* --- Ledger signature: a strip of computed mini-stats --- */
@@ -901,11 +902,11 @@ def inject_theme() -> None:
           }}
           [class*="st-key-welcome_get_started"] button {{
             width: auto !important;
-            padding: 24px 80px 24px 40px !important; font-size: 21px !important;
+            padding: 32px 104px 32px 52px !important; font-size: 27px !important;
           }}
           [class*="st-key-welcome_get_started"] button::after {{
-            width: 46px !important; height: 46px !important; right: 12px !important;
-            font-size: 19px !important;
+            width: 58px !important; height: 58px !important; right: 14px !important;
+            font-size: 23px !important;
           }}
 
           /* --- Top navigation: rounded pill bar --- */
@@ -1018,6 +1019,17 @@ def inject_theme() -> None:
           @media (max-width: 820px) {{
             .aw-hero {{ padding: 40px 12px 28px; }}
             .aw-hero h1 {{ font-size: 38px; }}
+            .pw-welcome-mark {{ width: 64px; height: 64px; margin-bottom: 24px; }}
+            [class*="st-key-pw_welcome"] .eyebrow {{ font-size: 12px; margin-bottom: 14px; }}
+            [class*="st-key-pw_welcome"] h1 {{ font-size: 40px; margin-bottom: 16px; }}
+            [class*="st-key-pw_welcome"] p {{ font-size: 16px; margin-bottom: 26px; }}
+            [class*="st-key-welcome_get_started"] button {{
+              padding: 20px 60px 20px 30px !important; font-size: 18px !important;
+            }}
+            [class*="st-key-welcome_get_started"] button::after {{
+              width: 40px !important; height: 40px !important; right: 10px !important;
+              font-size: 16px !important;
+            }}
             .aw-ledger {{ flex-wrap: wrap; }}
             .aw-steps {{ flex-direction: column; gap: 16px; }}
             .pw-pipeline {{ flex-direction: column; }}
