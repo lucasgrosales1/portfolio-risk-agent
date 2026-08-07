@@ -394,6 +394,28 @@ def home() -> None:
         unsafe_allow_html=True,
     )
 
+    # --- How the AI stays honest (the compute/narrate/check pipeline) --------
+    st.write("")
+    st.write("")
+    ui.section_header(
+        "How it works", "The AI never invents a number.",
+        "Two independent Claude calls sit downstream of the math — one narrates, "
+        "one checks. Neither can produce a figure that isn't already computed.",
+        centered=True,
+    )
+    st.write("")
+    st.markdown(ui.ai_pipeline_html(), unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="pw-pipeline-note">'
+        f'<span>{ui.icon("shield", 18)}</span>'
+        f'<span><b>When compliance flags something, the report still ships — with '
+        f'the flag attached.</b> Visible rather than silently corrected. No API key '
+        f'configured falls back to a deterministic, rule-based narrative instead — '
+        f'same computed numbers either way.</span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
     # --- Our process (numbered spotlight) ------------------------------------
     st.write("")
     st.write("")

@@ -602,6 +602,44 @@ def inject_theme() -> None:
             box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
           }}
 
+          /* --- AI pipeline: compute -> narrative -> compliance -> report --- */
+          .pw-pipeline {{
+            display: flex; align-items: flex-start; gap: 4px; margin: 8px 0 4px;
+          }}
+          .pw-pipeline-stage {{
+            flex: 1; min-width: 0; text-align: center; padding: 22px 14px;
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 18px;
+            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            transition: transform .22s var(--ease-settle), border-color .22s var(--ease-settle);
+          }}
+          .pw-pipeline-stage:hover {{
+            transform: translateY(-3px); border-color: rgba(125,178,245,.4);
+          }}
+          .pw-pipeline-stage .ico {{
+            width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 14px;
+            display: flex; align-items: center; justify-content: center; color: #ffffff;
+            background:
+              radial-gradient(circle at 32% 28%, rgba(255,255,255,.85), transparent 42%),
+              radial-gradient(circle at 68% 72%, var(--glow-cyan), transparent 55%),
+              radial-gradient(circle at 30% 75%, var(--glow-blue), var(--teal) 70%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+          }}
+          .pw-pipeline-stage h4 {{
+            font-size: 15px; margin: 0 0 6px; font-family: var(--display); font-weight: 700;
+          }}
+          .pw-pipeline-stage p {{
+            font-size: 12.5px; line-height: 1.55; color: var(--ink-soft); margin: 0;
+          }}
+          .pw-pipeline-arrow {{
+            flex: none; color: var(--ink-soft); opacity: .5; padding-top: 40px;
+          }}
+          .pw-pipeline-note {{
+            display: flex; gap: 12px; align-items: flex-start; margin-top: 18px;
+            padding: 16px 20px; background: var(--soft); border: 1px solid var(--line);
+            border-radius: 14px; font-size: 13.5px; line-height: 1.6; color: var(--ink-soft);
+          }}
+          .pw-pipeline-note b {{ color: var(--ink); }}
+
           /* --- Process timeline (a real sequence → numbered ledger entries) --- */
           .aw-steps {{ display: flex; gap: 0; margin: 8px 0 4px; }}
           .aw-step {{
@@ -979,6 +1017,8 @@ def inject_theme() -> None:
             .aw-hero h1 {{ font-size: 38px; }}
             .aw-ledger {{ flex-wrap: wrap; }}
             .aw-steps {{ flex-direction: column; gap: 16px; }}
+            .pw-pipeline {{ flex-direction: column; }}
+            .pw-pipeline-arrow {{ padding: 0; align-self: center; transform: rotate(90deg); }}
             .aw-step:not(:last-child)::after {{ display: none; }}
             .aw-team {{ flex-direction: column; text-align: center; align-items: center; }}
             .aw-team .creds {{ justify-content: center; }}
@@ -1393,6 +1433,8 @@ _ICON_PATHS = {
     "bell": '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2.5h-15z"/>'
             '<path d="M10 21a2 2 0 0 0 4 0"/>',
     "chevron-down": '<path d="M5 9l7 7 7-7"/>',
+    "pen": '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    "arrow-right": '<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>',
 }
 
 
@@ -1434,6 +1476,41 @@ def trust_strip() -> None:
         for nm, t, s in items
     )
     st.markdown(f'<div class="aw-trust">{cells}</div>', unsafe_allow_html=True)
+
+
+def ai_pipeline_html() -> str:
+    """The compute -> narrative agent -> compliance agent -> report pipeline,
+    rendered as a visual sequence. The README and case-study explain this in
+    prose; this is the same architecture surfaced in the live demo itself,
+    for a visitor who never opens the repo.
+    """
+    stages = [
+        ("chart", "Your data",
+         "Every figure — allocation, volatility, tax cost — computed in Python "
+         "first. Nothing downstream can invent a number that isn't already a "
+         "typed, computed value."),
+        ("pen", "Narrative agent",
+         "Claude Sonnet gets a fact sheet — every number it's allowed to "
+         "mention, already computed and labeled — and writes the client-facing "
+         "story around it."),
+        ("shield", "Compliance agent",
+         "A second, independent Claude call — Haiku — checks the draft against "
+         "that same fact sheet: is every number traceable, is anything phrased "
+         "as a guarantee."),
+        ("doc", "Your report",
+         "Ships with a badge showing which path ran. If compliance flags "
+         "something, it ships anyway — with the flag attached, visible rather "
+         "than silently corrected."),
+    ]
+    parts: list[str] = []
+    for i, (ic, title, body) in enumerate(stages):
+        if i > 0:
+            parts.append(f'<div class="pw-pipeline-arrow">{icon("arrow-right", 18)}</div>')
+        parts.append(
+            f'<div class="pw-pipeline-stage"><div class="ico">{icon(ic, 26)}</div>'
+            f'<h4>{title}</h4><p>{body}</p></div>'
+        )
+    return f'<div class="pw-pipeline">{"".join(parts)}</div>'
 
 
 def disclosures_footer() -> None:
