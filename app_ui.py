@@ -187,46 +187,64 @@ def inject_theme() -> None:
             will-change: transform, translate; mix-blend-mode: screen;
           }}
           .pw-bg-glow .b1 {{
-            width: 900px; height: 900px; top: -280px; left: -220px; opacity: .62;
+            width: 900px; height: 900px; top: -280px; left: -220px; opacity: .68;
             background: radial-gradient(circle, var(--glow-blue), transparent 68%);
-            animation: pw-drift-1 15s var(--ease-settle) infinite;
+            animation: pw-drift-1 10s var(--ease-settle) infinite;
             translate: calc(var(--scroll-y, 0) * -0.07px) calc(var(--scroll-y, 0) * 0.05px);
           }}
           .pw-bg-glow .b2 {{
-            width: 820px; height: 820px; top: -4%; right: -240px; opacity: .55;
+            width: 820px; height: 820px; top: -4%; right: -240px; opacity: .6;
             background: radial-gradient(circle, var(--glow-cyan), transparent 68%);
-            animation: pw-drift-2 18s var(--ease-settle) infinite;
+            animation: pw-drift-2 12s var(--ease-settle) infinite;
             translate: calc(var(--scroll-y, 0) * 0.06px) calc(var(--scroll-y, 0) * -0.04px);
           }}
           .pw-bg-glow .b3 {{
-            width: 760px; height: 760px; bottom: -260px; left: 20%; opacity: .48;
+            width: 760px; height: 760px; bottom: -260px; left: 20%; opacity: .52;
             background: radial-gradient(circle, var(--gold), transparent 70%);
-            animation: pw-drift-3 21s var(--ease-settle) infinite;
+            animation: pw-drift-3 14s var(--ease-settle) infinite;
             translate: calc(var(--scroll-y, 0) * -0.05px) calc(var(--scroll-y, 0) * -0.06px);
           }}
           .pw-bg-glow .b4 {{
-            width: 640px; height: 640px; bottom: 2%; right: 6%; opacity: .5;
+            width: 640px; height: 640px; bottom: 2%; right: 6%; opacity: .55;
             background: radial-gradient(circle, var(--marine), transparent 70%);
-            animation: pw-drift-2 17s var(--ease-settle) infinite reverse;
+            animation: pw-drift-4 11s var(--ease-settle) infinite;
             translate: calc(var(--scroll-y, 0) * 0.08px) calc(var(--scroll-y, 0) * 0.03px);
           }}
           .pw-bg-glow .b5 {{
-            width: 560px; height: 560px; top: 34%; left: 42%; opacity: .34;
+            width: 560px; height: 560px; top: 34%; left: 42%; opacity: .4;
             background: radial-gradient(circle, var(--teal), transparent 70%);
-            animation: pw-drift-3 24s var(--ease-settle) infinite reverse;
+            animation: pw-drift-1 16s var(--ease-settle) infinite reverse;
             translate: calc(var(--scroll-y, 0) * -0.06px) calc(var(--scroll-y, 0) * 0.07px);
           }}
+          .pw-bg-glow .b6 {{
+            width: 460px; height: 460px; top: 8%; right: 12%; opacity: .38;
+            background: radial-gradient(circle, var(--glow-blue), transparent 70%);
+            animation: pw-drift-2 13s var(--ease-settle) infinite reverse;
+            translate: calc(var(--scroll-y, 0) * 0.1px) calc(var(--scroll-y, 0) * 0.08px);
+          }}
           @keyframes pw-drift-1 {{
-            0%, 100% {{ transform: translate(0, 0) scale(1); }}
-            50%      {{ transform: translate(140px, 100px) scale(1.32); }}
+            0%   {{ transform: translate(0, 0) rotate(0deg) scale(1); }}
+            33%  {{ transform: translate(150px, 90px) rotate(8deg) scale(1.3); }}
+            66%  {{ transform: translate(60px, 170px) rotate(-6deg) scale(1.12); }}
+            100% {{ transform: translate(0, 0) rotate(0deg) scale(1); }}
           }}
           @keyframes pw-drift-2 {{
-            0%, 100% {{ transform: translate(0, 0) scale(1); }}
-            50%      {{ transform: translate(-130px, 120px) scale(1.24); }}
+            0%   {{ transform: translate(0, 0) scale(1); }}
+            33%  {{ transform: translate(-150px, 110px) scale(1.28); }}
+            66%  {{ transform: translate(-70px, -60px) scale(1.1); }}
+            100% {{ transform: translate(0, 0) scale(1); }}
           }}
           @keyframes pw-drift-3 {{
-            0%, 100% {{ transform: translate(0, 0) scale(1); }}
-            50%      {{ transform: translate(110px, -115px) scale(1.3); }}
+            0%   {{ transform: translate(0, 0) rotate(0deg) scale(1); }}
+            33%  {{ transform: translate(130px, -130px) rotate(-9deg) scale(1.34); }}
+            66%  {{ transform: translate(-50px, -60px) rotate(5deg) scale(1.14); }}
+            100% {{ transform: translate(0, 0) rotate(0deg) scale(1); }}
+          }}
+          @keyframes pw-drift-4 {{
+            0%   {{ transform: translate(0, 0) scale(1); }}
+            33%  {{ transform: translate(90px, -100px) scale(1.22); }}
+            66%  {{ transform: translate(140px, 30px) scale(1.3); }}
+            100% {{ transform: translate(0, 0) scale(1); }}
           }}
           html, body, [class*="css"], .stMarkdown, p, li {{
             color: var(--ink); font-family: var(--sans);
@@ -270,32 +288,6 @@ def inject_theme() -> None:
             background: transparent; border: none; position: relative;
             padding: 56px 6px 40px; overflow: hidden;
             animation: aw-rise .55s var(--ease-settle) both;
-          }}
-          .aw-hero::before {{
-            content: ""; position: absolute; top: -220px; right: -160px;
-            width: 520px; height: 520px; border-radius: 50%; z-index: 0;
-            background: radial-gradient(circle at 35% 30%,
-              rgba(255,255,255,.55), var(--glow-blue) 32%, var(--teal) 62%, transparent 75%);
-            filter: blur(2px); opacity: .55;
-            animation: pw-orb-float-1 13s ease-in-out infinite;
-            translate: calc(var(--scroll-y, 0) * -0.12px) calc(var(--scroll-y, 0) * 0.18px);
-          }}
-          .aw-hero::after {{
-            content: ""; position: absolute; bottom: -60px; right: 18%;
-            width: 150px; height: 150px; border-radius: 50%; z-index: 0;
-            background: radial-gradient(circle at 40% 30%,
-              rgba(255,255,255,.5), var(--glow-cyan) 40%, transparent 78%);
-            opacity: .4;
-            animation: pw-orb-float-2 10s ease-in-out infinite;
-            translate: calc(var(--scroll-y, 0) * 0.16px) calc(var(--scroll-y, 0) * -0.1px);
-          }}
-          @keyframes pw-orb-float-1 {{
-            0%, 100% {{ transform: translate(0, 0) scale(1); }}
-            50%      {{ transform: translate(-30px, 34px) scale(1.08); }}
-          }}
-          @keyframes pw-orb-float-2 {{
-            0%, 100% {{ transform: translate(0, 0) scale(1); }}
-            50%      {{ transform: translate(22px, -26px) scale(1.14); }}
           }}
           .aw-hero > * {{ position: relative; z-index: 1; }}
           /* One-time arrival flourish, only on the render right after "Get
@@ -366,16 +358,6 @@ def inject_theme() -> None:
           [class*="st-key-pw_welcome"] p {{
             color: var(--ink-soft); font-size: 16px; line-height: 1.65;
             margin: 0 auto 30px; max-width: 38ch;
-          }}
-          /* The one hero CTA on the whole splash -- scaled up from the
-             everyday button size so it doesn't read as an afterthought next
-             to its own circular arrow badge. */
-          [class*="st-key-welcome_get_started"] button {{
-            padding: 20px 68px 20px 34px !important; font-size: 18px !important;
-          }}
-          [class*="st-key-welcome_get_started"] button::after {{
-            width: 40px !important; height: 40px !important; right: 10px !important;
-            font-size: 17px !important;
           }}
 
           /* --- Ledger signature: a strip of computed mini-stats --- */
@@ -905,6 +887,27 @@ def inject_theme() -> None:
             background: rgba(255,255,255,.1); transform: translateY(-1px);
           }}
 
+          /* The one hero CTA on the whole splash -- sized to its own content
+             (not stretched to the 460px card width, which left a wide dead
+             gap between the label and the circular badge) and scaled well
+             above the everyday button size so it reads as the single,
+             deliberate action on the page. Declared after the general
+             .stButton button rules above (not just more specific) since
+             equal-specificity !important declarations resolve by source
+             order -- an earlier, equally-specific override here would lose
+             to the general rule despite the !important. */
+          [class*="st-key-welcome_get_started"] {{
+            display: flex; justify-content: center;
+          }}
+          [class*="st-key-welcome_get_started"] button {{
+            width: auto !important;
+            padding: 24px 80px 24px 40px !important; font-size: 21px !important;
+          }}
+          [class*="st-key-welcome_get_started"] button::after {{
+            width: 46px !important; height: 46px !important; right: 12px !important;
+            font-size: 19px !important;
+          }}
+
           /* --- Top navigation: rounded pill bar --- */
           div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-nav_"]) {{
             background: var(--paper2); border: 1px solid var(--line);
@@ -1055,6 +1058,7 @@ def inject_theme() -> None:
           <div class="blob b3"></div>
           <div class="blob b4"></div>
           <div class="blob b5"></div>
+          <div class="blob b6"></div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1195,7 +1199,7 @@ def welcome_screen() -> None:
             unsafe_allow_html=True,
         )
         if st.button("Get Started", key="welcome_get_started",
-                      type="primary", width="stretch"):
+                      type="primary", width="content"):
             st.session_state["welcomed"] = True
             st.session_state["just_welcomed"] = True
             st.session_state.setdefault("page", "Home")
