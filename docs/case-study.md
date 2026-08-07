@@ -152,12 +152,57 @@ the most-scrutinized category in the industry precisely because they get
 sold to people whose profile doesn't support them. A tool that only ever
 says yes isn't doing suitability analysis; it's doing sales enablement.
 
+## 7. Session state isn't shared state — a bug Streamlit's own naming invites
+
+`st.session_state` reads like a normal variable: you write to it, you read
+it back later, it persists across reruns. It's easy to build several
+features on top of it and never notice the actual scope — one browser
+session — because nothing in local testing ever contradicts it. You're
+always the only visitor.
+
+That assumption broke the moment a feature became inherently cross-person:
+an advisor creating a client-survey link on their own machine, meant to be
+opened later by someone else's phone or laptop entirely. Two browser
+sessions, two separate `session_state` dicts, no channel between them — the
+client's submission would have vanished into a session the advisor's own
+browser could never read. The bug wasn't unique to that new feature, either;
+the pre-existing "book a consultation" form on the Home page had the same
+flaw, silently, since the day it was written — it wrote into
+`session_state`, and the Dashboard's "New consultation requests" panel read
+from a *different* session's copy of it. It rendered, it looked finished,
+and it never actually worked cross-device on the deployed app.
+
+The fix is `app_views._shared_store()` — a dict returned by a function
+decorated `@st.cache_resource`, which Streamlit guarantees resolves to the
+same object for every caller, in every session, for the life of the process.
+Everything that has to be visible to more than the browser tab that wrote
+it — filed surveys, invite tokens and their status, consultation leads — now
+lives there instead. The trade-off is named rather than hidden: that shared
+dict resets on a redeploy or a Streamlit Community Cloud sleep/wake cycle,
+same as the on-disk price cache in `prices.py`. Acceptable for a demo;
+a system of record would need an external database, which would be a real
+architectural addition, not a config flag.
+
+Fixing this surfaced a second, smaller bug in the same code path: the
+survey thank-you screen used to read `surveys[-1]` — "the most recent
+submission" — to display a confirmation. That's a reasonable assumption when
+the list is private to one session. Once `surveys` is a single list every
+visitor can append to, "the most recent entry in the shared list" and "the
+one *I* just submitted" are no longer guaranteed to be the same thing if two
+people submit close together. The fix is smaller than the bug sounds: stash
+the just-submitted record in `session_state` (correctly scoped there, since
+it's genuinely per-session data — what *this* visitor just did) instead of
+re-deriving it from shared state that other people can also be writing to at
+the same time.
+
 ---
 
 ## What I'd build next
 
-The honest backlog is in [`docs/context.md`](context.md). The two I'd call
-out: a fetch timeout on the live yfinance call (the cache is ephemeral on
-Streamlit Cloud, so a cold load has no guardrail today), and finishing the
-visual pass so the downloadable report/IPS match the app's own design system
-instead of carrying their own older CSS.
+The honest backlog is in [`docs/context.md`](context.md) — genuinely short
+at this point. The one I'd call out: `report/render.py` and
+`suitability/ips.py` still carry their own light, print-oriented CSS rather
+than the app's dark theme, and I'm no longer sure that's actually a defect —
+a downloadable, printable client deliverable arguably *should* look
+different from a live dark-mode web app. Worth a real decision, not a
+default "make it match."
