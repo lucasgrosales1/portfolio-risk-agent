@@ -158,6 +158,21 @@ def fetch_prices(
             "Verify these are valid, currently-listed symbols."
         )
 
+    # A ticker can come back as a present-but-entirely-empty column -- yfinance
+    # recognized it but a transient partial failure meant no actual prices
+    # landed. dropna(how="all") above only drops rows where *every* column is
+    # empty, so a single all-NaN column survives undetected here and would
+    # otherwise crash later (load_market_data's .iloc[-1] on an empty series)
+    # instead of surfacing as the same clean, retryable PriceDataError as a
+    # genuinely missing ticker.
+    empty = [t for t in all_tickers if closes[t].dropna().empty]
+    if empty:
+        raise PriceDataError(
+            f"No usable price data returned for: {', '.join(empty)}. "
+            "This is usually a transient data-provider issue -- please try again "
+            "in a moment."
+        )
+
     if use_cache:
         try:
             closes.to_pickle(cache_file)

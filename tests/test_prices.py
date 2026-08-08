@@ -9,6 +9,8 @@ or times out, since that's the actual behavior being fixed here.
 
 from __future__ import annotations
 
+import numpy as np
+import pandas as pd
 import pytest
 
 import pra.prices as prices_module
@@ -55,6 +57,33 @@ def test_fetch_prices_surfaces_price_data_error_not_a_raw_exception(monkeypatch)
 
     with pytest.raises(PriceDataError):
         prices_module.fetch_prices(["VOO"], use_cache=False)
+
+
+def test_fetch_prices_rejects_a_present_but_all_nan_column(monkeypatch):
+    """Reproduces a live crash: yfinance recognized a ticker (its column
+    exists) but a transient partial failure meant every price came back NaN.
+    dropna(how="all") in _download_history only drops rows where *every*
+    column is empty, so this column survives that step untouched and used to
+    reach load_market_data's `.dropna().iloc[-1]`, which raised a raw,
+    unhandled IndexError -- exactly the crash seen on Devon & Ana Carter's
+    sample portfolio. fetch_prices must catch this itself and raise the same
+    clean, retryable PriceDataError as a genuinely missing ticker."""
+    index = pd.bdate_range("2024-01-02", periods=5)
+    tickers = ["VOO", "BROKEN", prices_module.BENCHMARK_TICKER]
+    columns = pd.MultiIndex.from_product([["Close"], tickers])
+    raw = pd.DataFrame(
+        {
+            ("Close", "VOO"): [400.0, 401.0, 402.0, 403.0, 404.0],
+            ("Close", "BROKEN"): [np.nan] * 5,
+            ("Close", prices_module.BENCHMARK_TICKER): [4500.0, 4510.0, 4505.0, 4520.0, 4515.0],
+        },
+        index=index,
+        columns=columns,
+    )
+    monkeypatch.setattr("yfinance.download", lambda **kwargs: raw)
+
+    with pytest.raises(PriceDataError, match="BROKEN"):
+        prices_module.fetch_prices(["VOO", "BROKEN"], use_cache=False)
 
 
 def test_fetch_risk_free_rate_falls_back_when_history_raises(monkeypatch):
