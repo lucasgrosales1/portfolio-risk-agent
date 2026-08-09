@@ -936,6 +936,21 @@ def _render_structured_gallery() -> None:
                 "when a longer defined term is specifically wanted.")
 
 
+def _md_safe(text: str) -> str:
+    """Escape a bare '$' before handing dynamic text to st.markdown/st.info/etc.
+
+    A single dollar amount is harmless, but the moment a string contains two
+    (e.g. "$72,000 is offset by $34,000..."), Streamlit's markdown renderer
+    reads the pair as a LaTeX math span and renders the text between them as
+    raw, unstyled math source instead of the sentence it actually is. This
+    hits every analytics/suitability module that writes a finding or
+    rationale as a plain string with a dollar sign baked in -- escaping at
+    the render boundary covers all of them at once instead of chasing down
+    every f-string that happens to format a dollar amount.
+    """
+    return text.replace("$", "\\$")
+
+
 def _render_recommendation(rec) -> None:
     """Advisor-facing suitability detail for a submitted survey."""
     a, readiness = rec.assessment, rec.readiness
@@ -948,9 +963,9 @@ def _render_recommendation(rec) -> None:
         w2.metric("Status", f"{icon} {readiness.status}")
         w3.metric("Suggested split", readiness.suggested_split_label)
         for f in readiness.findings:
-            st.markdown(f"- {f}")
+            st.markdown(_md_safe(f"- {f}"))
         for rf in readiness.red_flags:
-            st.error(rf, icon="🚩")
+            st.error(_md_safe(rf), icon="🚩")
 
     st.markdown("#### Recommendation")
     rc1, rc2, rc3, rc4 = st.columns(4)
@@ -963,7 +978,7 @@ def _render_recommendation(rec) -> None:
         st.warning(f"Stated profile supports **{rec.desired_label}**, but capacity caps the "
                    f"recommendation at **{rec.recommended_label}**.", icon="🛡️")
     for line in rec.rationale:
-        st.markdown(line if line.strip().startswith("•") else f"- {line}")
+        st.markdown(_md_safe(line if line.strip().startswith("•") else f"- {line}"))
     with st.expander("Capacity ceiling — every constraint"):
         for c in rec.capacity.constraints:
             st.markdown(f"{'▶' if c.binding else '•'} **{c.ceiling:.0%}** — {c.label}")
@@ -982,22 +997,22 @@ def _render_recommendation(rec) -> None:
             status = "Survived" if sc.survived else f"Depleted yr {sc.depletion_year}"
             col.metric(sc.name, f"${sc.terminal_value:,.0f}", status, delta_color="off")
         for f in stress.findings:
-            st.info(f, icon="📉")
+            st.info(_md_safe(f), icon="📉")
 
     # --- Structured products ---------------------------------------------
     sp = rec.structured
     st.markdown("#### Structured products")
-    st.caption(sp.sleeve_note)
+    st.caption(_md_safe(sp.sleeve_note))
     if sp.any_recommended:
-        st.success(sp.headline, icon="✅")
+        st.success(_md_safe(sp.headline), icon="✅")
     else:
-        st.info(sp.headline, icon="🚫")
+        st.info(_md_safe(sp.headline), icon="🚫")
 
     for p in sp.considered:
         if p.recommended:
             with st.container(border=True):
                 st.markdown(f"**✅ {p.name}**")
-                st.markdown(p.rationale)
+                st.markdown(_md_safe(p.rationale))
                 if p.payoff:
                     df = pd.DataFrame(
                         {"Product return %": [r * 100 for _, r in p.payoff],
@@ -1006,7 +1021,7 @@ def _render_recommendation(rec) -> None:
                     df.index.name = "Underlying return %"
                     st.line_chart(df, height=230, color=[ui.GOLD, ui.TEAL])
         else:
-            st.markdown(f"**✗ {p.name}** — {p.rationale}")
+            st.markdown(_md_safe(f"**✗ {p.name}** — {p.rationale}"))
     st.caption("Payoff diagrams use illustrative, clearly-stated assumed terms at maturity — "
                "not a quote for any real issued product. Structured products carry issuer "
                "credit risk, limited liquidity, and defined terms.")
@@ -1027,13 +1042,14 @@ def _render_recommendation(rec) -> None:
     st.divider()
     st.markdown("#### Implementation strategy")
     st.caption("How to get to the target allocation — matched to this client.")
-    st.success(sa.headline, icon="🧩")
+    st.success(_md_safe(sa.headline), icon="🧩")
     for f in sa.fits:
         if f.recommended:
-            st.markdown(f"**✅ {f.name}** — {f.rationale}")
+            st.markdown(_md_safe(f"**✅ {f.name}** — {f.rationale}"))
         else:
-            st.markdown(f"<span style='color:var(--ink-soft)'>◦ {f.name} — {f.rationale}</span>",
-                        unsafe_allow_html=True)
+            st.markdown(
+                f"<span style='color:var(--ink-soft)'>◦ {f.name} — {_md_safe(f.rationale)}</span>",
+                unsafe_allow_html=True)
 
     # --- Structured note analysis ----------------------------------------
     st.divider()
