@@ -23,7 +23,6 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 
 import app_ui as ui
 from pra.config import has_api_key
@@ -1055,7 +1054,7 @@ def _render_recommendation(rec) -> None:
         file_name=f"{rec.profile.client_name.replace(' ', '_').lower()}_ips.html",
         mime="text/html", type="primary", key="ips_dl")
     with st.expander("Preview IPS"):
-        st.components.v1.html(ips_html, height=760, scrolling=True)
+        st.iframe(ips_html, height=760)
 
 
 def _render_client_header(rec_wrap: dict) -> None:
@@ -1320,7 +1319,7 @@ def _render_portfolio_subject(result: AnalysisResult, show_gallery: bool = True)
                        file_name=f"{result.portfolio.client_name.replace(' ', '_').lower()}_report.html",
                        mime="text/html", type="primary")
     with st.expander("Preview report"):
-        st.components.v1.html(html, height=760, scrolling=True)
+        st.iframe(html, height=760)
 
     if show_gallery:
         st.markdown("#### Structured-product possibilities")

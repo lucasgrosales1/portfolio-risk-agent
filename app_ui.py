@@ -12,7 +12,6 @@ import math
 from pathlib import Path
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 # --------------------------------------------------------------------------
 # Branding — swap FIRM_NAME for any firm's name.
@@ -1238,7 +1237,7 @@ def _fix_button_accessible_names() -> None:
     window.parent guards against stacking a duplicate observer on every one
     of those reruns, since this component itself gets re-injected each time.
     """
-    components.html(
+    st.iframe(
         """
         <script>
         try {
@@ -1258,7 +1257,7 @@ def _fix_button_accessible_names() -> None:
         } catch (e) { /* cross-origin or no parent — leave labels as-is */ }
         </script>
         """,
-        height=0,
+        height=1,
     )
 
 
@@ -1278,7 +1277,7 @@ def _scroll_bridge() -> None:
     inspecting scrollTop across the real DOM (window.scrollY stays 0 the whole
     time). That element, not window, is the one to watch.
     """
-    components.html(
+    st.iframe(
         """
         <script>
         function tick() {
@@ -1293,7 +1292,7 @@ def _scroll_bridge() -> None:
         tick();
         </script>
         """,
-        height=0,
+        height=1,
     )
 
 
@@ -1312,7 +1311,7 @@ def invite_link_html(token: str) -> None:
         f'<div id="{box_id}" class="pw-invite-link">Building link…</div>',
         unsafe_allow_html=True,
     )
-    components.html(
+    st.iframe(
         f"""
         <script>
         try {{
@@ -1329,7 +1328,7 @@ def invite_link_html(token: str) -> None:
         }}
         </script>
         """,
-        height=0,
+        height=1,
     )
 
 
