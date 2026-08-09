@@ -1,0 +1,16 @@
+# client_name: Raj Patel
+# client_age: 45
+# time_horizon_years: 20
+# notes: Senior engineering director. Concentrated Microsoft position from a decade of RSU vests. Growth-oriented, comfortable with volatility, wants a plan to diversify without an outsized tax bill.
+# scenario: Concentrated employer stock with a large embedded long-term gain.
+# SYNTHETIC DATA - not a real client.
+ticker,shares,cost_basis_per_share,acquisition_date,account_type,is_employer_stock
+MSFT,700,180.00,2018-06-15,taxable,true
+MSFT,450,245.00,2020-09-20,taxable,true
+MSFT,300,310.00,2022-11-08,taxable,true
+VOO,240,360.00,2021-04-12,taxable,false
+VTI,180,210.00,2020-07-01,traditional,false
+QQQ,160,340.00,2022-05-18,roth,false
+BND,700,86.00,2021-02-09,traditional,false
+VEA,400,46.20,2022-03-25,taxable,false
+CASH,32000,1.00,2024-02-01,taxable,false

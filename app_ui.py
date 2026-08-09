@@ -863,6 +863,18 @@ def inject_theme() -> None:
           }}
           [data-testid="stMetricValue"] {{ font-size: 24px; color: var(--ink);
             font-family: var(--display); font-weight: 700; letter-spacing: -.02em; }}
+          /* Streamlit's default truncates long values with an ellipsis --
+             fine for "$2.1M" but not for text values like "Moderate
+             Aggressive" or "Balanced Growth", which just got cut off
+             mid-word. The actual text lives in a <p> inside
+             stMarkdownContainer, which carries its own nowrap/ellipsis rule
+             at higher specificity than a plain descendant selector can beat
+             without !important. Wrap instead, matching the label already. */
+          [data-testid="stMetricValue"] p,
+          [data-testid="stMetricValue"] [data-testid="stMarkdownContainer"] {{
+            white-space: normal !important; overflow: visible !important;
+            text-overflow: clip !important; line-height: 1.15 !important;
+          }}
           [data-testid="stMetricLabel"] {{ color: var(--ink-soft); font-family: var(--sans);
             letter-spacing: 0; font-size: 11px; }}
           [data-testid="stMetricLabel"] * {{ white-space: normal; overflow: visible;

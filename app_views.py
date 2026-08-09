@@ -230,7 +230,7 @@ def _sample_clients() -> dict:
 
         "Raj Patel — 45, concentrated tech position": dict(
             phone="(408) 555-0175", email="raj.patel@example.com", net_worth=2_100_000,
-            portfolio="sample_concentrated.csv",
+            portfolio="client_patel.csv",
             profile=ClientProfile(
                 client_name="Raj Patel", age=45, dependents=1, time_horizon_years=20,
                 employment=Employment.EMPLOYED, annual_income=310_000, net_worth=2_100_000,
