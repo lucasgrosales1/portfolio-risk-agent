@@ -1,7 +1,7 @@
 # Project context — where WealthSync stands
 
 A one-read catch-up for a fresh session (or a returning human). Written 2026-07-26,
-last updated 2026-08-06. **Live:** [wealthsync-advisors.streamlit.app](https://wealthsync-advisors.streamlit.app/).
+last updated 2026-08-08. **Live:** [wealthsync-advisors.streamlit.app](https://wealthsync-advisors.streamlit.app/).
 For design rules see [`CLAUDE.md`](../CLAUDE.md); for deploy steps see
 [`06-deploy.md`](06-deploy.md).
 
@@ -22,16 +22,21 @@ figure is computed in Python; AI only narrates.** Two chained capabilities:
   following a link an advisor sent them) short-circuits straight to
   `render_client_invite()` before the welcome splash or nav bar ever run.
 - `app_ui.py` — design system: `inject_theme()` (all CSS), branding, `top_nav()`,
-  `welcome_screen()`, and component helpers (`card`, `section_header`, `subhead`,
+  `welcome_screen()`, `ai_pipeline_html()` (the compute→narrate→check diagram on
+  Home), and component helpers (`card`, `section_header`, `subhead`,
   `score_gauge_html`, `step_photo_html`, `invite_link_html`, `advisor_photo_html`).
-  ~1,440 lines. Two components.v1 iframes do real cross-frame JS work that
+  ~1,710 lines. Three `st.iframe()` calls do real cross-frame JS work that
   `st.markdown()` can't (it never executes injected `<script>` tags): `_scroll_bridge()`
   drives scroll-linked parallax, `_fix_button_accessible_names()` patches Streamlit's
   buttons (which all render `aria-label=""` by default) so screen readers get a
-  real label instead of silence.
+  real label instead of silence, and `invite_link_html()` computes the client-invite
+  URL client-side (Streamlit has no server-side notion of its own public URL).
+  Migrated off the deprecated `st.components.v1.html` on 08-08 — `st.iframe` is a
+  near drop-in replacement with one gotcha: it rejects `height=0` outright (must be
+  a positive int, `"stretch"`, or `"content"`), so these three now pass `height=1`.
 - `app_views.py` — the 5 page views (`home`, `dashboard`, `portfolio_analysis`,
   `client_survey`, `settings`) plus `render_client_invite` (the stripped, nav-free
-  view a client sees through an invite link) and render helpers. ~1,710 lines (a
+  view a client sees through an invite link) and render helpers. ~1,760 lines (a
   monolith — still true, still fine for now).
 - `src/pra/` — the real engine, UI-independent:
   - `analytics/` (allocation, concentration, rebalance, risk),
@@ -85,33 +90,51 @@ single source of truth shared between them.
 
 Signature motion: an entrance stagger on arrival at a page (`@keyframes
 aw-rise`), scroll-linked parallax on Home's hero blobs, a living animated
-background (`.pw-bg-glow`), hover lift + shadow bloom + press-scale on every
-interactive element. `transform`/`opacity` only, never `transition-all`,
-respects `prefers-reduced-motion`.
+background (`.pw-bg-glow` — six blobs, 10-16s multi-stop drift keyframes with
+a little rotation, tuned livelier after an early pass read as too static),
+hover lift + shadow bloom + press-scale on every interactive element.
+`transform`/`opacity` only, never `transition-all`, respects
+`prefers-reduced-motion`. The welcome splash got its own pass on 08-08: a much
+larger two-tier headline ("Welcome to" as a quiet lead-in, the firm name at
+84px with a stronger gradient), a content-width (not stretched) CTA with an
+animated gradient fill using typed `@property` custom properties so the
+color/position transition smoothly on hover, and a one-time brighter
+entrance + light-bloom on Home's hero that plays only on the render right
+after "Get Started" (`session_state["just_welcomed"]`, popped after one use).
 
 ## State: done vs. not
 **Done:** all 5 pages plus the client-invite view build and render; the dark
-redesign applied app-wide including a one-time welcome splash and scroll
-parallax; licensed hero + real headshot + four process-step photos; sample
-clients and filed surveys both produce holdings analysis + suitability;
+redesign applied app-wide including a one-time welcome splash (now with the
+bigger two-tier headline and gradient CTA above) and scroll parallax;
+licensed hero + real headshot + four process-step photos + an
+`ai_pipeline_html()` diagram on Home explaining the compute→narrate→check
+architecture visually, not just in the README; sample clients and filed
+surveys both produce holdings analysis + suitability, each of the 4 sample
+clients now has its **own** dedicated portfolio CSV (Raj Patel used to
+silently borrow `sample_concentrated.csv` — Jordan Reyes' data — see below);
 structured-note analysis with themed payoff charts (explicit GOLD/TEAL/POS/NEG
-colors, not Streamlit's auto-picked defaults); a 96-test `pytest` suite with
+colors, not Streamlit's auto-picked defaults); a 99-test `pytest` suite with
 known-value coverage of `analytics/*` and `suitability/*`, a mocked-Anthropic
-coverage of the AI agent pair, prices.py's network-failure handling, and
-AppTest smoke checks for every page — fully offline/deterministic, see
-`tests/conftest.py` (including an autouse fixture that resets the shared
-`cache_resource` store between test cases); a refined logo mark + brand
-guideline; the narrative + compliance-review agent pair wired end to end,
-surfaced natively with a source/compliance badge; cross-session survey
-delivery via a shareable invite link (advisor creates it, client's response
-lands on the advisor's Dashboard, recoverable from there too if the advisor
-navigates away before copying it); every button has a real screen-reader
-label (Streamlit's own `aria-label=""` default silently strips this app-wide
-otherwise); yfinance calls have an explicit 15s timeout and convert network
-failures into the existing friendly-error UI instead of crashing the page;
-`requirements.txt` pinned to known-good versions; mobile nav bar fixed (was
-losing its button chrome when Streamlit's columns stack vertically below
-~640px); pushed and **deployed live**.
+coverage of the AI agent pair, `prices.py`'s network-failure handling
+(including the present-but-empty-column case below), and AppTest smoke checks
+for every page — fully offline/deterministic, see `tests/conftest.py`
+(including an autouse fixture that resets the shared `cache_resource` store
+between test cases); a refined logo mark + brand guideline; the narrative +
+compliance-review agent pair wired end to end, surfaced natively with a
+source/compliance badge; cross-session survey delivery via a shareable
+invite link (advisor creates it, client's response lands on the advisor's
+Dashboard, recoverable from there too if the advisor navigates away before
+copying it); every button has a real screen-reader label (Streamlit's own
+`aria-label=""` default silently strips this app-wide otherwise); yfinance
+calls have an explicit 15s timeout and convert both network failures *and*
+a present-but-all-NaN column into the existing friendly-error UI instead of
+crashing the page; `requirements.txt` pinned to known-good versions; mobile
+nav bar fixed (was losing its button chrome when Streamlit's columns stack
+vertically below ~640px); `st.metric` values no longer truncate long text
+answers ("Moderate Aggressive" used to clip to "Moderate Aggr…" — Streamlit's
+default nowrap/ellipsis on the value's inner `<p>`, fixed with an explicit
+override); migrated off the deprecated `st.components.v1.html`; pushed and
+**deployed live**.
 
 **Not done / open** — genuinely short now; see the README roadmap for the
 checklist view:
@@ -120,7 +143,7 @@ checklist view:
   arguably *correct* now rather than a gap — a printable/PDF-able client
   deliverable wants a light, ink-friendly, print-optimized look, not the
   app's dark navy. Revisit only if that judgment call changes.
-- **`app_views.py` is a ~1,710-line monolith.** Fine at this size, real
+- **`app_views.py` is a ~1,760-line monolith.** Fine at this size, real
   friction if it keeps growing — candidate for a per-page split.
 - **Emoji in dashboard subheads** (⏱️ 📋 📅) are a minor off-note against the
   otherwise-considered visual system. Low priority.
@@ -147,6 +170,24 @@ checklist view:
   needs one color per column, and the payoff dataframe always has two
   columns (product + underlying reference); found while adding explicit
   chart theming, not by inspection.
+- **The dollar-sign LaTeX bug recurred in eight more places.** The original
+  fix only covered the AI narrative paragraphs; retirement-readiness
+  findings, capacity rationale, stress-test findings, and the structured-
+  product/implementation-strategy sections all build plain strings with two
+  or more bare `$` too (e.g. "$72,000 is offset by $34,000…"), and Streamlit
+  reads any such pair as a LaTeX math span — rendered as raw, unstyled math
+  source instead of a sentence. Fixed with a shared `_md_safe()` helper
+  applied at every render site instead of chasing individual f-strings in
+  the analytics layer, so a new dollar-amount finding added later is
+  covered automatically.
+- **A live crash on Devon & Ana Carter's sample portfolio**: yfinance can
+  return a ticker's column as *present* but entirely NaN (a transient
+  partial failure, not a missing symbol) for names as liquid as VTI/VOO/QQQ.
+  `dropna(how="all")` in `_download_history` only drops rows where *every*
+  column is empty, so an all-NaN single column sailed through undetected
+  and crashed later at `.dropna().iloc[-1]` with a raw `IndexError`.
+  `fetch_prices` now checks for this explicitly and raises the same clean,
+  retryable `PriceDataError` as a genuinely missing ticker.
 
 ## How to run / preview / deploy
 - Run: `.venv/Scripts/streamlit run streamlit_app.py` → http://localhost:8501
